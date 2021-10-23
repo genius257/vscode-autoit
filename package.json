@@ -1,0 +1,57 @@
+{
+    "name": "autoit",
+    "icon": "images/logo.svg.png",
+    "displayName": "AutoIt",
+    "description": "Syntax highlighting for AutoIt2 AutoIt3",
+    "version": "0.0.1",
+    "publisher": "genius257",
+    "engines": {
+        "vscode": "^1.61.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "au3",
+                "aliases": [
+                    "AutoIt3",
+                    "au3"
+                ],
+                "extensions": [
+                    "au3"
+                ],
+                "configuration": "./au3-language-configuration.json"
+            },
+            {
+                "id": "aut",
+                "aliases": [
+                    "AutoIt2",
+                    "aut"
+                ],
+                "extensions": [
+                    "aut"
+                ],
+                "configuration": "./aut-language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "au3",
+                "scopeName": "source.au3",
+                "path": "./syntaxes/au3.tmLanguage.json"
+            },
+            {
+                "language": "aut",
+                "scopeName": "source.aut",
+                "path": "./syntaxes/aut.tmLanguage.json"
+            }
+        ]
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "svg-png-converter": "0.0.9",
+        "vsce": "^1.100.1"
+    }
+}

@@ -1,0 +1,250 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "AutoIt3",
+	"patterns": [
+		{
+			"include": "#expression"
+		},
+		{
+			"include": "#function-declaration"
+		}
+	],
+	"repository": {
+		"expression": {
+			"patterns": [
+				{
+					"include": "#modifier"
+				},
+				{
+					"include": "#variables"
+				},
+				{
+					"include": "#macros"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#comment.line"
+				},
+				{
+					"include": "#comment.block"
+				},
+				{
+					"include": "#meta"
+				},
+				{
+					"include": "#numbers"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#underscore"
+				},
+				{
+					"include": "#function-literal"
+				}
+			]
+		},
+		"underscore": {
+			"name": "keyword.control.underscore.au3",
+			"match": "\\b_(?= *(?:$|;))"
+		},
+		"modifier": {
+			"name": "storage.modifier.au3",
+			"match": "\\b(?i:Local|Global|Static|ByRef|Dim|ReDim|Volatile|Const)\\b"
+		},
+		"operators": {
+			"name": "keyword.operator.au3",
+			"match": "([+\\-*\\/&<>]=|==?|<>|[&+\\-*\\/^<>]|\\b(?i:And|Or|Not)\\b)"
+		},
+		"macros": {
+			"name": "variable.other.constant.au3",
+			"match": "@(?i:AppDataCommonDir|AppDataDir|AutoItExe|AutoItPID|AutoItVersion|AutoItX64|COM_EventObj|CommonFilesDir|Compiled|ComputerName|ComSpec|CPUArch|CR|CRLF|DesktopCommonDir|DesktopDepth|DesktopDir|DesktopHeight|DesktopRefresh|DesktopWidth|DocumentsCommonDir|error|exitCode|exitMethod|extended|FavoritesCommonDir|FavoritesDir|GUI_CtrlHandle|GUI_CtrlId|GUI_DragFile|GUI_DragId|GUI_DropId|GUI_WinHandle|HomeDrive|HomePath|HomeShare|HotKeyPressed|HOUR|IPAddress1|IPAddress2|IPAddress3|IPAddress4|KBLayout|LF|LocalAppDataDir|LogonDNSDomain|LogonDomain|LogonServer|MDAY|MIN|MON|MSEC|MUILang|MyDocumentsDir|NumParams|OSArch|OSBuild|OSLang|OSServicePack|OSType|OSVersion|ProgramFilesDir|ProgramsCommonDir|ProgramsDir|ScriptDir|ScriptFullPath|ScriptLineNumber|ScriptName|SEC|StartMenuCommonDir|StartMenuDir|StartupCommonDir|StartupDir|SW_DISABLE|SW_ENABLE|SW_HIDE|SW_LOCK|SW_MAXIMIZE|SW_MINIMIZE|SW_RESTORE|SW_SHOW|SW_SHOWDEFAULT|SW_SHOWMAXIMIZED|SW_SHOWMINIMIZED|SW_SHOWMINNOACTIVE|SW_SHOWNA|SW_SHOWNOACTIVATE|SW_SHOWNORMAL|SW_UNLOCK|SystemDir|TAB|TempDir|TRAY_ID|TrayIconFlashing|TrayIconVisible|UserName|UserProfileDir|WDAY|WindowsDir|WorkingDir|YDAY|YEAR)\\b"
+		},
+		"function-literal": {
+			"name": "entity.name.function.au3",
+			"match": "(?<!\\$)\\b(?i:[a-z_][a-z_0-9]*)\\b"
+		},
+		"variables": {
+			"patterns": [{
+				"match": "(\\$[a-zA-Z_][a-zA-Z0-9_]*)(?:\\s*(\\.)([a-zA-Z0-9_]*))*",
+				"match": "(\\$[a-zA-Z_][a-zA-Z0-9_]*)((?:\\s*\\.[a-zA-Z0-9_]*)*)",
+				"captures":{
+					"1": {
+						"name": "variable.other.au3"
+					},
+					"2": {
+						"xname": "keyword.operator.au3",
+						"patterns": [
+							{
+								"match": "\\s*(\\.)([a-zA-Z0-9_]*)",
+								"captures": {
+									"1": {
+										"name": "keyword.operator.au3"
+									},
+									"2": {
+										"name": "support.type.property-name"
+									}
+								}
+							}
+						]
+					},
+					"3": {
+						"name": "support.type.property-name"
+					}
+				}
+			}]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.au3",
+					"match": "\\b(?i:If|Then|Else|ElseIf|EndIf|While|WEnd|Do|Until|For|In|To|Step|Next|Return|Switch|ContinueCase|Case|EndSwitch|ContinueLoop|ExitLoop|Exit|Select|EndSelect|With|EndWith)\\b"
+				},
+				{
+					"name": "storage.type.function.au3",
+					"match": "\\b(?i:Func|EndFunc)\\b"
+				},
+				{
+					"name": "storage.type.enum.au3",
+					"match": "\\b(?i:Enum)\\b"
+				},
+				{
+					"name": "keyword.control.au3",
+					"match": "\\b(?i:True|False|Default|Null)\\b"
+				}
+			]
+		},
+		"strings": {
+			"comment": "(?<a>[\"'])((?:(?=\\k<a>\\k<a>|(?!\\k<a>))(?:\\k<a>\\k<a>|.))*)\\k<a>",
+			"patterns": [
+				{
+					"name": "string.quoted.double.au3",
+					"match": "\"((?:(?=\"\"|[^\"])(?:\"\"|[^\"]))*)\"",
+					"captures": {
+						"1": {
+							"patterns": [
+								{
+									"name": "constant.character.escape.quoted.double.au3",
+									"match": "\"\""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "string.quoted.double.au3",
+					"match": "'((?:(?=''|[^'])(?:''|[^']))*)'",
+					"captures": {
+						"1": {
+							"patterns": [
+								{
+									"name": "constant.character.escape.quoted.double.au3",
+									"match": "''"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"comment.line": {
+			"patterns": [
+				{
+					"name": "comment.line.au3",
+					"match": "(;).*"
+				}
+			]
+		},
+		"comment.block": {
+			"patterns": [
+				{
+					"name": "comment.block.au3",
+					"begin": "^\\s*#(?i:cs|comments-start)\\b",
+					"end": "^\\s*#(?i:ce|comments-end)\\b",
+					"patterns": [
+						{
+							"include": "#comment.block"
+						}
+					]
+				}
+			]
+		},
+		"meta": {
+			"patterns": [
+				{
+					"name": "keyword.control.includeonce.au3",
+					"match": "^\\s*#(?i:include-once)\\b"
+				},
+				{
+					"match": "(#(?i:include))\\b(.*)",
+					"captures": {
+						"1": {
+							"name": "keyword.control.include.au3"
+						},
+						"2": {
+							"patterns": [
+								{
+									"match": "\\K\\s+((?<s>['\"])[^\"']+\\k<s>|\\<[^>]+\\>)(.*)",
+									"captures": {
+										"1": {
+											"name": "string.other.include.au3"
+										},
+										"3":{
+											"patterns": [
+												{
+													"include": "#comment.line"
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "meta.preprocessor.au3",
+					"match": "^\\s*#.*"
+				}
+			]
+		},
+		"numbers": {
+			"name": "constant.numeric",
+			"patterns": [
+				{
+					"name": "constant.numeric.double.au3",
+					"match": "[+-]?\\b[0-9]*\\.[0-9]+\\b"
+				},
+				{
+					"name": "constant.numeric.integer.au3",
+					"match": "[+-]?\\b[0-9]+\\b"
+				},
+				{
+					"name": "constant.numeric.hex.au3",
+					"match": "\\b0x[0-9A-Fa-f]+\\b"
+				},
+				{
+					"name": "constant.numeric.scientific_notation.au3",
+					"match": "\\b[0-9]*\\.[0-9]+e[+-]?[0-9]+\\b"
+				}
+			]
+		},
+		"function-declaration": {
+			"begin": "Funcz",
+			"end": "EndFunc",
+			"patterns": [
+				{
+					"name": "entity.name.function",
+					"match": "\\s[a-zA-Z][a-zA-Z0-9_]+\\s*"
+				}
+			]
+		}
+	},
+	"scopeName": "source.au3"
+}

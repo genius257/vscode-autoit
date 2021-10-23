@@ -1,0 +1,1501 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "AutoIt2",
+	"patterns": [
+		{
+			"include": "#expression"
+		}
+	],
+	"repository": {
+		"expression": {
+			"patterns": [
+				{
+					"include": "#include"
+				},
+				{
+					"include": "#label"
+				},
+				{
+					"include": "#comment.line"
+				},
+				{
+					"include": "#functions"
+				},
+				{
+					"comment": "Everything from this adlib line, until OEF is adlib expressions, instead of normal expressions",
+					"begin": "^(\\[(?i:ADLIB)\\])$",
+					"captures": {
+						"1": {
+							"name": "keyword.other.adlib.aut"
+						}
+					},
+					"patterns": [
+						{
+							"begin": "^((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ",
+							"end": "$",
+							"beginCaptures": {
+								"1": {
+									"name": "string.unquoted",
+									"patterns": [
+										{
+											"include": "#strings"
+										}
+									]
+								},
+								"2": {
+									"name": "string.unquoted",
+									"patterns": [
+										{
+											"include": "#strings"
+										}
+									]
+								}
+							},
+							"patterns": [
+								{
+									"include": "#functions"
+								}
+							]
+						}
+					]
+				},
+				{
+					"match": "^Return$",
+					"name": "keyword.control"
+				},
+				{
+					"include": "#repeat-block"
+				}
+			]
+		},
+		"repeat-block": {
+			"patterns": [
+				{
+					"comment": "Repeat => EndRepeat",
+					"begin": "^(Repeat), ([0-9]+)$",
+					"end": "^(EndRepeat)$",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other"
+						},
+						"2": {
+							"name": "constant.numeric"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "keyword.other"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						},
+						{
+							"include": "#repeat-block"
+						}
+					]
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"match": "\\\\.",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "%[a-zA-Z0-9]+%",
+					"name": "variable.name"
+				}
+			]
+		},
+		"include": {
+			"match": "(#(?i:include))\\b (.*)",
+			"captures": {
+				"1": {
+					"name": "keyword.control.include.aut"
+				},
+				"2": {
+					"name": "string.other.include.au3",
+					"patterns": [
+						{
+							"include": "#strings"
+						}
+					]
+				}
+			}
+		},
+		"label": {
+			"match": "((?i:[a-z]+))(:)",
+			"captures": {
+				"1": {
+					"name": "entity.name.tag.aut"
+				},
+				"2": {
+					"name": "keyword.operator.colon.aut"
+				}
+			}
+		},
+		"comment.line": {
+			"patterns": [
+				{
+					"name": "comment.line.au3",
+					"match": "(;).*"
+				}
+			]
+		},
+		"functions": {
+			"patterns": [
+				{
+					"comment": "AdlibOn/AdlibOff",
+					"match": "^(?i:AdlibOn|AdlibOff)$"
+				},
+				{
+					"comment": "BlockInput",
+					"match": "\\K(BlockInput), (on|off)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.other"
+						}
+					}
+				},
+				{
+					"comment": "Break",
+					"match": "\\K(Break), (on|off)",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.other"
+						}
+					}
+				},
+				{
+					"comment": "DetectHiddenText",
+					"match": "\\K(DetectHiddenText), (on|off)",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.other"
+						}
+					}
+				},
+				{
+					"comment": "Exit",
+					"match": "\\K(Exit)(?:, ([0-9]+))?",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "EnvAdd/EnvSub/EnvMult/EnvDiv",
+					"match": "\\K(Env(?:Add|Sub|Mult|Div)), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "FileAppend",
+					"match": "\\K(FileAppend), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "FileCopy",
+					"match": "\\K(FileCopy), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), (0|1)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "FileCreateDir",
+					"match": "\\K(FileCreateDir), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "FileDelete",
+					"match": "\\K(FileDelete), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "FileInstall",
+					"match": "\\K(FileInstall), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), (0|1)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "FileReadLine",
+					"match": "\\K(FileReadLine), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "FileRemoveDir",
+					"match": "\\K(FileRemoveDir), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "FileSelectFile",
+					"match": "\\K(FileSelectFile), ((?i:[a-z]+)), (0|1)(, (?>\\\\\\\\|\\\\,|[^,])+)?$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "constant.numeric"
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}					
+				},
+				{
+					"comment": "Goto/Gosub",
+					"match": "\\K(Goto|Gosub), ((?i:[a-z]+))$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "entity.name.tag.aut"
+						}
+					}
+				},
+				{
+					"comment": "HideAutoItDebug/HideAutoItWin",
+					"match": "\\K(HideAutoItDebug|HideAutoItWin), ((?i:on|off))",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "keyword.other"
+						}
+					}
+				},
+				{
+					"comment": "IfInString/IfNotInString",
+					"begin": "\\K(IfInString/IfNotInString), ((?i:[a-z]+)), (?>\\\\\\\\|\\\\,|[^,])+, ",
+					"end": "$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						}
+					]
+				},
+				{
+					"comment": "IfWinExist/IfWinNotExist/IfWinActive/IfWinNotActive",
+					"begin": "\\K(IfWinExist|IfWinNotExist|IfWinActive|IfWinNotActive), ((?>\\\\\\\\|\\\\,|[^,])+)(, (?>\\\\\\\\|\\\\,|[^,])+)?, ",
+					"end": "$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						}
+					]
+				},
+				{
+					"comment": "IfEqual/IfNotEqual",
+					"begin": "\\K(IfEqual|IfNotEqual), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+), ",
+					"end": "$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						}
+					]
+				},
+				{
+					"comment": "IfGreater/IfGreaterOrEqual/IfLess/IfLessOrEqual",
+					"begin": "\\K(IfGreater|IfGreaterOrEqual|IfLess|IfLessOrEqual), ((?i:[a-z]+)), ([0-9]+), ",
+					"end": "$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "constant.numeric"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						}
+					]
+				},
+				{
+					"comment": "IfExist/IfNotExist",
+					"begin": "\\K(IfExist|IfNotExist), ((?>\\\\\\\\|\\\\,|[^,])+), ",
+					"end": "$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						}
+					]
+				},
+				{
+					"comment": "IfMsgBox",
+					"begin": "\\K(IfMsgBox), (ABORT|CANCEL|IGNORE|NO|OK|RETRY|YES), ",
+					"end": "$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "keyword.other"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#functions"
+						}
+					]
+				},
+				{
+					"comment": "IniRead",
+					"match": "\\K(IniRead), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"5": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "IniWrite",
+					"match": "\\K(IniWrite), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"5": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "IniDelete",
+					"match": "\\K(IniWrite), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "InputBox",
+					"match": "\\K(InputBox), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)(?:, (hide))?$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.other",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"5": {
+							"name": "keyword.other"
+						}
+					}
+				},
+				{
+					"comment": "LeftClick/RightClick",
+					"match": "\\K(LeftClick|RightClick), ([0-9]+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						},
+						"3": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "LeftClickDrag/RightClickDrag",
+					"match": "\\K(LeftClickDrag|RightClickDrag), ([0-9]+), ([0-9]+), ([0-9]+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						},
+						"3": {
+							"name": "constant.numeric"
+						},
+						"4": {
+							"name": "constant.numeric"
+						},
+						"5": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "MouseGetPos",
+					"match": "\\K(MouseGetPos), ((?i:[a-z]+)), ((?i:[a-z]+))$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						}
+					}
+				},
+				{
+					"comment": "MouseMove",
+					"match": "\\K(MouseMove), ([0-9]+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						},
+						"3": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "MsgBox",
+					"match": "\\K(MsgBox), ([0-9]+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "Random",
+					"match": "\\K(Random), ((?i:[a-z]+)), ([0-9]+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "constant.numeric"
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "RegRead",
+					"match": "\\K(RegRead), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"patterns": [
+								{
+									"name": "keyword.other",
+									"match": "\\K(REG_DWORD|REG_SZ)$"
+								}
+							]
+						},
+						"4": {
+							"patterns": [
+								{
+									"name": "keyword.other",
+									"match": "\\K(HKEY_LOCAL_MACHINE|HKEY_CURRENT_USER|HKEY_USERS|HKEY_CURRENT_CONFIG|HKEY_CLASSES_ROOT)$"
+								}
+							]
+						},
+						"5": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"6": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "RegWrite",
+					"match": "\\K(RegWrite), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"patterns": [
+								{
+									"name": "keyword.other",
+									"match": "\\K(REG_DWORD|REG_SZ)$"
+								}
+							]
+						},
+						"3": {
+							"patterns": [
+								{
+									"name": "keyword.other",
+									"match": "\\K(HKEY_LOCAL_MACHINE|HKEY_CURRENT_USER|HKEY_USERS|HKEY_CURRENT_CONFIG|HKEY_CLASSES_ROOT)$"
+								}
+							]
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"5": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"6": {
+							"patterns": [
+								{
+									"name": "constant.numeric",
+									"match": "[0-9]+"
+								},
+								{
+									"name": "string.unquoted",
+									"match": "(?>\\\\\\\\|\\\\,|[^,])+",
+									"patterns": [
+										{
+											"include": "#strings"
+										}
+									]
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "RegDelete",
+					"match": "\\K(RegDelete), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"patterns": [
+								{
+									"name": "keyword.other",
+									"match": "\\K(HKEY_LOCAL_MACHINE|HKEY_CURRENT_USER|HKEY_USERS|HKEY_CURRENT_CONFIG|HKEY_CLASSES_ROOT)$"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "Run/RunWait",
+					"match": "\\K(Run|RunWait), ((?>\\\\\\\\|\\\\,|[^,])+)(?:(, (?>\\\\\\\\|\\\\,|[^,])+)(?:(max|min|hide))?)?$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "keyword.other"
+						}
+					}
+				},
+				{
+					"comment": "Send",
+					"match": "\\K(Send), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"comment": "FIXME: support highlighting of key macros",
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "SetCapslockState",
+					"match": "\\K(SetCapslockState), (on|off)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.other"
+						}
+					}
+				},
+				{
+					"comment": "SetEnv",
+					"match": "\\K(SetEnv), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "SetBatchLines/SetKeyDelay",
+					"match": "\\K(SetBatchLines|SetKeyDelay), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "SetStoreCapslockMode",
+					"match": "\\K(SetStoreCapslockMode), (on|off)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "keyword.other"
+						}
+					}
+				},
+				{
+					"comment": "SetTitleMatchMode",
+					"match": "\\K(SetTitleMatchMode), (1|2)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "keyword.other"
+						}
+					}
+				},
+				{
+					"comment": "SetWinDelay",
+					"match": "\\K(SetWinDelay), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "Shutdown",
+					"match": "\\K(Shutdown), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "Sleep",
+					"match": "\\K(Sleep), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "SplashTextOn",
+					"match": "\\K(SplashTextOn), ([0-9]+), ([0-9]+), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "constant.numeric"
+						},
+						"3": {
+							"name": "constant.numeric"
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"5": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "SplashTextOff",
+					"match": "\\K(SplashTextOff)$",
+					"name": "support.function"
+				},
+				{
+					"comment": "StringCaseSense",
+					"match": "\\K(StringCaseSense), (On|Off)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "keyword.other"
+						}
+					}
+				},
+				{
+					"comment": "StringLeft/StringRight",
+					"match": "\\K(StringLeft|StringRight), ((?i:[a-z]+)), ((?i:[a-z]+)), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "StringMid",
+					"match": "\\K(StringMid), ((?i:[a-z]+)), ((?i:[a-z]+)), ([0-9]+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						},
+						"4": {
+							"name": "constant.numeric"
+						},
+						"5": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "StringLen",
+					"match": "\\K(StringLen), ((?i:[a-z]+)), ((?i:[a-z]+))$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						}
+					}
+				},
+				{
+					"comment": "StringReplace",
+					"match": "\\K(StringReplace), ((?i:[a-z]+)), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"5": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "StringTrimLeft/StringTrimRight",
+					"match": "\\K(StringTrimLeft|StringTrimRight), ((?i:[a-z]+)), ((?i:[a-z]+)), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "StringGetPos",
+					"match": "\\K(StringGetPos), ((?i:[a-z]+)), ((?i:[a-z]+)), ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "WinGetActiveStats",
+					"match": "\\K(WinGetActiveStats), ((?i:[a-z]+)), ((?i:[a-z]+)), ((?i:[a-z]+)), ((?i:[a-z]+)), ((?i:[a-z]+))$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						},
+						"3": {
+							"name": "variable.name"
+						},
+						"4": {
+							"name": "variable.name"
+						}, 
+						"5": {
+							"name": "variable.name"
+						},
+						"6": {
+							"name": "variable.name"
+						}
+					}
+				},
+				{
+					"comment": "WinGetActiveTitle",
+					"match": "\\K(WinGetActiveTitle), ((?i:[a-z]+))$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "variable.name"
+						}
+					}
+				},
+				{
+					"comment": "WinKill",
+					"match": "\\K(WinKill), ((?>\\\\\\\\|\\\\,|[^,])+)(?:, ((?>\\\\\\\\|\\\\,|[^,])+))?$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "WinWait/WinWaitClose/WinWaitActive/WinWaitNotActive",
+					"match": "\\K(WinWait|WinWaitClose|WinWaitActive|WinWaitNotActive), ((?>\\\\\\\\|\\\\,|[^,])+)(?:, ((?>\\\\\\\\|\\\\,|[^,])+)(?:, ([0-9]+))?)?$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "WinHide/WinShow/WinRestore/WinMinimize/WinMaximize/WinActivate/WinClose",
+					"match": "\\K(WinHide|WinShow|WinRestore|WinMinimize|WinMaximize|WinActivate|WinClose), ((?>\\\\\\\\|\\\\,|[^,])+)(?:, ((?>\\\\\\\\|\\\\,|[^,])+))?$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "WinMove",
+					"match": "\\K(WinMove), ((?>\\\\\\\\|\\\\,|[^,])+)(?:, ((?>\\\\\\\\|\\\\,|[^,])+))?, ([0-9]+), ([0-9]+), ([0-9]+), ([0-9]+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "constant.numeric"
+						},
+						"5": {
+							"name": "constant.numeric"
+						},
+						"6": {
+							"name": "constant.numeric"
+						},
+						"7": {
+							"name": "constant.numeric"
+						}
+					}
+				},
+				{
+					"comment": "WinSetTitle",
+					"match": "\\K(WinSetTitle), ((?>\\\\\\\\|\\\\,|[^,])+)(?:, ((?>\\\\\\\\|\\\\,|[^,])+))?, ((?>\\\\\\\\|\\\\,|[^,])+)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						},
+						"2": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"3": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						},
+						"4": {
+							"name": "string.unquoted",
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"comment": "WinMinimizeAll/WinMinimizeAllUndo",
+					"match": "\\K(WinMinimizeAll|WinMinimizeAllUndo)$",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						}
+					}
+				}
+			]
+		},
+		"boolean": {
+			"match": "\\b(on|off)\\b"
+		},
+		"exit-code": {
+			"match": "\\b[0-9]+\\b"
+		},
+		"Variable": {
+
+		},
+		"Value": {
+
+		},
+		"Text": {
+			
+		},
+		"File" : {
+
+		}
+	},
+	"scopeName": "source.aut"
+}
