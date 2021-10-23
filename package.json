@@ -56,6 +56,6 @@
     "dependencies": {},
     "devDependencies": {
         "svg-png-converter": "0.0.9",
-        "vsce": "^1.100.1"
+        "vsce": "^1.100.2"
     }
 }
