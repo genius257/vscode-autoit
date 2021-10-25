@@ -1,4 +1,4 @@
-# AutoIt3
+# AutoIt
 
 AutoIt2 and AutoIt3 language syntax highlighting.
 
