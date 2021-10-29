@@ -2,7 +2,7 @@
     "name": "autoit",
     "icon": "images/logo.svg.png",
     "displayName": "AutoIt",
-    "description": "Syntax highlighting for AutoIt2 AutoIt3",
+    "description": "Syntax highlighting for AutoIt2 and AutoIt3",
     "version": "0.0.1",
     "publisher": "genius257",
     "repository": {
