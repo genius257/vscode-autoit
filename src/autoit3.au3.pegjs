@@ -162,7 +162,7 @@ StringLiteral "string" = String
 
 Comment = SingleLineComment / MultiLineComment
 
-SingleLineComment = ';' [^\u000A\u000D]+
+SingleLineComment = ';' [^\u000A\u000D]*
 
 MultiLineCommentStartTag = "#" (CSToken / CommentsStartToken)
 
