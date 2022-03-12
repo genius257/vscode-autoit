@@ -4,6 +4,15 @@
 
 //BUG: start
 {
+  var TYPES_TO_PROPERTY_NAMES = {
+    CallExpression:   "callee",
+    MemberExpression: "object",
+  };
+
+  function extractOptional(optional, index) {
+    return optional ? optional[index] : null;
+  }
+
     function extractList(list, index) {
       return list.map(function(element) { return element[index]; });
     }
@@ -11,25 +20,50 @@
   function buildList(head, tail, index) {
     return [head].concat(extractList(tail, index));
   }
+
+  function buildBinaryExpression(head, tail) {
+    return tail.reduce(function(result, element) {
+      return {
+        type: "BinaryExpression",
+        operator: element[1],
+        left: result,
+        right: element[3]
+      };
+    }, head);
+  }
+
+  function buildLogicalExpression(head, tail) {
+    return tail.reduce(function(result, element) {
+      return {
+        type: "LogicalExpression",
+        operator: element[1],
+        left: result,
+        right: element[3]
+      };
+    }, head);
+  }
+
+  function optionalList(value) {
+    return value !== null ? value : [];
+  }
 }
 //BUG: end
 
 Start
     = __ program:Program __ { return program; }
 
-__
-    = (LiteralWhitespace / Newline)*
+//__ = (LiteralWhitespace / Newline)*
 
-Program = (RootExpression (Newline+ RootExpression)*)?
+//Program = (RootExpression (Newline+ RootExpression)*)?
 
-RootExpression = Expression / FunctionBlock
+//RootExpression = Expression / FunctionBlock
 
-Expression = Comment / PreProc / VariableExpression / LoopBlock / IfExpression / CallExpression / ExitExpression / SwitchStatement / ReturnStatement
+// Expression = Comment / PreProc / VariableExpression / LoopBlock / IfExpression / CallExpression / ExitExpression / SwitchStatement / ReturnStatement
 
-InlineExpression = ('(' Whitespace? _InlineExpression Whitespace? ')' / _InlineExpression ( Whitespace? "&" Whitespace? _InlineExpression)*)
-_InlineExpression = TernaryStatement / VariableComparison / BinaryExpression / ValueExpression / ContinueLoopStatement
+//InlineExpression = ('(' Whitespace? _InlineExpression Whitespace? ')' / _InlineExpression ( Whitespace? "&" Whitespace? _InlineExpression)*)
+//_InlineExpression = TernaryStatement / VariableComparison / BinaryExpression / ValueExpression / ContinueLoopStatement
 
-ValueExpression = Variable / Number / String / CallExpression / Identifier / Macro / NullLiteral
+// ValueExpression = Variable / Number / String / CallExpression / Identifier / Macro / NullLiteral
 
 PreProc = '#' ('include'i ('-once'i)? Whitespace ('<' [^:?"<>]+ '>' / '"' [^:?"<>]+ '"') / !(CSToken / CEToken / CommentsStartToken / CommentsEndToken) [a-z]i+)
 
@@ -43,16 +77,15 @@ LineContinuation = LiteralWhitespace '_' Newline
 
 Newline = "\u000A" / "\u000D"
 
-VariableExpression = VariableOperation / VariableDeclarationStatement / VariableComparison
+// VariableExpression = VariableOperation / VariableDeclarationStatement / VariableComparison
 
 //FIXME: MemberExpression
-
-//WARNING: new, not implemented
+/*
 VariableDeclarationStatement
   = ((LocalToken / GlobalToken / DimToken) Whitespace)? (ConstToken Whitespace)? VariableDeclarationList
-  / RedimToken Whitespace VariableIdentifier ("[" Whitespace? InlineExpression Whitespace? "]")+
+  / RedimToken Whitespace VariableIdentifier ("[" Whitespace? Expression Whitespace? "]")+
   / ((LocalToken / GlobalToken / DimToken) Whitespace)? (ConstToken Whitespace)? EnumToken Whitespace EnumDeclarationList
-
+*/
 EnumDeclarationList
   = head:EnumDeclaration tail:(__ "," __ EnumDeclaration)* {
       return buildList(head, tail, 3);
@@ -66,27 +99,42 @@ VariableDeclarationList
 
 //WARNING: new/altered
 //TODO: change to return ID object
-VariableDeclaration = VariableIdentifier ("[" Whitespace? InlineExpression Whitespace? "]")* (Whitespace? '=' Whitespace? (InlineExpression / ArrayExpression))?
-EnumDeclaration = VariableIdentifier (Whitespace? '=' Whitespace? InlineExpression)?
+//VariableDeclaration = VariableIdentifier ("[" Whitespace? InlineExpression Whitespace? "]")* (Whitespace? '=' Whitespace? (InlineExpression / ArrayExpression))?
+VariableDeclaration
+  = id:VariableIdentifier ("[" __ Expression __ "]")* init:(__ Initialiser)? {
+      return {
+        type: "VariableDeclarator",
+        id: id,
+        init: extractOptional(init, 1)
+      };
+    }
+EnumDeclaration = VariableIdentifier (__ '=' __ Expression)?
+
+Initialiser
+  = "=" !"=" __ expression:(AssignmentExpression / ArrayDeclaration) { return expression; }
 
 //WARNING: new
-VariableIdentifier = '$' [a-zA-Z_] [0-9a-zA-Z_]*
+VariableIdentifier = '$' head:[a-zA-Z_] tail:[0-9a-zA-Z_]*
+  {return {
+    type: "VariableIdentifier",
+    name: head + tail.join("")
+  }}
 
 //WARNING: new
 ArrayExpression = ArrayDeclaration
 
 //NOTE: ths may need to go under "assignment statement"
-VariableOperation = Variable Whitespace? ('+' / '-' / '*' / '/' / '&' ) '=' Whitespace? InlineExpression
+// VariableOperation = Variable Whitespace? ('+' / '-' / '*' / '/' / '&' ) '=' Whitespace? InlineExpression
 
 //TODO: remove/replace due to the existance of BinaryExpression
-VariableComparison = Variable Whitespace? ( '==' / '=' / '>' / '>=' / '<' / '<=' ) Whitespace? InlineExpression
+//VariableComparison = Variable Whitespace? ( '==' / '=' / '>' / '>=' / '<' / '<=' ) Whitespace? InlineExpression
 
 //FIXME: enum?
-VariableScope = (('Global'i / 'Local'i) (Whitespace 'Const'i)? ) / 'Dim' / 'Redim'
+//VariableScope = (('Global'i / 'Local'i) (__ 'Const'i)? ) / 'Dim' / 'Redim'
 
-VariableConstantDeclaration = VariableScope 'Const'
+// VariableConstantDeclaration = VariableScope 'Const'
 
-Variable = _Variable ("[" Whitespace? InlineExpression Whitespace? "]")*
+Variable = _Variable ("[" __ Expression __ "]")*
 //FIXME: this needs to be better named/formatted
 _Variable = '$' [a-zA-Z_] [0-9a-zA-Z_]*
 
@@ -108,9 +156,9 @@ String = '"' ([^"] / '""')* '"' / "'" ([^'] / "''")* "'"
 StringLiteral "string" = String
 
 //FIXME: remove?
-LogicalOperators = AndToken / OrToken / NotToken
+//LogicalOperators = AndToken / OrToken / NotToken
 
-ConditionalOperators = InlineExpression '?' InlineExpression ':' InlineExpression
+// ConditionalOperators = InlineExpression '?' InlineExpression ':' InlineExpression
 
 Comment = SingleLineComment / MultiLineComment
 
@@ -123,27 +171,29 @@ MultiLineComment = MultiLineCommentStartTag (LiteralWhitespace (!Newline .)*)? (
 
 MultiLineCommentEndTag = '#' (CEToken / CommentsEndToken)
 
-FunctionBlock = ("Volatile" Whitespace)? FuncToken Whitespace Identifier Whitespace? "(" (Whitespace? FunctionParameter Whitespace? ("," Whitespace? FunctionParameter Whitespace?)* )? ")" __ (Expression __)* "EndFunc"
+// FunctionBlock = ("Volatile" Whitespace)? FuncToken Whitespace Identifier Whitespace? "(" (Whitespace? FunctionParameter Whitespace? ("," Whitespace? FunctionParameter Whitespace?)* )? ")" __ (Expression __)* "EndFunc"
 
-FunctionParameter = Variable (Whitespace? "=" Whitespace? InlineExpression)?
+// FunctionParameter = Variable (Whitespace? "=" Whitespace? InlineExpression)?
 
-LoopBlock = DoExpression / WhileExpression / ForExpression
+//LoopBlock = DoExpression / WhileExpression / ForExpression
 
-DoExpression = "FIXME: Do"
+// DoExpression = "FIXME: Do"
 
-WhileExpression = WhileToken Whitespace InlineExpression __ (Expression __)* WEndToken
+// WhileExpression = WhileToken Whitespace InlineExpression __ (Expression __)* WEndToken
 
 //FIXME: Step value in the for loop: currently we allow any inline expression, but it is not comfirmed if that is corract au3 syntax.
+/*
 ForExpression
     = ForToken Whitespace Variable ((Whitespace? "=" Whitespace? InlineExpression Whitespace ToToken Whitespace InlineExpression (Whitespace "Step"i Whitespace InlineExpression)?) / (Whitespace "In"i Whitespace InlineExpression)) __
     (Expression __)*
     "Next"i
+*/
 
-IfExpression = SingleLineIfExpression / MultiLineIfExpression
-SingleLineIfExpression = IfToken Whitespace InlineExpression Whitespace ThenToken Whitespace ( VariableDeclarationStatement / InlineExpression / ReturnStatement )
-MultiLineIfExpression = IfToken Whitespace InlineExpression Whitespace ThenToken __ (Expression __)* EndIfToken
+//IfExpression = SingleLineIfExpression / MultiLineIfExpression
+//SingleLineIfExpression = IfToken Whitespace InlineExpression Whitespace ThenToken Whitespace ( VariableDeclarationStatement / InlineExpression / ReturnStatement )
+//MultiLineIfExpression = IfToken Whitespace InlineExpression Whitespace ThenToken __ (Expression __)* EndIfToken
 
-ArrayDeclaration = "[" (Whitespace? InlineExpression Whitespace? ("," Whitespace? InlineExpression Whitespace?)*)? Whitespace? "]"
+ArrayDeclaration = "[" (__ Expression __ ("," __ Expression __)*)? __ "]"
 
 //Identifier = !ReservedWord [_a-zA-Z][_a-zA-Z0-9]*
 Identifier = !ReservedWord name:IdentifierName { return name; }
@@ -170,7 +220,8 @@ IdentifierPart
   /// "\u200C"
   /// "\u200D"
 
-CallExpression = Identifier Whitespace? "(" Whitespace? (InlineExpression Whitespace? ("," Whitespace? InlineExpression Whitespace?)*)? ")"
+//TODO: remove?
+//CallExpression = Identifier Whitespace? "(" Whitespace? (InlineExpression Whitespace? ("," Whitespace? InlineExpression Whitespace?)*)? ")"
 
 //FIXME: with block, switch block
 
@@ -279,7 +330,7 @@ Macro
     / "YEAR"i
     ) !IdentifierPart
 
-ExitExpression = "Exit"i Whitespace InlineExpression
+ExitExpression = ExitToken __ Expression
 
 NullLiteral = NullToken { return { type: "Literal", value: null }; }
 
@@ -335,31 +386,33 @@ Keyword
 FutureReservedWord
     = "@RESERVED" //NOTE: no future reserved words so far
 
-TernaryStatement = (ValueExpression/VariableComparison) Whitespace? "?" Whitespace? InlineExpression Whitespace? ":" Whitespace? InlineExpression
+// TernaryStatement = (ValueExpression/VariableComparison) Whitespace? "?" Whitespace? InlineExpression Whitespace? ":" Whitespace? InlineExpression
 
+/*
 SwitchStatement
-    = "Switch"i Whitespace InlineExpression __
+    = SwitchToken Whitespace InlineExpression __
         (CaseStatement)+
     EndSwitchToken
 
 CaseStatement
-    = "Case"i Whitespace ((InlineExpression (Whitespace ToToken Whitespace InlineExpression)? (Whitespace? "," Whitespace? InlineExpression (Whitespace ToToken Whitespace InlineExpression)?)*) / "Else"i)
+    = CaseToken Whitespace ((InlineExpression (Whitespace ToToken Whitespace InlineExpression)? (Whitespace? "," Whitespace? InlineExpression (Whitespace ToToken Whitespace InlineExpression)?)*) / ElseToken)
     (__ Expression __)*
+*/
 
 WithStatement = "FIXME: With"
 
-ReturnStatement = ReturnToken Whitespace !ReturnStatement InlineExpression
+ReturnStatement = ReturnToken (__ Expression)? EOS
 
-BreakStatement = "FIXME: break"
+ExitLoopStatement = ExitLoopToken (__ Expression)? EOS
 
-ExitLoopStatement = "FIXME: exitLoop"
+ContinueLoopStatement = ContinueLoopToken (__ Expression)? EOS
 
-ContinueLoopStatement = ContinueLoopToken (Whitespace ValueExpression)?
+ContinueCaseStatement = ContinueCaseToken (__ Expression)? EOS
 
 SelectStatement = "FIXME: Select"
 
-BinaryExpression = ValueExpression Whitespace? (BinaryOperator / MathematicalOperator) Whitespace? ValueExpression / NotToken Whitespace InlineExpression !BinaryOperator
-BinaryOperator = "=" !"=" / "==" / ">" "="? / "<" !">" "="? / "<>"
+//BinaryExpression = ValueExpression Whitespace? (BinaryOperator / MathematicalOperator) Whitespace? ValueExpression / NotToken Whitespace InlineExpression !BinaryOperator
+//BinaryOperator = "=" !"=" / "==" / ">" "="? / "<" !">" "="? / "<>"
 MathematicalOperator = "+" / "-" / "*" / "/" / "*"
 
 BooleanLiteral 
@@ -517,3 +570,448 @@ ExponentIndicator
 
 SignedInteger
   = [+-]? DecimalDigit+
+
+//BUG: --------------------------------------------------------------------------------------------------------------------------------------
+
+MemberExpression
+  = head:(
+        PrimaryExpression
+    )
+    tail:(
+        __ "[" __ property:Expression __ "]" {
+          return { property: property, computed: true };
+        }
+      / __ "." __ property:IdentifierName {
+          return { property: property, computed: false };
+        }
+    )*
+    {
+      return tail.reduce(function(result, element) {
+        return {
+          type: "MemberExpression",
+          object: result,
+          property: element.property,
+          computed: element.computed
+        };
+      }, head);
+    }
+    / Macro
+
+
+PrimaryExpression
+  = Identifier
+  / VariableIdentifier
+  / Literal //FIXME: this does not make sense with dot and array access in au3
+  // ArrayLiteral
+  // ObjectLiteral
+  / "(" __ expression:Expression __ ")" { return expression; }
+  //FIXME: rules below are not sure if belong
+  / DefaultToken
+
+  //FIXME: all NewExpression are MemberExpression
+
+CallExpression
+  = head:(
+      callee:MemberExpression __ args:Arguments {
+        return { type: "CallExpression", callee: callee, arguments: args };
+      }
+    )
+    tail:(
+        __ args:Arguments {
+          return { type: "CallExpression", arguments: args };
+        }
+      / __ "[" __ property:Expression __ "]" {
+          return {
+            type: "MemberExpression",
+            property: property,
+            computed: true
+          };
+        }
+      / __ "." __ property:IdentifierName {
+          return {
+            type: "MemberExpression",
+            property: property,
+            computed: false
+          };
+        }
+    )*
+    {
+      return tail.reduce(function(result, element) {
+        element[TYPES_TO_PROPERTY_NAMES[element.type]] = result;
+        return element;
+      }, head);
+    }
+
+Arguments
+  = "(" __ args:(ArgumentList __)? ")" {
+      return optionalList(extractOptional(args, 0));
+    }
+
+ArgumentList
+  = head:AssignmentExpression tail:(__ "," __ AssignmentExpression)* {
+      return buildList(head, tail, 3);
+    }
+
+LeftHandSideExpression
+  = CallExpression
+  / MemberExpression
+
+AssignmentExpression
+  = left:LeftHandSideExpression __
+    "=" !"=" __
+    right:AssignmentExpression
+    {
+      return {
+        type: "AssignmentExpression",
+        operator: "=",
+        left: left,
+        right: right
+      };
+    }
+  / left:LeftHandSideExpression __
+    operator:AssignmentOperator __
+    right:AssignmentExpression
+    {
+      return {
+        type: "AssignmentExpression",
+        operator: operator,
+        left: left,
+        right: right
+      };
+    }
+  / ConditionalExpression
+
+  AssignmentOperator //WARNING: au3 does not allow assignemnt in inline-expressions
+  = "*="
+  / "/="
+  / "+="
+  / "-="
+  / "&="
+
+  ConditionalExpression
+  = test:LogicalORExpression __
+    "?" __ consequent:AssignmentExpression __
+    ":" __ alternate:AssignmentExpression
+    {
+      return {
+        type: "ConditionalExpression",
+        test: test,
+        consequent: consequent,
+        alternate: alternate
+      };
+    }
+  / LogicalORExpression
+
+LogicalORExpression
+  = head:LogicalANDExpression
+    tail:(__ LogicalOROperator __ LogicalANDExpression)*
+    { return buildLogicalExpression(head, tail); }
+
+/*
+LogicalANDExpression
+  = head:EqualityExpression
+    tail:(__ LogicalANDOperator __ EqualityExpression)*
+    { return buildLogicalExpression(head, tail); }
+*/
+LogicalANDExpression
+  = head:NotExpression
+    tail:(__ LogicalANDOperator __ NotExpression)*
+    { return buildLogicalExpression(head, tail); }
+
+LogicalOROperator
+  = OrToken
+
+LogicalANDOperator
+ = AndToken
+
+NotExpression = (NotToken __)? EqualityExpression
+
+EqualityExpression //FIXME: support NOT
+  = head:RelationalExpression
+    tail:(__ EqualityOperator __ RelationalExpression)*
+    { return buildBinaryExpression(head, tail); }
+
+EqualityOperator
+  = "=="
+  // "!=="
+  / "="
+  // "!="
+
+RelationalExpression
+  = head:AdditiveExpression
+    tail:(__ RelationalOperator __ AdditiveExpression)*
+    { return buildBinaryExpression(head, tail); }
+
+AdditiveExpression
+  = head:MultiplicativeExpression
+    tail:(__ AdditiveOperator __ MultiplicativeExpression)*
+    { return buildBinaryExpression(head, tail); }
+
+AdditiveOperator
+  = $("+" ![+=])
+  / $("-" ![-=])
+  / $("&" ![=])
+
+RelationalOperator
+  = "<="
+  / ">="
+  / "<>" //TODO: this may not belong here
+  / $("<" !"<")
+  / $(">" !">")
+
+MultiplicativeExpression
+  = head:UnaryExpression
+    tail:(__ MultiplicativeOperator __ UnaryExpression)*
+    { return buildBinaryExpression(head, tail); }
+
+MultiplicativeOperator
+  = $("*" !"=")
+  / $("/" !"=")
+  // $("%" !"=")
+
+UnaryExpression
+  = LeftHandSideExpression
+  / operator:UnaryOperator __ argument:UnaryExpression {
+      return {
+        type: "UnaryExpression",
+        operator: operator,
+        argument: argument,
+        prefix: true
+      };
+    }
+
+UnaryOperator//FIXME: NOT token in here?
+  = 
+  // "++"
+  // "--"
+  $("+" !"=")
+  / $("-" !"=")
+  // "~"
+  // "!"
+
+//BUG: --------------------------------------------------------------------------------------------------------------------------------------
+
+Program
+  = body:SourceElements? {
+      return {
+        type: "Program",
+        body: optionalList(body)
+      };
+    }
+
+SourceElements
+  = head:SourceElement tail:(__ SourceElement)* {
+      return buildList(head, tail, 1);
+    }
+
+SourceElement
+  = Statement
+  / FunctionDeclaration
+
+//NOTE: au3 specific!
+PreProcStatement = PreProc EOS
+
+FunctionDeclaration
+  = ("Volatile" __)? FuncToken __ Identifier __
+  "(" __ params:(FormalParameterList __)? __ ")" EOS
+  (__ Statement __)* __ "EndFunc" EOS
+
+/*FormalParameterList
+  = head:VariableIdentifier tail:(__ "," __ VariableIdentifier)* {
+      return buildList(head, tail, 3);
+    }*/
+FormalParameterList
+  = head:FormalParameter tail:(__ "," __ FormalParameter)* {
+      return buildList(head, tail, 3);
+    }
+
+// HACK: start of custom support of function arguements with default value
+//FIXME: currently this allows ($a, $b = 123, $c) but no parameters without Initializer allowed after first parameter with Initializer occurred
+FormalParameter
+  = VariableIdentifier __ ("=" __ Expression)?
+
+//Initializer
+
+// HACK: end of custom support of function arguements with default value
+
+Statement
+  = VariableStatement //TODO: should we dilute?
+  / EmptyStatement
+  / SingleLineComment EOS
+  / ExpressionStatement
+  / IfStatement
+  / IterationStatement
+  / ContinueLoopStatement
+  / ContinueCaseStatement
+  / ExitLoopStatement
+  / ReturnStatement
+  / WithStatement
+  / SwitchStatement
+  // DebuggerStatement
+  //NOTE: below here is new unsure rules
+  / ExitStatement
+  / PreProcStatement
+  / MultiLineComment
+
+EmptyStatement
+  = __ LineTerminatorSequence { return { type: "EmptyStatement" }; }
+
+
+StatementList
+  = head:Statement tail:(__ Statement)* { return buildList(head, tail, 1); }
+
+//NOTE: VariableDeclarationStatement
+//FIXME: update syntax to use new identifiers, expressions and statements
+VariableStatement
+  = static_:(StaticToken __)? scope:($(LocalToken / GlobalToken / DimToken) __)? constant:(ConstToken __)? declarations:VariableDeclarationList EOS {
+    return {
+      scope: extractOptional(scope, 0),
+      constant: !!constant,
+      static_: !!static_,
+      type: "VariableDeclaration",
+      declarations: declarations,
+    }
+  }
+  / scope:($(LocalToken / GlobalToken / DimToken) __)? static_:(StaticToken __)? constant:(ConstToken __)? declarations:VariableDeclarationList EOS {
+    return {
+      scope: extractOptional(scope, 0),
+      constant: !!constant,
+      static_: !!static_,
+      type: "VariableDeclaration",
+      declarations: declarations,
+    }
+  }
+  / RedimToken __ VariableIdentifier ("[" __ Expression __ "]")+
+  / ((LocalToken / GlobalToken / DimToken) __)? (ConstToken __)? EnumToken __ EnumDeclarationList
+
+ExpressionStatement
+  = !FuncToken expression:Expression EOS {
+      return {
+        type: "ExpressionStatement",
+        expression: expression
+      };
+    }
+
+//FIXME: update syntax to use new identifiers, expressions and statements
+//IfStatement = SingleLineIfExpression / MultiLineIfExpression
+//SingleLineIfExpression = IfToken __ Expression Whitespace ThenToken Whitespace ( VariableDeclarationStatement / InlineExpression / ReturnStatement ) EOS
+//MultiLineIfExpression = IfToken __ Expression Whitespace ThenToken __ (Expression __)* EndIfToken
+IfStatement
+  = IfToken __ Expression __ ThenToken __ EOS
+       __ StatementList __
+    __ ElseIfClauses? __
+    __ ElseClause? __
+    EndIfToken EOS
+    / IfToken __ Expression __ ThenToken __ Statement
+
+ElseIfClauses
+  = head:ElseIfClause tail:(__ ElseIfClause)* { return buildList(head, tail, 1); }
+
+ElseIfClause
+  = ElseIfToken __ Expression __ ThenToken __ EOS
+    __ StatementList __
+
+ElseClause
+  = ElseToken __ EOS
+    __ StatementList __
+    
+
+//FIXME: verify
+IterationStatement
+  = DoToken __ EOS
+    __ body:StatementList __
+    UntilToken __ test:Expression __ EOS
+    { return { type: "DoWhileStatement", body: body, test: test }; }
+  / WhileToken __ test:Expression __ EOS
+    __ body:StatementList __
+    WEndToken __ EOS
+    { return { type: "WhileStatement", test: test, body: body }; }
+  / ForToken __ VariableIdentifier __ "=" __ Expression __ ToToken __ Expression __ (StepToken __ Expression)? EOS
+      __ body:StatementList __
+    NextToken
+  / ForToken __ VariableIdentifier __ InToken __ Expression
+      __ body:StatementList __
+    NextToken
+
+EOS
+  = _ SingleLineComment? LineTerminatorSequence
+  / __ EOF
+
+EOF
+  = !.
+
+WhiteSpace = Whitespace
+__ //FIXME: support line continuation
+  = WhiteSpace*
+//FIXME: implement this
+_ = __
+
+//TODO: verify the chars in here!
+LineTerminatorSequence "end of line"
+  = "\n"
+  / "\r\n"
+  / "\r"
+  / "\u2028"
+  / "\u2029"
+
+
+//FIXME: validate if this is true for au3
+Expression // Comment / PreProc / VariableExpression / LoopBlock / IfExpression / CallExpression / ExitExpression / SwitchStatement / ReturnStatement
+  = head:AssignmentExpression tail:(__ "," __ AssignmentExpression)* {
+      return tail.length > 0
+        ? { type: "SequenceExpression", expressions: buildList(head, tail, 3) }
+        : head;
+    }
+
+ExitStatement
+  = ExitToken __ AssignmentExpression EOS
+
+SwitchStatement
+  = SwitchToken __ discriminant:Expression __ EOS
+    cases:CaseBlock
+  EndSwitchToken EOS
+  {
+    return {
+      type: "SwitchStatement",
+      discriminant: discriminant,
+      cases: cases
+    };
+  }
+
+CaseBlock
+  = __
+    before:(CaseClauses __)?
+    default_: DefaultClause __
+    after:(CaseClauses __)?
+  / __ clauses:(CaseClauses __)? //FIXME: verify that "?" should be there
+
+
+CaseClauses
+  = head:CaseClause tail:(__ CaseClause)* { return buildList(head, tail, 1); }
+
+CaseClause
+  = CaseToken __ tests: CaseValueList EOS
+    consequent: (__ StatementList)?
+    {
+      return {
+        type: "SwitchCase",
+        tests: tests,
+        consequent: optionalList(extractOptional(consequent, 1))
+      };
+    }
+
+DefaultClause
+  = CaseToken __ ElseToken __ EOS
+    consequent:(__ StatementList)?
+    {
+      return {
+        type: "SwitchCase",
+        test: null,
+        consequent: optionalList(extractOptional(consequent, 1))
+      };
+    }
+
+CaseValueList
+  = head:Expression tail:(__ ToToken __ Expression)* {
+      return buildList(head, tail, 3);
+    }
