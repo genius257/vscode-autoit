@@ -65,7 +65,30 @@ Start
 
 // ValueExpression = Variable / Number / String / CallExpression / Identifier / Macro / NullLiteral
 
-PreProc = '#' ('include'i ('-once'i)? Whitespace ('<' [^:?"<>]+ '>' / '"' [^:?"<>]+ '"') / !(CSToken / CEToken / CommentsStartToken / CommentsEndToken) [a-z]i+)
+PreProc
+  = "#include-once"i {
+    return { type: "IncludeOnceStatement" };
+  }
+  / "#" 'include'i Whitespace file:IncludeFileNameLiteral { //FIXME: require once ore more whirespace
+    return {
+      type: "IncludeStatement",
+      file: file,
+    };
+  }
+  / "#" !(CSToken / CEToken / CommentsStartToken / CommentsEndToken) body:[a-z]i+ { //FIXME: allow anything except newline
+    return { type: "PreProcStatement", body: body };
+  }
+
+IncludeFileNameLiteral
+  = "<" file:[^:?"<>]+ ">" {
+    return file.join("");
+  }
+  / '"' file:[^:?"<>]+ '"' {
+    return file.join("");
+  }
+  / "'" file:[^:?"'<>]+ "'" {
+    return file.join("");
+  }
 
 LiteralWhitespace = "\u0009" / "\u0020"
 
@@ -353,7 +376,7 @@ Keyword
 FutureReservedWord
     = "@RESERVED" //NOTE: no future reserved words so far
 
-WithStatement = WithToken (__ Expression) EOS
+WithStatement = WithToken (__ Expression) EOS //FIXME: WIP
 StatementList
 EndWithToken EOS
 
@@ -679,7 +702,7 @@ LogicalOROperator
   = OrToken
 
 LogicalANDOperator
- = AndToken WhiteSpace
+ = AndToken WhiteSpace //FIXME: we need to allow multiple whitespaces
 
 NotExpression = (NotToken __)? EqualityExpression
 
@@ -766,7 +789,9 @@ SourceElement
   / FunctionDeclaration
 
 //NOTE: au3 specific!
-PreProcStatement = PreProc EOS
+PreProcStatement = preproc:PreProc EOS {
+  return preproc;
+}
 
 FunctionDeclaration
   = ("Volatile" __)? FuncToken __ Identifier __
