@@ -767,10 +767,6 @@ ExpressionStatement
       };
     }
 
-//FIXME: update syntax to use new identifiers, expressions and statements
-//IfStatement = SingleLineIfExpression / MultiLineIfExpression
-//SingleLineIfExpression = IfToken __ Expression Whitespace ThenToken Whitespace ( VariableDeclarationStatement / InlineExpression / ReturnStatement ) EOS
-//MultiLineIfExpression = IfToken __ Expression Whitespace ThenToken __ (Expression __)* EndIfToken
 IfStatement
   = IfToken __ Expression __ ThenToken __ EOS
        __ StatementList __
