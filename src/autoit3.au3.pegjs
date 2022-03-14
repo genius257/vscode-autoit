@@ -2,7 +2,6 @@
 // ==================
 //
 
-//BUG: start
 {
   var TYPES_TO_PROPERTY_NAMES = {
     CallExpression:   "callee",
@@ -47,7 +46,6 @@
     return value !== null ? value : [];
   }
 }
-//BUG: end
 
 Start
     = __ program:Program __ { return program; }
