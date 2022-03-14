@@ -150,19 +150,20 @@ HexIntegerLiteral
 
 Integer = [0-9]+
 
-//FIXME: rename
 //FIXME: !('"' / LineTerminator) instead of [^"]
-String = '"' ([^"] / '""')* '"' / "'" ([^'] / "''")* "'"
-StringLiteral "string" = String
-
-//FIXME: remove?
-//LogicalOperators = AndToken / OrToken / NotToken
-
-// ConditionalOperators = InlineExpression '?' InlineExpression ':' InlineExpression
+StringLiteral "string"
+  = '"' chars:([^"] / '""')* '"' {
+    return { type: "Literal", value: chars.join("") }
+  }
+  / "'" chars:([^'] / "''")* "'" {
+    return { type: "Literal", value: chars.join("") }
+  }
 
 Comment = SingleLineComment / MultiLineComment
 
-SingleLineComment = ';' [^\u000A\u000D]*
+SingleLineComment = ';' body:([^\u000A\u000D]*) {
+  return {type: "SingleLineComment", body: body.join("")}
+}
 
 MultiLineCommentStartTag = "#" (CSToken / CommentsStartToken)
 
@@ -171,31 +172,8 @@ MultiLineComment = MultiLineCommentStartTag (LiteralWhitespace (!Newline .)*)? (
 
 MultiLineCommentEndTag = '#' (CEToken / CommentsEndToken)
 
-// FunctionBlock = ("Volatile" Whitespace)? FuncToken Whitespace Identifier Whitespace? "(" (Whitespace? FunctionParameter Whitespace? ("," Whitespace? FunctionParameter Whitespace?)* )? ")" __ (Expression __)* "EndFunc"
-
-// FunctionParameter = Variable (Whitespace? "=" Whitespace? InlineExpression)?
-
-//LoopBlock = DoExpression / WhileExpression / ForExpression
-
-// DoExpression = "FIXME: Do"
-
-// WhileExpression = WhileToken Whitespace InlineExpression __ (Expression __)* WEndToken
-
-//FIXME: Step value in the for loop: currently we allow any inline expression, but it is not comfirmed if that is corract au3 syntax.
-/*
-ForExpression
-    = ForToken Whitespace Variable ((Whitespace? "=" Whitespace? InlineExpression Whitespace ToToken Whitespace InlineExpression (Whitespace "Step"i Whitespace InlineExpression)?) / (Whitespace "In"i Whitespace InlineExpression)) __
-    (Expression __)*
-    "Next"i
-*/
-
-//IfExpression = SingleLineIfExpression / MultiLineIfExpression
-//SingleLineIfExpression = IfToken Whitespace InlineExpression Whitespace ThenToken Whitespace ( VariableDeclarationStatement / InlineExpression / ReturnStatement )
-//MultiLineIfExpression = IfToken Whitespace InlineExpression Whitespace ThenToken __ (Expression __)* EndIfToken
-
 ArrayDeclaration = "[" (__ Expression __ ("," __ Expression __)*)? __ "]"
 
-//Identifier = !ReservedWord [_a-zA-Z][_a-zA-Z0-9]*
 Identifier = !ReservedWord name:IdentifierName { return name; }
 
 IdentifierName "identifier"
@@ -207,25 +185,14 @@ IdentifierName "identifier"
     }
 
 IdentifierStart
-  = //UnicodeLetter
-  Letter
+  = Letter
   / "_"
 
 IdentifierPart
   = IdentifierStart
-  // UnicodeCombiningMark
-  /// UnicodeDigit
   / DecimalDigit
-  // UnicodeConnectorPunctuation
-  /// "\u200C"
-  /// "\u200D"
-
-//TODO: remove?
-//CallExpression = Identifier Whitespace? "(" Whitespace? (InlineExpression Whitespace? ("," Whitespace? InlineExpression Whitespace?)*)? ")"
 
 //FIXME: with block, switch block
-
-//FIXME: reserved keywords to match AGENST
 
 Macro
     = "@" (
@@ -386,20 +353,9 @@ Keyword
 FutureReservedWord
     = "@RESERVED" //NOTE: no future reserved words so far
 
-// TernaryStatement = (ValueExpression/VariableComparison) Whitespace? "?" Whitespace? InlineExpression Whitespace? ":" Whitespace? InlineExpression
-
-/*
-SwitchStatement
-    = SwitchToken Whitespace InlineExpression __
-        (CaseStatement)+
-    EndSwitchToken
-
-CaseStatement
-    = CaseToken Whitespace ((InlineExpression (Whitespace ToToken Whitespace InlineExpression)? (Whitespace? "," Whitespace? InlineExpression (Whitespace ToToken Whitespace InlineExpression)?)*) / ElseToken)
-    (__ Expression __)*
-*/
-
-WithStatement = "FIXME: With"
+WithStatement = WithToken (__ Expression) EOS
+StatementList
+EndWithToken EOS
 
 ReturnStatement = ReturnToken (__ Expression)? EOS
 
@@ -409,7 +365,8 @@ ContinueLoopStatement = ContinueLoopToken (__ Expression)? EOS
 
 ContinueCaseStatement = ContinueCaseToken (__ Expression)? EOS
 
-SelectStatement = "FIXME: Select"
+SelectStatement = SelectToken EOS
+EndSelectToken EOS
 
 //BinaryExpression = ValueExpression Whitespace? (BinaryOperator / MathematicalOperator) Whitespace? ValueExpression / NotToken Whitespace InlineExpression !BinaryOperator
 //BinaryOperator = "=" !"=" / "==" / ">" "="? / "<" !">" "="? / "<>"
@@ -722,7 +679,7 @@ LogicalOROperator
   = OrToken
 
 LogicalANDOperator
- = AndToken
+ = AndToken WhiteSpace
 
 NotExpression = (NotToken __)? EqualityExpression
 
@@ -914,9 +871,7 @@ ElseIfClause
 ElseClause
   = ElseToken __ EOS
     __ StatementList __
-    
 
-//FIXME: verify
 IterationStatement
   = DoToken __ EOS
     __ body:StatementList __
@@ -956,11 +911,9 @@ LineTerminatorSequence "end of line"
 
 
 //FIXME: validate if this is true for au3
-Expression // Comment / PreProc / VariableExpression / LoopBlock / IfExpression / CallExpression / ExitExpression / SwitchStatement / ReturnStatement
-  = head:AssignmentExpression tail:(__ "," __ AssignmentExpression)* {
-      return tail.length > 0
-        ? { type: "SequenceExpression", expressions: buildList(head, tail, 3) }
-        : head;
+Expression
+  = head:AssignmentExpression {
+      return head;
     }
 
 ExitStatement
@@ -982,8 +935,14 @@ CaseBlock
   = __
     before:(CaseClauses __)?
     default_: DefaultClause __
-    after:(CaseClauses __)?
-  / __ clauses:(CaseClauses __)? //FIXME: verify that "?" should be there
+    after:(CaseClauses __)? {//FIXME: verify that other case clauses can come after the default clase in au3
+      return optionalList(extractOptional(before, 0))
+        .concat(default_)
+        .concat(optionalList(extractOptional(after, 0)));
+    }
+  / __ clauses:(CaseClauses __)? { //FIXME: verify that "?" CAN be there
+    return optionalList(extractOptional(clauses, 0));
+  } 
 
 
 CaseClauses
@@ -1012,6 +971,16 @@ DefaultClause
     }
 
 CaseValueList
-  = head:Expression tail:(__ ToToken __ Expression)* {
+  = head:SwitchCaseValue tail:(__ "," __ SwitchCaseValue)* {
       return buildList(head, tail, 3);
     }
+
+SwitchCaseValue
+  = from:Expression __ ToToken __ to:Expression {
+    return {
+      type: "SwitchCaseRange",
+      from: from,
+      to: to,
+    }
+  }
+  / Expression
