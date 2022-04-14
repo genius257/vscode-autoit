@@ -166,7 +166,7 @@
 				{
 					"name": "comment.block.au3",
 					"begin": "^\\s*#(?i:cs|comments-start)\\b",
-					"end": "^\\s*#(?i:ce|comments-end)\\b",
+					"end": "^\\s*#(?i:ce|comments-end)\\b[^\n]*",
 					"patterns": [
 						{
 							"include": "#comment.block"
