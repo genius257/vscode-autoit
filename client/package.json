@@ -1,0 +1,13 @@
+{
+	"name": "autoit-lsp-client",
+	"engines": {
+		"vscode": "^1.52.0"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^7.0.0"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.52.0",
+		"@vscode/test-web": "^0.0.22"
+	}
+}

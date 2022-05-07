@@ -12,6 +12,10 @@
     "engines": {
         "vscode": "^1.61.0"
     },
+    "activationEvents": [
+        "onLanguage:au3"
+    ],
+    "browser": "./client/dist/main",
     "categories": [
         "Programming Languages"
     ],
@@ -56,6 +60,26 @@
     "dependencies": {},
     "devDependencies": {
         "svg-png-converter": "0.0.9",
-        "vsce": "^1.100.2"
+        "vsce": "^1.100.2",
+        "@types/mocha": "^8.2.2",
+        "@typescript-eslint/eslint-plugin": "^4.23.0",
+        "@typescript-eslint/parser": "^4.23.0",
+        "@vscode/test-web": "^0.0.22",
+        "eslint": "^7.26.0",
+        "mocha": "^8.3.2",
+        "path-browserify": "^1.0.1",
+        "ts-loader": "^9.2.3",
+        "typescript": "^4.5.5",
+        "webpack": "^5.44.0",
+        "webpack-cli": "^4.7.2"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+        "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+        "chrome": "npm run compile && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ./test-data"
     }
 }
