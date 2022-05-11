@@ -141,15 +141,16 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 		switch (currentValue.type) {
 			case "IncludeStatement":
 				//connection.console.info(resolveIncludePath(params.textDocument.uri, currentValue.file || "."));
+				//TODO: check if some code for handling multi-line include statement text handling is needed.
 				previousValue.push({
 					range: {
 						start: {
 							line: (currentValue.location?.start.line || 1) - 1,
-							character: currentValue.location?.start.column || 0
+							character: (currentValue.location?.end.column || 0) - (currentValue.file?.length || 0) - 3
 						},
 						end: {
 							line: (currentValue.location?.end.line || 1) - 1,
-							character: currentValue.location?.end.column || 0
+							character: (currentValue.location?.end.column || 0) - 1
 						},
 					},
 					target: resolveIncludePath(params.textDocument.uri, currentValue.file || "."),
