@@ -182,7 +182,7 @@
 					"match": "^\\s*#(?i:include-once)\\b"
 				},
 				{
-					"match": "(#(?i:include))\\b(.*)",
+					"match": "^\\s*(#(?i:include))\\b(.*)",
 					"captures": {
 						"1": {
 							"name": "keyword.control.include.au3"
