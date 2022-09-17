@@ -30,7 +30,11 @@
                 "extensions": [
                     "au3"
                 ],
-                "configuration": "./au3-language-configuration.json"
+                "configuration": "./au3-language-configuration.json",
+                "icon": {
+                    "light": "./images/file.svg",
+                    "dark": "./images/file.svg"
+                }
             },
             {
                 "id": "aut",
