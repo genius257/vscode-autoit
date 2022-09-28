@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext, Uri } from 'vscode';
-import { LanguageClientOptions } from 'vscode-languageclient';
+import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
 
 import { LanguageClient } from 'vscode-languageclient/browser';
 
@@ -17,13 +17,13 @@ export function activate(context: ExtensionContext) {
 	 * all except the code to create the language client in not browser specific
 	 * and couuld be shared with a regular (Node) extension
 	 */
-	const documentSelector = [{ language: 'au3' }];
+	const documentSelector: DocumentSelector | string = [{ language: 'au3' }];
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
 		documentSelector,
 		synchronize: {},
-		initializationOptions: {}
+		initializationOptions: {},
 	};
 
 	const client = createWorkerLanguageClient(context, clientOptions);
