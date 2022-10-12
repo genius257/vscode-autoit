@@ -9,8 +9,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI, Utils } from 'vscode-uri';
 
-import * as parser from "./autoit3"
 import FileAstMap from './FileAstMap';
+
+import nativeSuggestions from "./autoit/internal";
+import { Program, StatementList, SyntaxError } from 'autoit3-pegjs';
 
 console.log('running server lsp-web-extension-sample');
 
@@ -23,19 +25,6 @@ const connection = createConnection(messageReader, messageWriter);
 
 /* from here on, all code is non-browser specific and could be shared with a regular extension */
 
-type Autoit3AstNode = {
-	type: string,
-	id?: {
-		type: string,
-		name: string,
-	},
-	declarations?: Array<Autoit3AstNode>,
-	file?: string,
-	body?: Autoit3AstNode[],
-	location?: parser.IFileRange,
-	params?: Autoit3AstNode[],
-};
-
 let Autoit3Ast = null;
 
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => console.log(params.contentChanges));
@@ -44,12 +33,16 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 	const capabilities: ServerCapabilities = {
 		completionProvider: {
 			resolveProvider: false,
+			triggerCharacters: ['$'],
 			//triggerCharacters: [ '.' ]
 		},
 		textDocumentSync: TextDocumentSyncKind.Full,
 		documentLinkProvider: {
 			resolveProvider: false
 		},
+		hoverProvider: {
+			workDoneProgress: false,
+		}
 	};
 	return { capabilities };
 });
@@ -58,17 +51,18 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 
-const fileAstMap = new FileAstMap<Autoit3AstNode, parser.ParseFunction>(parser.parse);
+const fileAstMap = new FileAstMap();
 connection.onDidOpenTextDocument(params => {
 	try {
-		fileAstMap.add(params.textDocument.uri, parser.parse(params.textDocument.text));
+		fileAstMap.add(params.textDocument.uri, fileAstMap.parse(params.textDocument.text, params.textDocument.uri));
 		connection.sendDiagnostics({
 			uri: params.textDocument.uri,
 			diagnostics: [],
 		});
-	} catch (e) {
-		fileAstMap.add(params.textDocument.uri, parser.parse(""));
-		const error = e as (Error | parser.SyntaxError) & {location?: parser.IFileRange};
+	} catch (error) {
+		fileAstMap.add(params.textDocument.uri, fileAstMap.parse("", params.textDocument.uri));
+		if (!isSyntaxError(error)) {throw error;}
+		connection.window.showErrorMessage(error.message);
 		connection.sendDiagnostics({
 			uri: params.textDocument.uri,
 			diagnostics: [{
@@ -90,30 +84,47 @@ connection.onDidOpenTextDocument(params => {
 
 connection.onDidChangeTextDocument(params => {
 	try {
-		fileAstMap.add(params.textDocument.uri, parser.parse(params.contentChanges[0].text));
+		let ast: Program;
+		try {
+			ast = fileAstMap.parse(params.contentChanges[0].text, params.textDocument.uri);
+		} catch (error) {
+			if (!isSyntaxError(error)) {throw error;}
+			try {
+				ast = fileAstMap.parse(params.contentChanges[0].text.substring(0, error.location.start.offset-1), params.textDocument.uri);
+			} catch (_error) {
+				throw error;
+			}
+		}
+		fileAstMap.add(params.textDocument.uri, ast);
 		connection.sendDiagnostics({
 			uri: params.textDocument.uri,
 			diagnostics: [],
 		});
-	} catch (e) {
-		fileAstMap.add(params.textDocument.uri, parser.parse(""));
-		const error = e as (Error | parser.SyntaxError) & {location?: parser.IFileRange};
-		connection.sendDiagnostics({
-			uri: params.textDocument.uri,
-			diagnostics: [{
-				message: error.message,
-				range: {
-					start: {
-						line: (error.location?.start.line ?? 1) - 1,
-						character: (error.location?.start.column || 1) - 1,
-					},
-					end: {
-						line: (error.location?.end.line ?? 1) - 1,
-						character: (error.location?.end.column ?? 1) - 1,
+	} catch (error) {
+		fileAstMap.add(params.textDocument.uri, fileAstMap.parse("", params.textDocument.uri));
+		if (isSyntaxError(error)) {
+			//connection.window.showInformationMessage(params.contentChanges[0].text.length+"");
+			connection.window.showErrorMessage(
+				params.contentChanges[0].text.substring(error.location.start.offset-1, error.location.start.offset)
+			);
+			//connection.window.showErrorMessage((error.location?.start.offset ?? "") + "");
+			connection.sendDiagnostics({
+				uri: params.textDocument.uri,
+				diagnostics: [{
+					message: error.message,
+					range: {
+						start: {
+							line: (error.location.start.line ?? 1) - 1,
+							character: (error.location.start.column || 1) - 1,
+						},
+						end: {
+							line: (error.location.end.line ?? 1) - 1,
+							character: (error.location.end.column ?? 1) - 1,
+						}
 					}
-				}
-			}]
-		});
+				}]
+			});
+		}
 	}
 });
 
@@ -137,7 +148,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 	//connection.console.info(params.textDocument.uri);
 	//URI.parse(params.textDocument.uri)
 
-	return ast.body?.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue: Autoit3AstNode) => {
+	return ast.body.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue) => {
 		switch (currentValue.type) {
 			case "IncludeStatement":
 				//connection.console.info(resolveIncludePath(params.textDocument.uri, currentValue.file || "."));
@@ -153,7 +164,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 							character: (currentValue.location?.end.column || 0) - 1
 						},
 					},
-					target: resolveIncludePath(params.textDocument.uri, currentValue.file || "."),
+					target: resolveIncludePath(params.textDocument.uri, currentValue.file || "."), //TODO: if resolve fails, we should either mark a warning/notice of missing file, and/or not show a broken link.
 				});
 				break;
 			default:
@@ -164,19 +175,65 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 	}, []);
 });
 
+connection.onHover((hoverParams, token, workDoneProgress) => {
+	const uri = hoverParams.textDocument.uri;
+
+	//FIXME: use hoverParams.position to find identifier or varaible.
+	//hoverParams.position
+	//workDoneProgress.done();
+	//return null;
+	//const path = resolveIncludePath(hoverParams.textDocument.uri, ".");
+
+	const identifierAtPos = fileAstMap.getIdentifierAt(hoverParams.textDocument.uri, hoverParams.position.line + 1, hoverParams.position.character - 1);
+	if (!identifierAtPos) {
+		return null;
+	}
+	const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
+	if (!identifier) {
+		return null;
+	}
+
+	const suggestion = nativeSuggestions[identifier.id.name.toLowerCase() ?? ""];
+	if (!suggestion) {
+		let value: string | number | boolean | null | undefined;
+		if (identifier.type === "VariableDeclarator") {
+			if (identifier.init?.type === "Literal") {
+				value = identifier.init.value;
+				connection.window.showInformationMessage(identifier.id.name+"\n"+value);
+			}
+		}
+		return {
+			contents: (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
+		};
+	}
+
+	return {
+		//code: 0,
+		contents: suggestion.documentation,
+		//message: "message",
+		name: suggestion.detail,
+	};
+});
+
 // Listen on the connection
 connection.listen();
 
 function getCompletionItems(params: CompletionParams): CompletionItem[] {
-	const documentText = documents.get(params.textDocument.uri)?.getText();
+	//const documentText = documents.get(params.textDocument.uri)?.getText();
 	//params.position
 	//const ast:{body?: Autoit3AstNode[]} = documentText !== undefined ? parser.parse(documentText) : [];
 	const ast = fileAstMap.get(params.textDocument.uri);
+	//connection.window.showInformationMessage([params.textDocument.uri, ast.body?.length ?? 0].join("\n"));
 
 	// FIXME: filter the top level function declarations and varaible declarations, extract identifiers and return the array
 	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" || item.type === "VariableDeclaration" )
 	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" ).map<CompletionItem>((item: { id: { name: string; }; }) => ({label: item.id.name, kind: CompletionItemKind.Function}));
-	return ast.body?.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue: Autoit3AstNode) => {
+
+	const astItems = ast.body?.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue) => {
+		// FIXME: we need to extract global variable declarations from FunctionDeclaration statements.
+		// FIXME: keep a ref map, to check if var is already defined, to only show one suggestion of the same variable multiple times.
+		// FIXME: show scope information in the completion item detail text.
+
 		switch (currentValue.type) {
 			case "FunctionDeclaration":
 				previousValue.push({
@@ -199,7 +256,10 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 						previousValue.push({
 							label: "$" + declaration.id.name,
 							kind: CompletionItemKind.Variable,
-							insertText: declaration.id.name, //FIXME: this need to have start of string removed equal to current typed in string.
+							insertText: "$" + declaration.id.name, //FIXME: this need to have start of string removed equal to current typed in string.
+							documentation: "documentation",
+							detail: "detail",
+							commitCharacters: ['$'],
 						});
 					}
 				});
@@ -210,14 +270,23 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 
 		return previousValue;
 	}, []) || [];
+
+	//[].map
+	//connection.window.showInformationMessage(params.textDocument.uri);
+	return astItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({
+		label: nativeSuggestions[nativeSuggestion].title || "",
+		kind: CompletionItemKind.Function,
+		documentation: nativeSuggestions[nativeSuggestion].documentation,
+		detail: nativeSuggestions[nativeSuggestion].detail,
+	})));
 }
 
 /**
  * Extracts completion items from function declation and nested elemenets within, containing completion items.
  * This is needed to get things in current scope, within functions.
  */
-function extractCompletionItems(nodes: Autoit3AstNode[]): CompletionItem[] {
-	return nodes.reduce((previousValue: CompletionItem[], currentValue: Autoit3AstNode) => {
+function extractCompletionItems(nodes: StatementList): CompletionItem[] {
+	return nodes.reduce((previousValue: CompletionItem[], currentValue) => {
 		switch (currentValue.type) {
 			case "VariableDeclaration":
 				(currentValue.declarations||[]).forEach(declaration => {
@@ -314,4 +383,8 @@ function resolveIncludePath(textDocumentUri: string, includeStatementUri: string
 	// An extra parameter indicating starting from script or standard library when looking for the file is needed.
 	// This may hovever not be needed in the webworker version?
 	return Utils.resolvePath(Utils.dirname(URI.parse(textDocumentUri)), includeStatementUri).toString();
+}
+
+function isSyntaxError(e: any): e is SyntaxError {
+	return 'location' in e && 'expected' in e && 'found' in e && 'format' in e;
 }
