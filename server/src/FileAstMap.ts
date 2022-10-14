@@ -1,5 +1,5 @@
 import { URI, Utils } from 'vscode-uri';
-import parser, { AutoItParser, FunctionDeclaration, IncludeFileNameLiteral, Program, VariableDeclaration, VariableStatement } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileNameLiteral, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
 
 export type FileRef = {
     uri: string,
@@ -15,11 +15,11 @@ export type Includes = {
 }
 
 //export type Identifier = VariableDeclaration|VariableStatement|FunctionDeclaration;
-export type Identifier = VariableDeclaration|FunctionDeclaration;
+//export type Identifier = VariableDeclaration|FunctionDeclaration;
 
 export type Identifiers = {
-    global: {[name: string]: Identifier},
-    scopes: {[scope: string]: {[name: string]: Identifier}}
+    global: {[name: string]: VariableDeclaration|FunctionDeclaration},
+    scopes: {[scope: string]: {[name: string]: VariableDeclaration|FunctionDeclaration}}
 }
 
 export type Maps = {
@@ -142,27 +142,29 @@ export default class FileAstMap {
     }
 
     /** Get first declaration statement for matching identifier */
-    getIdentifierDeclarator(uri: string, identifier: Identifier): FunctionDeclaration|VariableDeclaration|null {
+    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier): FunctionDeclaration|VariableDeclaration|null {
         if (!this.exists(uri)) {
             throw new Error(`URI not found in map: ${uri}`);
         }
         //const scope = this.getScopeAt(uri, identifier.location.start.line, identifier.location.start.line); //FIXME: scope support
 
         const identifiers = this.maps[uri].identifiers.global;
-        const _identifier = Object.keys(identifiers ?? {}).find(identifierIndex => {
-            const _identifier = identifiers[identifierIndex];
-            return _identifier.id === identifier.id;
-        })
+        let identifierName = identifier.name;
+        if (identifier.type === "VariableIdentifier") {
+            identifierName = "$"+identifierName;
+        }
+        const _identifier = identifiers[identifierName.toLowerCase()];
 
-        return _identifier !== undefined ? identifiers[_identifier] : null;
+        return _identifier ?? null;
     }
 
     /** get identifier object based on cursor position */
-    getIdentifierAt(uri: string, line: number, column: number): Identifier|null {
+    getIdentifierAt(uri: string, line: number, column: number): Identifier|VariableIdentifier|null {
         if (!this.exists(uri)) {
             throw new Error(`URI not found in map: ${uri}`);
         }
         //FIXME: object properties with dot notation support.
+        /*
         const scope = this.getScopeAt(uri, line, column); //FIXME: iterate document includes, until match is found?
         const scopeIdentifiers = this.maps[uri].identifiers.scopes[scope?.id.name ?? ""];
         const scopeIdentifier = Object.keys(scopeIdentifiers ?? {}).find(scopeIdentifier => {
@@ -177,21 +179,138 @@ export default class FileAstMap {
         });
 
         if (scopeIdentifier !== undefined) {
-            return scopeIdentifiers[scopeIdentifier] ?? null;
+            const identifier = scopeIdentifiers[scopeIdentifier] ?? null;
+            return identifier.id;
+        }
+        */
+
+        return this.getNestedIdentifierAtFromArray(this.maps[uri].data.body, line, column);
+    }
+
+    getNestedIdentifierAt(node: SourceElement|AssignmentExpression|FormalParameter|VariableDeclaration|ArrayDeclaration|DefaultClause|CaseClause|SelectCaseClause|SwitchCaseValue|null, line: number, column: number): VariableIdentifier|Identifier|null {//FunctionDeclaration|VariableDeclaration|Identifier|IdentifierName|VariableIdentifier|null {
+        if (node === null) {
+            return null;
+        }
+        if (node.location === undefined) {
+            throw new Error(JSON.stringify(node));
+        }
+        if (!this.isPositionWithinLocation(line, column, node.location)) {
+            return null;
+        }
+        switch (node.type) {
+            case "ArrayDeclaration":
+                return this.getNestedIdentifierAtFromArray(node.elements, line, column);
+            case "AssignmentExpression":
+            case "BinaryExpression":
+                return this.getNestedIdentifierAt(node.left, line, column) ?? this.getNestedIdentifierAt(node.right, line, column);
+            case "CallExpression":
+                return this.getNestedIdentifierAt(node.callee, line, column) ?? this.getNestedIdentifierAtFromArray(node.arguments, line, column);
+            case "ConditionalExpression":
+                return this.getNestedIdentifierAt(node.test, line, column) ?? this.getNestedIdentifierAt(node.consequent, line, column) ?? this.getNestedIdentifierAt(node.alternate, line, column);
+            case "ContinueCaseStatement":
+                return null;
+            case "ContinueLoopStatement":
+                return this.getNestedIdentifierAt(node.level, line, column);
+            case "DoWhileStatement":
+                return this.getNestedIdentifierAt(node.test, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
+            case "EmptyStatement":
+                return null;
+            case "ExitLoopStatement":
+                return this.getNestedIdentifierAt(node.level, line, column);
+            case "ExitStatement":
+                return this.getNestedIdentifierAt(node.argument, line, column);
+            case "ExpressionStatement":
+                return this.getNestedIdentifierAt(node.expression, line, column);
+            case "FunctionDeclaration":
+                return this.getNestedIdentifierAt(node.id, line, column) ?? this.getNestedIdentifierAtFromArray(node.params, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
+            case "Identifier":
+                return node;
+            case "IfStatement":
+                let identifier = this.getNestedIdentifierAt(node.test, line, column);
+                if (identifier === null) {
+                    return Array.isArray(node.consequent) ? this.getNestedIdentifierAtFromArray(node.consequent, line, column) : this.getNestedIdentifierAt(node.consequent, line, column)
+                }
+                return identifier;
+            case "IncludeOnceStatement":
+                return null;
+            case "IncludeStatement":
+                return null;
+            case "Keyword":
+                return null;//FIXME: return keywords also?
+            case "Literal":
+                return null;
+            case "LogicalExpression":
+                return this.getNestedIdentifierAt(node.left, line, column) ?? this.getNestedIdentifierAt(node.right, line, column);
+            case "Macro":
+                return null;
+            case "MemberExpression":
+                return this.getNestedIdentifierAt(node.object, line, column) ?? this.getNestedIdentifierAt(node.property, line, column);
+            case "MultiLineComment":
+                return null;
+            case "NotExpression":
+                return this.getNestedIdentifierAt(node.value, line, column);
+            case "Parameter":
+                return this.getNestedIdentifierAt(node.id, line, column) ?? this.getNestedIdentifierAt(node.init, line, column);
+            case "PreProcStatement":
+                return null;
+            case "RedimExpression":
+                //return this.getNestedIdentifierAtFromArray(node.declarations, line, column);
+                throw new Error("RedimExpression not correcly implemented as an AST node yet!");
+            case "ReturnStatement":
+                return this.getNestedIdentifierAt(node.value, line, column);
+            case "SelectCase":
+                return this.getNestedIdentifierAt(node.tests, line, column) ?? this.getNestedIdentifierAtFromArray(node.consequent, line, column);
+            case "SelectStatement":
+                return this.getNestedIdentifierAtFromArray(node.cases, line, column);
+            case "SingleLineComment":
+                return null;
+            case "SwitchCase":
+                return this.getNestedIdentifierAtFromArray(node.tests, line, column) ?? this.getNestedIdentifierAtFromArray(node.consequent, line, column);
+            case "SwitchStatement":
+                return this.getNestedIdentifierAt(node.discriminant, line, column) ?? this.getNestedIdentifierAtFromArray(node.cases, line, column);
+            case "UnaryExpression":
+                return this.getNestedIdentifierAt(node.argument, line, column)
+            case "VariableDeclaration":
+                return this.getNestedIdentifierAtFromArray(node.declarations, line, column);
+            case "VariableDeclarator":
+                return this.getNestedIdentifierAt(node.id, line, column) ?? this.getNestedIdentifierAt(node.init, line, column);
+            case "VariableIdentifier":
+                return node;
+            case "WhileStatement":
+                return this.getNestedIdentifierAt(node.test, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
+            case "WithStatement":
+                return this.getNestedIdentifierAt(node.object, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
+            default:
+                //@ts-ignore
+                throw new Error("Unsupported type: "+node.type);
         }
 
-        const identifiers = this.maps[uri].identifiers.global;
-        const identifier = Object.keys(identifiers ?? {}).find(identifier => {
-            const _identifier = identifiers[identifier];
-            if (_identifier !== undefined && _identifier.location !== undefined) {
-                if (_identifier.location.start.line <= line && _identifier.location.end.line >= line) {
-                    if (_identifier.location.start.column <= column && _identifier.location.end.column >= column) {
-                        return true;
-                    }
-                }
+        return null;
+    }
+
+    getNestedIdentifierAtFromArray(array: SourceElements|ArgumentList|VariableDeclarationList|FormalParameterList|(DefaultClause | CaseClause | SelectCaseClause)[]|ArrayDeclarationElementList|CaseValueList|null, line: number, column: number): VariableIdentifier|Identifier|null {// FunctionDeclaration|VariableDeclaration|Identifier|VariableIdentifier|null {
+        if (array === null) {
+            return null;
+        }
+        let result:VariableIdentifier|Identifier|null = null;
+        for (const node of array) {
+            result = this.getNestedIdentifierAt(node, line, column);
+            if (result !== null) {
+                return result;
             }
-        })
-        return identifier !== undefined ? identifiers[identifier] : null;
+        }
+
+        return null;
+    }
+
+    isPositionWithinLocation(line: number, column: number, location: LocationRange):boolean {
+        if (location.start.line <= line && location.end.line >= line) {
+            if (location.start.line === line && location.end.line === line) {
+                return location.start.column <= column && location.end.column > column;
+            }
+            return true;
+        }
+        return false;
     }
 
     /** get scope id based on cursor position */
