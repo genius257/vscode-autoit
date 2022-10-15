@@ -62,7 +62,6 @@ connection.onDidOpenTextDocument(params => {
 	} catch (error) {
 		fileAstMap.add(params.textDocument.uri, fileAstMap.parse("", params.textDocument.uri));
 		if (!isSyntaxError(error)) {throw error;}
-		connection.window.showErrorMessage(error.message);
 		connection.sendDiagnostics({
 			uri: params.textDocument.uri,
 			diagnostics: [{
@@ -103,11 +102,6 @@ connection.onDidChangeTextDocument(params => {
 	} catch (error) {
 		fileAstMap.add(params.textDocument.uri, fileAstMap.parse("", params.textDocument.uri));
 		if (isSyntaxError(error)) {
-			//connection.window.showInformationMessage(params.contentChanges[0].text.length+"");
-			connection.window.showErrorMessage(
-				params.contentChanges[0].text.substring(error.location.start.offset-1, error.location.start.offset)
-			);
-			//connection.window.showErrorMessage((error.location?.start.offset ?? "") + "");
 			connection.sendDiagnostics({
 				uri: params.textDocument.uri,
 				diagnostics: [{
@@ -184,10 +178,11 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 	//return null;
 	//const path = resolveIncludePath(hoverParams.textDocument.uri, ".");
 
-	const identifierAtPos = fileAstMap.getIdentifierAt(hoverParams.textDocument.uri, hoverParams.position.line + 1, hoverParams.position.character - 1);
-	if (!identifierAtPos) {
+	const identifierAtPos = fileAstMap.getIdentifierAt(hoverParams.textDocument.uri, hoverParams.position.line + 1, hoverParams.position.character + 1);
+	if (identifierAtPos === null) {
 		return null;
 	}
+	//const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
 	const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
 	if (!identifier) {
 		return null;
@@ -199,11 +194,10 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 		if (identifier.type === "VariableDeclarator") {
 			if (identifier.init?.type === "Literal") {
 				value = identifier.init.value;
-				connection.window.showInformationMessage(identifier.id.name+"\n"+value);
 			}
 		}
 		return {
-			contents: (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
+			contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
 		};
 	}
 
@@ -223,7 +217,6 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 	//params.position
 	//const ast:{body?: Autoit3AstNode[]} = documentText !== undefined ? parser.parse(documentText) : [];
 	const ast = fileAstMap.get(params.textDocument.uri);
-	//connection.window.showInformationMessage([params.textDocument.uri, ast.body?.length ?? 0].join("\n"));
 
 	// FIXME: filter the top level function declarations and varaible declarations, extract identifiers and return the array
 	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" || item.type === "VariableDeclaration" )
@@ -271,8 +264,6 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 		return previousValue;
 	}, []) || [];
 
-	//[].map
-	//connection.window.showInformationMessage(params.textDocument.uri);
 	return astItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({
 		label: nativeSuggestions[nativeSuggestion].title || "",
 		kind: CompletionItemKind.Function,
