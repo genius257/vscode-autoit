@@ -173,30 +173,33 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 	if (identifierAtPos === null) {
 		return null;
 	}
+
+	if (identifierAtPos.type === "Identifier") {
+		const suggestion = nativeSuggestions[identifierAtPos.name.toLowerCase() ?? ""];
+		if (suggestion !== undefined) {
+			return {
+				//code: 0,
+				contents: suggestion.detail + "\n\n" + suggestion.documentation,
+				//message: "message",
+				name: suggestion.detail,
+			};
+		}
+	}
+
 	//const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
 	const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
 	if (!identifier) {
 		return null;
 	}
 
-	const suggestion = nativeSuggestions[identifier.id.name.toLowerCase() ?? ""];
-	if (!suggestion) {
-		let value: string | number | boolean | null | undefined;
-		if (identifier.type === "VariableDeclarator") {
-			if (identifier.init?.type === "Literal") {
-				value = identifier.init.value;
-			}
+	let value: string | number | boolean | null | undefined;
+	if (identifier.type === "VariableDeclarator") {
+		if (identifier.init?.type === "Literal") {
+			value = identifier.init.value;
 		}
-		return {
-			contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
-		};
 	}
-
 	return {
-		//code: 0,
-		contents: suggestion.documentation,
-		//message: "message",
-		name: suggestion.detail,
+		contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
 	};
 });
 
