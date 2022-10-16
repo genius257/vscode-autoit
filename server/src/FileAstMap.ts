@@ -75,10 +75,14 @@ export default class FileAstMap {
             switch (item.type) {
                 case "FunctionDeclaration":
                     this.maps[uri].identifiers.global[item.id.name.toLowerCase()] = item;
+                    this.maps[uri].scopes[item.id.name.toLowerCase()] = item;
                     break;
                 case "VariableDeclaration":
                     item.declarations.forEach(declaration => {
-                        this.maps[uri].identifiers.global['$' + declaration.id.name.toLowerCase()] = declaration;
+                        const key = '$' + declaration.id.name.toLowerCase();
+                        if (!this.maps[uri].identifiers.global.hasOwnProperty(key)) {
+                            this.maps[uri].identifiers.global[key] = declaration;
+                        }
                     });
                     break;
                 default:
@@ -141,11 +145,24 @@ export default class FileAstMap {
         return this.maps[uri].data;
     }
 
-    /** Get first declaration statement for matching identifier */
-    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier): FunctionDeclaration|VariableDeclaration|null {
+    getMap(uri: string) {
         if (!this.exists(uri)) {
             throw new Error(`URI not found in map: ${uri}`);
         }
+
+        return this.maps[uri];
+    }
+
+    /** Get first declaration statement for matching identifier */
+    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|null): FunctionDeclaration|VariableDeclaration|null {
+        if (!this.exists(uri)) {
+            throw new Error(`URI not found in map: ${uri}`);
+        }
+
+        if (identifier === null) {
+            return null;
+        }
+
         //const scope = this.getScopeAt(uri, identifier.location.start.line, identifier.location.start.line); //FIXME: scope support
 
         const identifiers = this.maps[uri].identifiers.global;
