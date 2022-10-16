@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { Color, ColorInformation, Range, InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, ColorPresentation, TextEdit, TextDocumentIdentifier, CompletionItem, CompletionItemKind, VersionedTextDocumentIdentifier, DidChangeTextDocumentParams, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams } from 'vscode-languageserver';
+import { Color, ColorInformation, Range, InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, ColorPresentation, TextEdit, TextDocumentIdentifier, CompletionItem, CompletionItemKind, VersionedTextDocumentIdentifier, DidChangeTextDocumentParams, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI, Utils } from 'vscode-uri';
@@ -27,7 +27,7 @@ const connection = createConnection(messageReader, messageWriter);
 
 let Autoit3Ast = null;
 
-connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => console.log(params.contentChanges));
+//connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => console.log(params.contentChanges));
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
 	const capabilities: ServerCapabilities = {
@@ -36,13 +36,19 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 			triggerCharacters: ['$'],
 			//triggerCharacters: [ '.' ]
 		},
-		textDocumentSync: TextDocumentSyncKind.Full,
+		definitionProvider: {
+			workDoneProgress: false,
+		},
 		documentLinkProvider: {
 			resolveProvider: false
 		},
 		hoverProvider: {
 			workDoneProgress: false,
-		}
+		},
+		documentSymbolProvider: {
+			workDoneProgress: false,
+		},
+		textDocumentSync: TextDocumentSyncKind.Full,
 	};
 	return { capabilities };
 });
@@ -133,7 +139,9 @@ connection.onDidCloseTextDocument(params => {
 // Register providers
 //connection.onDocumentColor(params => getColorInformation(params.textDocument));
 //connection.onColorPresentation(params => getColorPresentation(params.color, params.range));
-connection.onCompletion(params => getCompletionItems(params));
+connection.onDocumentSymbol(getDocumentSymbol);
+connection.onDefinition(getDefinition);
+connection.onCompletion(getCompletionItems);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
 	const documentText = documents.get(params.textDocument.uri)?.getText();
@@ -211,6 +219,105 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 
 // Listen on the connection
 connection.listen();
+
+function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
+	const symbols: DocumentSymbol[] = [];
+
+	const map = fileAstMap.getMap(params.textDocument.uri);
+/*
+	Object.keys(map.scopes).forEach(scopeKey => {
+		const scope = map.scopes[scopeKey];
+		symbols.push({
+			kind: SymbolKind.Function,
+			name: scope.id.name,
+			range: {
+				start: {
+					character: scope.location.start.column - 1,
+					line: scope.location.start.line - 1,
+				},
+				end: {
+					character: scope.location.end.column - 1,
+					line: scope.location.end.line - 1,
+				}
+			},
+			selectionRange: {
+				start: {
+					character: scope.id.location.start.column - 1,
+					line: scope.id.location.start.line - 1,
+				},
+				end: {
+					character: scope.id.location.end.column - 1,
+					line: scope.id.location.end.line - 1,
+				}
+			},
+			children: [],
+		});
+	});
+*/
+	Object.keys(map.identifiers.global).forEach(globalKey => {
+		const global = map.identifiers.global[globalKey];
+		symbols.push({
+			kind: global.type === "FunctionDeclaration" ? SymbolKind.Function : SymbolKind.Variable,
+			name: global.id.name,
+			range: {
+				start: {
+					character: global.location.start.column - 1,
+					line: global.location.start.line - 1,
+				},
+				end: {
+					character: global.location.end.column - 1,
+					line: global.location.end.line - 1,
+				}
+			},
+			selectionRange: {
+				start: {
+					character: global.id.location.start.column - 1,
+					line: global.id.location.start.line - 1,
+				},
+				end: {
+					character: global.id.location.end.column - 1,
+					line: global.id.location.end.line - 1,
+				}
+			}
+		});
+	});
+
+	return symbols;
+}
+
+function getDefinition(params: DefinitionParams): LocationLink[] {
+	const identifierAtPos = fileAstMap.getIdentifierAt(params.textDocument.uri, params.position.line + 1, params.position.character + 1);
+	const declarator = fileAstMap.getIdentifierDeclarator(params.textDocument.uri, identifierAtPos);
+	if (declarator === null) {
+		return [];
+	}
+	const identifier = declarator.id;
+	return [
+		{
+			targetUri: params.textDocument.uri,
+			targetRange: {
+				start: {
+					character: declarator.location.start.column - 1,
+					line: declarator.location.start.line - 1,
+				},
+				end: {
+					character: declarator.location.end.column - 1,
+					line: declarator.location.end.line - 1,
+				},
+			},
+			targetSelectionRange: {
+				start: {
+					character: identifier.location.start.column - 1,
+					line: identifier.location.start.line - 1,
+				},
+				end: {
+					character: identifier.location.end.column - 1,
+					line: identifier.location.end.line - 1,
+				},
+			},
+		}
+	];
+}
 
 function getCompletionItems(params: CompletionParams): CompletionItem[] {
 	//const documentText = documents.get(params.textDocument.uri)?.getText();
