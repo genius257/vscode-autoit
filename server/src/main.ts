@@ -13,6 +13,7 @@ import FileAstMap from './FileAstMap';
 
 import nativeSuggestions from "./autoit/internal";
 import { Program, StatementList, SyntaxError } from 'autoit3-pegjs';
+import Parser from './autoit/Parser';
 
 console.log('running server lsp-web-extension-sample');
 
@@ -72,16 +73,7 @@ connection.onDidOpenTextDocument(params => {
 			uri: params.textDocument.uri,
 			diagnostics: [{
 				message: error.message,
-				range: {
-					start: {
-						line: (error.location?.start.line ?? 1) - 1,
-						character: (error.location?.start.column || 1) - 1,
-					},
-					end: {
-						line: (error.location?.end.line ?? 1) - 1,
-						character: (error.location?.end.column ?? 0) - 1,
-					}
-				}
+				range: Parser.locationToRange(error.location),
 			}]
 		});
 	}
@@ -112,16 +104,7 @@ connection.onDidChangeTextDocument(params => {
 				uri: params.textDocument.uri,
 				diagnostics: [{
 					message: error.message,
-					range: {
-						start: {
-							line: (error.location.start.line ?? 1) - 1,
-							character: (error.location.start.column || 1) - 1,
-						},
-						end: {
-							line: (error.location.end.line ?? 1) - 1,
-							character: (error.location.end.column ?? 1) - 1,
-						}
-					}
+					range: Parser.locationToRange(error.location),
 				}]
 			});
 		}
@@ -230,26 +213,8 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 		symbols.push({
 			kind: SymbolKind.Function,
 			name: scope.id.name,
-			range: {
-				start: {
-					character: scope.location.start.column - 1,
-					line: scope.location.start.line - 1,
-				},
-				end: {
-					character: scope.location.end.column - 1,
-					line: scope.location.end.line - 1,
-				}
-			},
-			selectionRange: {
-				start: {
-					character: scope.id.location.start.column - 1,
-					line: scope.id.location.start.line - 1,
-				},
-				end: {
-					character: scope.id.location.end.column - 1,
-					line: scope.id.location.end.line - 1,
-				}
-			},
+			range: Parser.locationToRange(scope.location),
+			selectionRange: Parser.locationToRange(scope.id.location),
 			children: [],
 		});
 	});
@@ -259,26 +224,8 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 		symbols.push({
 			kind: global.type === "FunctionDeclaration" ? SymbolKind.Function : SymbolKind.Variable,
 			name: global.id.name,
-			range: {
-				start: {
-					character: global.location.start.column - 1,
-					line: global.location.start.line - 1,
-				},
-				end: {
-					character: global.location.end.column - 1,
-					line: global.location.end.line - 1,
-				}
-			},
-			selectionRange: {
-				start: {
-					character: global.id.location.start.column - 1,
-					line: global.id.location.start.line - 1,
-				},
-				end: {
-					character: global.id.location.end.column - 1,
-					line: global.id.location.end.line - 1,
-				}
-			}
+			range: Parser.locationToRange(global.location),
+			selectionRange: Parser.locationToRange(global.id.location),
 		});
 	});
 
@@ -295,26 +242,8 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 	return [
 		{
 			targetUri: params.textDocument.uri,
-			targetRange: {
-				start: {
-					character: declarator.location.start.column - 1,
-					line: declarator.location.start.line - 1,
-				},
-				end: {
-					character: declarator.location.end.column - 1,
-					line: declarator.location.end.line - 1,
-				},
-			},
-			targetSelectionRange: {
-				start: {
-					character: identifier.location.start.column - 1,
-					line: identifier.location.start.line - 1,
-				},
-				end: {
-					character: identifier.location.end.column - 1,
-					line: identifier.location.end.line - 1,
-				},
-			},
+			targetRange: Parser.locationToRange(declarator.location),
+			targetSelectionRange: Parser.locationToRange(identifier.location),
 		}
 	];
 }
