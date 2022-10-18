@@ -1,4 +1,4 @@
-import { AssignmentExpression, FormalParameter, FormalParameterList, LocationRange, Program, SourceElement, Statement, StatementList } from "autoit3-pegjs";
+import { ArgumentList, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, Initialiser, LeftHandSideExpression, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, Statement, StatementList, SwitchCaseValue, VariableDeclaration, VariableDeclarationList } from "autoit3-pegjs";
 import { Range } from "vscode-languageserver";
 
 export default class Parser {
@@ -16,13 +16,29 @@ export default class Parser {
         }
     }
 
-    public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement): string {
+    public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement|RedimIdentifierExpression|DefaultClause|SelectCaseClause|CaseClause|VariableDeclaration|EnumDeclaration|Initialiser|SwitchCaseValue/*{
+        type: "AssignmentExpression";
+        operator: "=";
+        left: LeftHandSideExpression;
+        right: AssignmentExpression;
+        location: LocationRange;
+    }*/): string {
         if (ast === null) {
             return "";
         }
         switch (ast.type) {
             case "Program":
                 return ast.body.map(sourceElement => this.AstToString(sourceElement)).join("\n");
+            case "ArrayDeclaration":
+                return "["+this.AstArrayToStringArray(ast.elements).join(",")+"]";
+            case "AssignmentExpression":
+                return this.AstToString(ast.left)+ast.operator+this.AstToString(ast.right);
+            case "BinaryExpression":
+                return this.AstToString(ast.left) + ast.operator + this.AstToString(ast.right);
+            case "CallExpression":
+                return this.AstToString(ast.callee)+"("+this.AstArrayToStringArray(ast.arguments).join(",")+")";
+            case "ConditionalExpression":
+                return this.AstToString(ast.test) + "?" + this.AstToString(ast.consequent) + ":" + this.AstToString(ast.alternate);
             case "ContinueCaseStatement":
                 return "ContinueCase";
             case "ContinueLoopStatement":
@@ -45,13 +61,67 @@ export default class Parser {
                 return "If "+this.AstToString(ast.test)+" Then\n"+(Array.isArray(ast.consequent) ? this.AstArrayToStringArray(ast.consequent).join("\n") : this.AstToString(ast.consequent))+"\nEndIf";
             case "IncludeOnceStatement":
                 return "#include-once";
+            case "IncludeStatement":
+                return "#include \""+ast.file+"\"";
+            case "Keyword":
+                return ast.value;
+            case "Literal":
+                return JSON.stringify(ast.value);
+            case "LogicalExpression":
+                return ast.left + " " + ast.operator + " " + ast.right;
+            case "Macro":
+                return ast.value;
+            case "MemberExpression":
+                return this.AstToString(ast.object)+"."+this.AstToString(ast.property);
+            case "MultiLineComment":
+                return "#cs" + ast.body + "\n#ce";
+            case "NotExpression":
+                return "Not " + this.AstToString(ast.value);
+            case "Parameter":
+                return (ast.const ? "Const " : "" ) + (ast.byref ? "ByRef " : "") + this.AstToString(ast.id) + (ast.init === null ? "" : "=" + this.AstToString(ast.init));
+            case "PreProcStatement":
+                return "#"+ast.body;
+            case "RedimExpression":
+                return "ReDim "+this.AstArrayToStringArray(ast.declarations).join(",");
+            case "RedimIdentifierExpression":
+                throw new Error("Parser node not implemented correct, yet.");//FIXME
+            case "ReturnStatement":
+                return "Return "+this.AstToString(ast.value);
+            case "SelectCase":
+                return "Case " + this.AstToString(ast.tests)+"\n"+this.AstArrayToStringArray(ast.consequent).join("\n");
+            case "SelectStatement":
+                return "Select\n"+this.AstArrayToStringArray(ast.cases).join("\n")+"\nEndSelect";
+            case "SingleLineComment":
+                return ";"+ast.body;
+            case "SwitchCase":
+                return "Case " + this.AstArrayToStringArray(ast.tests).join(",")+"\n"+this.AstArrayToStringArray(ast.consequent).join("\n");
+            case "SwitchCaseRange":
+                return this.AstToString(ast.from)+" To "+this.AstToString(ast.to);
+            case "SwitchStatement":
+                return "Switch " + this.AstToString(ast.discriminant) + "\n" + this.AstArrayToStringArray(ast.cases).join("\n") + "\nEndSwitch";
+            case "UnaryExpression":
+                return ast.operator + this.AstToString(ast.argument);
+            case "VariableDeclaration":
+                return (ast.scope === null ? "" : ast.scope+" " )+(ast.constant ? "Const " : "")+this.AstArrayToStringArray(ast.declarations);
+            case "VariableDeclarator":
+                return this.AstToString(ast.id)+this.AstToString(ast.init);
+            case "VariableIdentifier":
+                return "$"+ast.name;
+            case "WhileStatement":
+                return "While "+ast.test+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nWEnd";
+            case "WithStatement":
+                return "With "+this.AstToString(ast.object)+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nEndWith";
             default:
+                // @ts-ignore
                 throw new Error("AST type not supported: "+ast.type);
         }
     }
 
-    public static AstArrayToStringArray(astArray: StatementList|FormalParameterList): string[] {
+    public static AstArrayToStringArray(astArray: StatementList|FormalParameterList|RedimIdentifierExpression[]|(DefaultClause | SelectCaseClause)[]|(DefaultClause | CaseClause)[]|VariableDeclarationList|EnumDeclarationList|ArgumentList|CaseValueList|ArrayDeclarationElementList|null): string[] {
         const result: string[] = [];
+        if (astArray === null) {
+            return [];
+        }
         for (const ast of astArray) {
             result.push(this.AstToString(ast));
         }
