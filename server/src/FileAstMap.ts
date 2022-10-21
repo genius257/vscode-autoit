@@ -37,9 +37,11 @@ export type Maps = {
 export default class FileAstMap {
     protected maps: Maps = {};
     protected parser: AutoItParser;
+    protected connection: Connection|null;
 
-    constructor() {
+    constructor(connection: Connection|null) {
         this.parser = parser;
+        this.connection = connection;
     }
 
     parse(input: string, uri?: string): Program {
