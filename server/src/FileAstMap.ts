@@ -112,7 +112,7 @@ export default class FileAstMap {
             this.addInclude(include);
         });
 
-        this.maps[uri].includes.global = includes.map(uri => ({uri: uri, once: false})); //FIXME
+        this.maps[uri].includes.global = includes.map(uri => ({uri: uri, once: false}));
     }
 
     addInclude(uri) {
