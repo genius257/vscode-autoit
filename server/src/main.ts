@@ -27,9 +27,7 @@ const connection = createConnection(messageReader, messageWriter);
 /* from here on, all code is non-browser specific and could be shared with a regular extension */
 
 let Autoit3Ast = null;
-
 //connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => console.log(params.contentChanges));
-
 connection.onInitialize((params: InitializeParams): InitializeResult => {
 	const capabilities: ServerCapabilities = {
 		completionProvider: {
