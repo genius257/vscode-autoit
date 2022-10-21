@@ -179,6 +179,35 @@ export default class FileAstMap {
         return _identifier ?? null;
     }
 
+    getIdentifierDeclaratorFromIncludes(uri: string, identifier: Identifier|VariableIdentifier|null, stack: string[] = []): FunctionDeclaration|VariableDeclaration|null {
+        if (stack.indexOf(uri) !== -1) {
+            return null;
+        }
+        stack.push(uri);
+        let declarator = this._getIdentifierDeclarator(uri, identifier);
+        if (declarator !== null) {
+            return declarator;
+        }
+        try {
+            const map = this.getMap(uri);
+            for (const include of map.includes.global) {
+                try {
+                    //declarator = this.getIdentifierDeclaratorFromIncludes(this.resolveIncludePath(uri, include.uri), identifier, stack);
+                    declarator = this.getIdentifierDeclaratorFromIncludes(include.uri, identifier, stack);
+                    if (declarator !== null) {
+                        return declarator;
+                    }
+                } catch (e) {
+                    // do nothing, keep going.
+                }
+            }
+        } catch (e) {
+            return null;
+        }
+
+        return null;
+    }
+
     /** get identifier object based on cursor position */
     getIdentifierAt(uri: string, line: number, column: number): Identifier|VariableIdentifier|null {
         if (!this.exists(uri)) {
