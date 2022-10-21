@@ -95,7 +95,7 @@ export default class FileAstMap {
             }
         });
 
-        //this.addIncludes(uri);
+        this.addIncludes(uri);
     }
 
     addIncludes(uri: string) {
