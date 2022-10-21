@@ -99,7 +99,7 @@ export default class FileAstMap {
     }
 
     addIncludes(uri: string) {
-        const previousIncludes = this.maps[uri].includes.global.map(fileRef => fileRef.uri); //FIXME
+        const previousIncludes = this.maps[uri].includes.global.map(fileRef => fileRef.uri);
         const includes = this.maps[uri].data.body.filter((node): node is {
             type: "IncludeStatement",
             library: IncludeFileName[0],
