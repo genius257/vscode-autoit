@@ -238,6 +238,10 @@ export default class FileAstMap {
                 return this.getNestedIdentifierAt(node.argument, line, column);
             case "ExpressionStatement":
                 return this.getNestedIdentifierAt(node.expression, line, column);
+            case "ForInStatement":
+                return this.getNestedIdentifierAt(node.left, line, column) ?? this.getNestedIdentifierAt(node.right, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
+            case "ForStatement":
+                return this.getNestedIdentifierAt(node.id, line, column) ??  this.getNestedIdentifierAt(node.init, line, column) ??  this.getNestedIdentifierAt(node.test, line, column) ??  this.getNestedIdentifierAt(node.update, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
             case "FunctionDeclaration":
                 return this.getNestedIdentifierAt(node.id, line, column) ?? this.getNestedIdentifierAtFromArray(node.params, line, column) ?? this.getNestedIdentifierAtFromArray(node.body, line, column);
             case "Identifier":
