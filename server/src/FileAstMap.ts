@@ -287,6 +287,8 @@ export default class FileAstMap {
                 return null;
             case "SwitchCase":
                 return this.getNestedIdentifierAtFromArray(node.tests, line, column) ?? this.getNestedIdentifierAtFromArray(node.consequent, line, column);
+            case "SwitchCaseRange":
+                return this.getNestedIdentifierAt(node.from, line, column) ?? this.getNestedIdentifierAt(node.to, line, column);
             case "SwitchStatement":
                 return this.getNestedIdentifierAt(node.discriminant, line, column) ?? this.getNestedIdentifierAtFromArray(node.cases, line, column);
             case "UnaryExpression":
