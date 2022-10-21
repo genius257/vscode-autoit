@@ -32,8 +32,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 	const capabilities: ServerCapabilities = {
 		completionProvider: {
 			resolveProvider: false,
-			triggerCharacters: ['$'],
-			//triggerCharacters: [ '.' ]
+			triggerCharacters: ['$', '.'],
 		},
 		definitionProvider: {
 			workDoneProgress: false,
