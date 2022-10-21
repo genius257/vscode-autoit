@@ -192,15 +192,27 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 		return null;
 	}
 
-	let value: string | number | boolean | null | undefined;
-	if (identifier.type === "VariableDeclarator") {
-		if (identifier.init?.type === "Literal") {
-			value = identifier.init.value;
-		}
+	switch (identifier.type) {
+		case "VariableDeclarator":
+			let value: string | number | boolean | null | undefined;
+			if (identifier.init !== null) {
+			//if (identifier.init?.type === "Literal") {
+				//value = identifier.init.value;
+				value = Parser.AstToString(identifier.init);
+			}
+
+			return {
+				contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
+			};
+		case "FunctionDeclaration":
+			return {
+				contents: identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+			};
+		default:
+			break;
 	}
-	return {
-		contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
-	};
+
+	return null;
 });
 
 // Listen on the connection
