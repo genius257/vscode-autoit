@@ -53,6 +53,9 @@ export default class FileAstMap {
     add(uri: string, data: Program): void {
         if (this.exists(uri)) {
             this.maps[uri].counter += 1;
+            // reset meta data
+            this.maps[uri].identifiers.global = {};
+            this.maps[uri].scopes = {};
             // update the data
             this.maps[uri].data = data;
         } else {
