@@ -117,12 +117,35 @@ export default class FileAstMap {
 
     addInclude(uri) {
         if (this.exists(uri)) {
-            this.maps[uri].counter++;
+            this.maps[uri].counter++;//FIXME: we need a addRef and Release thing instead, to free the key if count reaches zero.
             return;
         }
 
-        //FIXME: use vs file api to read files.
-        //this.add(uri, this.parser(fs ))
+        this.maps[uri] = {
+            counter: 0,
+            data: {
+                type: 'Program',
+                body:[],
+            },
+            identifiers: {
+                global: {},
+                scopes: {},
+            },
+            includes: {
+                global: [],
+                scopes: {},
+            },
+            scopes: {},
+        };
+
+        this.connection?.console.log("Loading URI: "+uri);
+        this.connection?.sendRequest<string|null>("openTextDocument", uri).then((content) => {
+            if (content !== null) {
+                this.add(uri, this.parse(content, uri));
+            } else {
+                this.release(uri);
+            }
+        }).catch(reason => this.release(uri));
     }
 
     resolveIncludePath(textDocumentUri: string, includeStatementUri: string): string {
