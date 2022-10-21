@@ -123,7 +123,7 @@ export default class FileAstMap {
         //FIXME: currently we only resolve the include uri's as "Script directory" includes. Implementation need for "User-defined libraries" and "Standard library".
         // An extra parameter indicating starting from script or standard library when looking for the file is needed.
         // This may hovever not be needed in the webworker version?
-        return Utils.resolvePath(Utils.dirname(URI.parse(textDocumentUri)), includeStatementUri).toString();
+        return Utils.resolvePath(Utils.dirname(URI.parse(textDocumentUri)), includeStatementUri.replace(/\\/g, "/")).toString();
     }
 
     difference(arr1: any[], arr2: any[]): any[] {
