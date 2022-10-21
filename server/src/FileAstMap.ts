@@ -97,7 +97,8 @@ export default class FileAstMap {
         const previousIncludes = this.maps[uri].includes.global.map(fileRef => fileRef.uri); //FIXME
         const includes = this.maps[uri].data.body.filter((node): node is {
             type: "IncludeStatement",
-            file: IncludeFileNameLiteral,
+            library: IncludeFileName[0],
+            file: IncludeFileName[1],
             location: any,
         } => node.type === "IncludeStatement").map((includeUri) => this.resolveIncludePath(uri, includeUri.file)) ?? [];
 
