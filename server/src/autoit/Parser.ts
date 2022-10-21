@@ -16,13 +16,7 @@ export default class Parser {
         }
     }
 
-    public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement|RedimIdentifierExpression|DefaultClause|SelectCaseClause|CaseClause|VariableDeclaration|EnumDeclaration|Initialiser|SwitchCaseValue/*{
-        type: "AssignmentExpression";
-        operator: "=";
-        left: LeftHandSideExpression;
-        right: AssignmentExpression;
-        location: LocationRange;
-    }*/): string {
+    public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement|RedimIdentifierExpression|DefaultClause|SelectCaseClause|CaseClause|VariableDeclaration|EnumDeclaration|Initialiser|SwitchCaseValue): string {
         if (ast === null) {
             return "";
         }
@@ -30,15 +24,15 @@ export default class Parser {
             case "Program":
                 return ast.body.map(sourceElement => this.AstToString(sourceElement)).join("\n");
             case "ArrayDeclaration":
-                return "["+this.AstArrayToStringArray(ast.elements).join(",")+"]";
+                return "["+this.AstArrayToStringArray(ast.elements).join(", ")+"]";
             case "AssignmentExpression":
                 return this.AstToString(ast.left)+ast.operator+this.AstToString(ast.right);
             case "BinaryExpression":
                 return this.AstToString(ast.left) + ast.operator + this.AstToString(ast.right);
             case "CallExpression":
-                return this.AstToString(ast.callee)+"("+this.AstArrayToStringArray(ast.arguments).join(",")+")";
+                return this.AstToString(ast.callee)+"("+this.AstArrayToStringArray(ast.arguments).join(", ")+")";
             case "ConditionalExpression":
-                return this.AstToString(ast.test) + "?" + this.AstToString(ast.consequent) + ":" + this.AstToString(ast.alternate);
+                return this.AstToString(ast.test) + " ? " + this.AstToString(ast.consequent) + " : " + this.AstToString(ast.alternate);
             case "ContinueCaseStatement":
                 return "ContinueCase";
             case "ContinueLoopStatement":
@@ -53,8 +47,12 @@ export default class Parser {
                 return "Exit "+this.AstToString(ast.argument);
             case "ExpressionStatement":
                 return this.AstToString(ast.expression);
+            case "ForInStatement":
+                return "For "+this.AstToString(ast.left)+" In "+this.AstToString(ast.right)+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nNext";
+            case "ForStatement":
+                return "For "+this.AstToString(ast.id)+" = "+this.AstToString(ast.init)+" To "+this.AstToString(ast.test)+(ast.update === null ? "" : " Step "+this.AstToString(ast.update))+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nNext";
             case "FunctionDeclaration":
-                return "Func "+ast.id.name+"("+this.AstArrayToStringArray(ast.params).join(",")+")\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nEndFunc";
+                return "Func "+ast.id.name+"("+this.AstArrayToStringArray(ast.params).join(", ")+")\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nEndFunc";
             case "Identifier":
                 return ast.name;
             case "IfStatement":
@@ -78,7 +76,7 @@ export default class Parser {
             case "NotExpression":
                 return "Not " + this.AstToString(ast.value);
             case "Parameter":
-                return (ast.const ? "Const " : "" ) + (ast.byref ? "ByRef " : "") + this.AstToString(ast.id) + (ast.init === null ? "" : "=" + this.AstToString(ast.init));
+                return (ast.const ? "Const " : "" ) + (ast.byref ? "ByRef " : "") + this.AstToString(ast.id) + (ast.init === null ? "" : " = " + this.AstToString(ast.init));
             case "PreProcStatement":
                 return "#"+ast.body;
             case "RedimExpression":
@@ -94,7 +92,7 @@ export default class Parser {
             case "SingleLineComment":
                 return ";"+ast.body;
             case "SwitchCase":
-                return "Case " + this.AstArrayToStringArray(ast.tests).join(",")+"\n"+this.AstArrayToStringArray(ast.consequent).join("\n");
+                return "Case " + this.AstArrayToStringArray(ast.tests).join(", ")+"\n"+this.AstArrayToStringArray(ast.consequent).join("\n");
             case "SwitchCaseRange":
                 return this.AstToString(ast.from)+" To "+this.AstToString(ast.to);
             case "SwitchStatement":
