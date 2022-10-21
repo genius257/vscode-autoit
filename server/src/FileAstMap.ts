@@ -209,7 +209,7 @@ export default class FileAstMap {
             return null;
         }
         if (node.location === undefined) {
-            throw new Error(JSON.stringify(node));
+            throw new Error("location is undefined on node type: "+node.type);
         }
         if (!this.isPositionWithinLocation(line, column, node.location)) {
             return null;
