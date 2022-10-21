@@ -1,5 +1,6 @@
 import { URI, Utils } from 'vscode-uri';
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileNameLiteral, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileName, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
+import { Connection } from 'vscode-languageserver';
 
 export type FileRef = {
     uri: string,
