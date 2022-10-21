@@ -215,7 +215,8 @@ export default class FileAstMap {
         if (node.location === undefined) {
             throw new Error("location is undefined on node type: "+node.type);
         }
-        if (!this.isPositionWithinLocation(line, column, node.location)) {
+        //MemberExpression order is reversed, so location of top object is the last part of the MemberExpression(s)
+        if (node.type !== "MemberExpression" && !this.isPositionWithinLocation(line, column, node.location)) {
             return null;
         }
         switch (node.type) {
