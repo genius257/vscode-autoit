@@ -157,8 +157,18 @@ export default class FileAstMap {
         return this.maps[uri];
     }
 
-    /** Get first declaration statement for matching identifier */
-    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|null): FunctionDeclaration|VariableDeclaration|null {
+    /**
+     * Get first declaration statement for matching identifier
+     * @param uri file uri
+     * @param identifier identifier to match declarator
+     * @param includes if includes should be searched as well.
+     */
+    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|null, includes: boolean = true): FunctionDeclaration|VariableDeclaration|null {
+        //return this._getIdentifierDeclarator(uri, identifier) ?? (includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : null);
+        return includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : this._getIdentifierDeclarator(uri, identifier);
+    }
+
+    protected _getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|null) {
         if (!this.exists(uri)) {
             throw new Error(`URI not found in map: ${uri}`);
         }
