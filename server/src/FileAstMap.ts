@@ -106,7 +106,7 @@ export default class FileAstMap {
             library: IncludeFileName[0],
             file: IncludeFileName[1],
             location: any,
-        } => node.type === "IncludeStatement").map((includeUri) => this.resolveIncludePath(uri, includeUri.file)) ?? [];
+        } => node.type === "IncludeStatement" && !node.library).map((includeUri) => this.resolveIncludePath(uri, includeUri.file)) ?? [];//FIXME: library includes are currently ignored. They need to be supported.
 
         this.difference(previousIncludes, includes).forEach(previousInclude => this.release(previousInclude));
         this.difference(includes, previousIncludes).forEach(include => {
