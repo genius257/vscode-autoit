@@ -56,7 +56,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 
-const fileAstMap = new FileAstMap();
+const fileAstMap = new FileAstMap(connection);
 connection.onDidOpenTextDocument(params => {
 	try {
 		fileAstMap.add(params.textDocument.uri, fileAstMap.parse(params.textDocument.text, params.textDocument.uri));
