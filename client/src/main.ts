@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionContext, Uri } from 'vscode';
+import { ExtensionContext, Uri, window, workspace } from 'vscode';
 import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
 
 import { LanguageClient } from 'vscode-languageclient/browser';
@@ -32,6 +32,18 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	client.onReady().then(() => {
+		//client.onRequest("openTextDocument", async (uri: string) => (await workspace.openTextDocument(uri)).getText());
+		client.onRequest("openTextDocument", async (uri: string) => {
+			try {
+				//console.log(uri);
+				//console.log(Uri.file(uri));
+				const file = Uri.parse(uri);
+				return (await workspace.openTextDocument(file)).getText();
+			} catch(e) {
+				console.error(e+"");
+			}
+		});
+
 		console.log('lsp-web-extension-sample server is ready');
 	});
 }
