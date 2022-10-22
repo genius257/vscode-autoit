@@ -11,7 +11,7 @@ import { LanguageClient } from 'vscode-languageclient/browser';
 // this method is called when vs code is activated
 export function activate(context: ExtensionContext) {
 
-	console.log('lsp-web-extension-sample activated!');
+	console.log('autoit3-lsp-web-extension activated!');
 
 	/* 
 	 * all except the code to create the language client in not browser specific
@@ -44,7 +44,7 @@ export function activate(context: ExtensionContext) {
 			}
 		});
 
-		console.log('lsp-web-extension-sample server is ready');
+		console.log('autoit3-lsp-web-extension server is ready');
 	});
 }
 
@@ -54,5 +54,5 @@ function createWorkerLanguageClient(context: ExtensionContext, clientOptions: La
 	const worker = new Worker(serverMain.toString());
 
 	// create the language server client to communicate with the server running in the worker
-	return new LanguageClient('lsp-web-extension-sample', 'LSP Web Extension Sample', clientOptions, worker);
+	return new LanguageClient('autoit3-lsp-web-extension', 'AutoIt3 LSP Web Extension', clientOptions, worker);
 }

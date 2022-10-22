@@ -15,7 +15,7 @@ import nativeSuggestions from "./autoit/internal";
 import { Program, StatementList, SyntaxError } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 
-console.log('running server lsp-web-extension-sample');
+console.log('running server autoit3-lsp-web-extension');
 
 /* browser specific setup code */
 
