@@ -253,7 +253,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 	const identifier = declarator.id;
 	return [
 		{
-			targetUri: params.textDocument.uri,
+			targetUri: declarator.location.source,
 			targetRange: Parser.locationToRange(declarator.location),
 			targetSelectionRange: Parser.locationToRange(identifier.location),
 		}
