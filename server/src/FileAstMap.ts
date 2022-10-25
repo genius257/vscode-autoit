@@ -1,17 +1,15 @@
 import { URI, Utils } from 'vscode-uri';
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileName, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileName, IncludeStatement, LocationRange, Macro, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
 import { Connection } from 'vscode-languageserver';
 
-export type FileRef = {
+export type IncludeRef = IncludeStatement & {
     uri: string,
-    /** Indicates include-once */
-    once: boolean,
 }
 
 export type Includes = {
-    global: FileRef[],
+    global: IncludeRef[],
     scopes: {
-        [scope: string]: FileRef[],
+        [scope: string]: IncludeRef[],
     },
 }
 
@@ -34,6 +32,15 @@ export type Maps = {
         scopes: {[scope: string]: FunctionDeclaration}
     };
 }
+
+export type IncludeResolve = {uri: URI, text: string};
+export type IncludePromise = Promise<IncludeResolve|null>;
+
+export type AutoIt3Configuration = {
+    "installDir": string|null,
+    "userDefinedLibraries": string[],
+    "version": string,
+};
 
 export default class FileAstMap {
     protected maps: Maps = {};
@@ -100,23 +107,21 @@ export default class FileAstMap {
     }
 
     addIncludes(uri: string) {
-        const previousIncludes = this.maps[uri].includes.global.map(fileRef => fileRef.uri);
-        const includes = this.maps[uri].data.body.filter((node): node is {
-            type: "IncludeStatement",
-            library: IncludeFileName[0],
-            file: IncludeFileName[1],
-            location: any,
-        } => node.type === "IncludeStatement" && !node.library).map((includeUri) => this.resolveIncludePath(uri, includeUri.file)) ?? [];//FIXME: library includes are currently ignored. They need to be supported.
 
-        this.difference(previousIncludes, includes).forEach(previousInclude => this.release(previousInclude));
-        this.difference(includes, previousIncludes).forEach(include => {
-            this.addInclude(include);
+        const previousIncludes = this.maps[uri].includes.global;
+        this.maps[uri].includes.global = [];
+        const includes = this.maps[uri].data.body.filter((node): node is IncludeStatement => node.type === "IncludeStatement")//.map((includeUri) => this.resolveIncludePath(uri, includeUri.file)) ?? [];
+
+        this.includeDifference(previousIncludes, includes).forEach(previousInclude => this.release(previousInclude.uri));
+        this.includeDifference(includes, previousIncludes).forEach(include => {
+            this.addInclude(uri, include)?.then(x => x !== null ? this.maps[uri].includes.global.push({...include, uri: x.uri.toString()}) : null);
         });
 
-        this.maps[uri].includes.global = includes.map(uri => ({uri: uri, once: false}));
+        //this.maps[uri].includes.global = includes.map(uri => ({uri: uri, once: false}));
     }
 
-    addInclude(uri) {
+    addInclude(documentUri: string, include: IncludeStatement): IncludePromise {
+        /*
         if (this.exists(uri)) {
             this.maps[uri].counter++;//FIXME: we need a addRef and Release thing instead, to free the key if count reaches zero.
             return;
@@ -138,7 +143,34 @@ export default class FileAstMap {
             },
             scopes: {},
         };
+        */
 
+        let promise = this.connection?.workspace.getConfiguration("autoit3").then((configuration: AutoIt3Configuration) => {
+            let promise:IncludePromise = Promise.resolve(null);
+
+            promise = include.library ? this.includeLibrary(include.file, promise, configuration) : this.includeLocal(include.file, documentUri, promise);
+
+            promise = this.includeUserDefined(include.file, promise, configuration);
+
+            promise = !include.library ? this.includeLibrary(include.file, promise, configuration) : this.includeLocal(include.file, documentUri, promise);
+
+            return promise;
+        }) ?? Promise.resolve(null);
+
+        promise = promise.then(x => {
+            if (x !== null) {
+                if (this.exists(x.uri.toString())) {
+                    this.maps[x.uri.toString()].counter++;
+                } else {
+                    this.add(x.uri.toString(), this.parse(x.text, x.uri.toString()));
+                }
+            }
+            return x;
+        });
+
+        return promise;
+
+        /*
         this.connection?.console.log("Loading URI: "+uri);
         this.connection?.sendRequest<string|null>("openTextDocument", uri).then((content) => {
             if (content !== null) {
@@ -147,16 +179,41 @@ export default class FileAstMap {
                 this.release(uri);
             }
         }).catch(reason => this.release(uri));
+        */
     }
 
-    resolveIncludePath(textDocumentUri: string, includeStatementUri: string): string {
+    protected includeLibrary(uri: string, promise: IncludePromise, configuration: AutoIt3Configuration|null): IncludePromise {
+        return promise.then(x => x === null && typeof configuration?.installDir === "string" ? this.openTextDocument(Utils.resolvePath(URI.parse(configuration.installDir), uri)) : x);
+    }
+
+    protected includeUserDefined(uri: string, promise: IncludePromise, configuration: AutoIt3Configuration|null): IncludePromise {
+        for (const path of configuration?.userDefinedLibraries ?? []) {
+            promise = promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(URI.file(path), uri)) : null);
+        }
+
+        return promise;
+    }
+
+    protected includeLocal(uri: string, documentUri: string, promise: IncludePromise): IncludePromise {
+        return promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
+    }
+
+    protected openTextDocument(uri: URI): IncludePromise {
+        return this.connection?.sendRequest<string|null>("openTextDocument", uri.toString()).then<IncludeResolve|null>(x => x === null ? x : ({uri: uri, text: x})) ?? Promise.resolve(null);
+    }
+
+    resolveRelativeIncludePath(textDocumentUri: string, includeStatementUri: string): string {
         //FIXME: currently we only resolve the include uri's as "Script directory" includes. Implementation need for "User-defined libraries" and "Standard library".
         // An extra parameter indicating starting from script or standard library when looking for the file is needed.
         // This may hovever not be needed in the webworker version?
         return Utils.resolvePath(Utils.dirname(URI.parse(textDocumentUri)), includeStatementUri.replace(/\\/g, "/")).toString();
     }
 
-    difference(arr1: any[], arr2: any[]): any[] {
+    includeDifference<T extends IncludeStatement>(arr1: T[], arr2: IncludeStatement[]) {
+        return arr1.filter(x => arr2.findIndex(y => x.file === y.file && x.library === y.library) === -1)
+    }
+
+    difference<T>(arr1: T[], arr2: T[]): T[] {
         return arr1.filter(x => !arr2.includes(x));
     }
 
