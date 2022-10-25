@@ -1,7 +1,7 @@
 import * as FileAstMap from "./FileAstMap";
 import parser from "autoit3-pegjs";
 
-const fileAstMap = new FileAstMap.default();
+const fileAstMap = new FileAstMap.default(null);
 
 test("getIdentifierAt", function () {
     fileAstMap.add("test", parser.parse("$x = 1"));
