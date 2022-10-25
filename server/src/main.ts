@@ -32,7 +32,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 	const capabilities: ServerCapabilities = {
 		completionProvider: {
 			resolveProvider: false,
-			triggerCharacters: ['$', '.'],
+			triggerCharacters: ['$', '.', '@'],
 		},
 		definitionProvider: {
 			workDoneProgress: false,
@@ -171,8 +171,8 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 		return null;
 	}
 
-	if (identifierAtPos.type === "Identifier") {
-		const suggestion = nativeSuggestions[identifierAtPos.name.toLowerCase() ?? ""];
+	if (identifierAtPos.type === "Identifier" || identifierAtPos.type === "Macro") {
+		const suggestion = identifierAtPos.type === "Identifier" ? nativeSuggestions[identifierAtPos.name.toLowerCase()] : nativeSuggestions[identifierAtPos.value.toLowerCase()];
 		if (suggestion !== undefined) {
 			return {
 				//code: 0,

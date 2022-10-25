@@ -246,7 +246,10 @@ export default class FileAstMap {
      * @param identifier identifier to match declarator
      * @param includes if includes should be searched as well.
      */
-    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|null, includes: boolean = true): FunctionDeclaration|VariableDeclaration|null {
+    getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|Macro|null, includes: boolean = true): FunctionDeclaration|VariableDeclaration|null {
+        if (identifier?.type === "Macro") {
+            return null;
+        }
         //return this._getIdentifierDeclarator(uri, identifier) ?? (includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : null);
         return includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : this._getIdentifierDeclarator(uri, identifier);
     }
@@ -302,7 +305,7 @@ export default class FileAstMap {
     }
 
     /** get identifier object based on cursor position */
-    getIdentifierAt(uri: string, line: number, column: number): Identifier|VariableIdentifier|null {
+    getIdentifierAt(uri: string, line: number, column: number): Identifier|VariableIdentifier|Macro|null {
         if (!this.exists(uri)) {
             throw new Error(`URI not found in map: ${uri}`);
         }
@@ -330,7 +333,7 @@ export default class FileAstMap {
         return this.getNestedIdentifierAtFromArray(this.maps[uri].data.body, line, column);
     }
 
-    getNestedIdentifierAt(node: SourceElement|AssignmentExpression|FormalParameter|VariableDeclaration|ArrayDeclaration|DefaultClause|CaseClause|SelectCaseClause|SwitchCaseValue|null, line: number, column: number): VariableIdentifier|Identifier|null {//FunctionDeclaration|VariableDeclaration|Identifier|IdentifierName|VariableIdentifier|null {
+    getNestedIdentifierAt(node: SourceElement|AssignmentExpression|FormalParameter|VariableDeclaration|ArrayDeclaration|DefaultClause|CaseClause|SelectCaseClause|SwitchCaseValue|null, line: number, column: number): VariableIdentifier|Identifier|Macro|null {//FunctionDeclaration|VariableDeclaration|Identifier|IdentifierName|VariableIdentifier|null {
         if (node === null) {
             return null;
         }
@@ -390,7 +393,7 @@ export default class FileAstMap {
             case "LogicalExpression":
                 return this.getNestedIdentifierAt(node.left, line, column) ?? this.getNestedIdentifierAt(node.right, line, column);
             case "Macro":
-                return null;
+                return node;
             case "MemberExpression":
                 return this.getNestedIdentifierAt(node.object, line, column) ?? this.getNestedIdentifierAt(node.property, line, column);
             case "MultiLineComment":
@@ -438,11 +441,11 @@ export default class FileAstMap {
         return null;
     }
 
-    getNestedIdentifierAtFromArray(array: SourceElements|ArgumentList|VariableDeclarationList|FormalParameterList|(DefaultClause | CaseClause | SelectCaseClause)[]|ArrayDeclarationElementList|CaseValueList|null, line: number, column: number): VariableIdentifier|Identifier|null {// FunctionDeclaration|VariableDeclaration|Identifier|VariableIdentifier|null {
+    getNestedIdentifierAtFromArray(array: SourceElements|ArgumentList|VariableDeclarationList|FormalParameterList|(DefaultClause | CaseClause | SelectCaseClause)[]|ArrayDeclarationElementList|CaseValueList|null, line: number, column: number): VariableIdentifier|Identifier|Macro|null {// FunctionDeclaration|VariableDeclaration|Identifier|VariableIdentifier|null {
         if (array === null) {
             return null;
         }
-        let result:VariableIdentifier|Identifier|null = null;
+        let result:VariableIdentifier|Identifier|Macro|null = null;
         for (const node of array) {
             result = this.getNestedIdentifierAt(node, line, column);
             if (result !== null) {
