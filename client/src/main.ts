@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext, Uri, window, workspace } from 'vscode';
+import { Utils } from 'vscode-uri';
 import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
 
 import { LanguageClient } from 'vscode-languageclient/browser';
@@ -32,16 +33,13 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	client.onReady().then(() => {
-		//client.onRequest("openTextDocument", async (uri: string) => (await workspace.openTextDocument(uri)).getText());
-		client.onRequest("openTextDocument", async (uri: string) => {
-			try {
-				//console.log(uri);
-				//console.log(Uri.file(uri));
-				const file = Uri.parse(uri);
-				return (await workspace.openTextDocument(file)).getText();
-			} catch(e) {
-				console.error(e+"");
-			}
+		client.onRequest("openTextDocument", (uri: string) => {
+			const file = Uri.parse(uri);
+			return workspace.openTextDocument(file).then(textDocument => {
+				return textDocument.getText();
+			}, (reason) => {
+				return null;
+			});
 		});
 
 		console.log('autoit3-lsp-web-extension server is ready');
