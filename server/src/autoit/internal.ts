@@ -1,5 +1,10 @@
 import { CompletionItemKind } from "vscode-languageserver";
 
+/**
+ * @file file for providing intellisense information for internal AutoIt3 functions, macros and such.
+ */
+
+/** A documentation object used for intellisense. */
 export type documentation = {
     title: string,
     detail: string,
@@ -7,6 +12,7 @@ export type documentation = {
     kind: CompletionItemKind,
 }
 
+/** A collection of documentaion object used for intellisense. */
 export type documentationCollection = {
     [key: string]: documentation,
 }
