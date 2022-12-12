@@ -1,5 +1,5 @@
 import { URI, Utils } from 'vscode-uri';
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileName, IncludeStatement, LocationRange, Macro, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, AutoItParser, CallExpression, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, Identifier, IdentifierName, IncludeFileName, IncludeStatement, LocationRange, Macro, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier, VariableStatement } from "autoit3-pegjs";
 import { Connection } from 'vscode-languageserver';
 
 export type IncludeRef = IncludeStatement & {
@@ -40,6 +40,24 @@ export type AutoIt3Configuration = {
     "installDir": string|null,
     "userDefinedLibraries": string[],
     "version": string,
+};
+
+export type Node = SourceElement|AssignmentExpression|FormalParameter|VariableDeclaration|ArrayDeclaration|DefaultClause|CaseClause|SelectCaseClause|SwitchCaseValue|Macro|IncludeStatement;
+export type NodeList = SourceElements|ArgumentList|VariableDeclarationList|FormalParameterList|(DefaultClause | CaseClause | SelectCaseClause)[]|ArrayDeclarationElementList|CaseValueList;
+
+export enum NodeFilterAction {
+    /** Adds the current node and continues down the branch */
+    Continue,
+    /** Does not add current node and continues down the branch */
+    Skip,
+    /** Does not add current node and continues but does not continue down the rest of current branch */
+    SkipAndStopPropagation,
+    /** Adds the current node and and continues but does not continue down the rest of current branch */
+    StopPropagation,
+    /** Does not add current node and does not continue */
+    StopAndSkip,
+    /** Adds the current node and does not continue */
+    Stop,
 };
 
 export default class FileAstMap {
@@ -109,8 +127,10 @@ export default class FileAstMap {
     addIncludes(uri: string) {
 
         const previousIncludes = this.maps[uri].includes.global;
-        this.maps[uri].includes.global = [];
+        //this.maps[uri].includes.global = []; //FIXME: this line causes issues with actions done during include resolve
         const includes = this.maps[uri].data.body.filter((node): node is IncludeStatement => node.type === "IncludeStatement")//.map((includeUri) => this.resolveIncludePath(uri, includeUri.file)) ?? [];
+
+        //FIXME: includes global array should be set to includes that are not changed here.
 
         this.includeDifference(previousIncludes, includes).forEach(previousInclude => this.release(previousInclude.uri));
         this.includeDifference(includes, previousIncludes).forEach(include => {
@@ -304,8 +324,33 @@ export default class FileAstMap {
         return null;
     }
 
+    isCallExpression(node: Node): node is CallExpression {
+        return node.type === "CallExpression";
+    }
+
+    getCallExpressionAt(uri: string, line: number, column: number): CallExpression|null {
+        return this.getNodesAt(uri, line, column).filter((node): node is CallExpression => this.isCallExpression(node)).pop() ?? null;
+    }
+
+    isIdentifier(node: Node): node is Identifier|VariableIdentifier|Macro {
+        return ["Identifier", "VariableIdentifier", "Macro"].includes(node.type);
+    }
+
+    getNestedIdentifiers(node: Node|null): Identifier[]|null {
+        const matches: Identifier[] = [];
+        this.filterNestedNode(node, (node) => this.isIdentifier(node) ? NodeFilterAction.Continue : NodeFilterAction.Skip, matches);
+        return matches;
+    }
+
     /** get identifier object based on cursor position */
     getIdentifierAt(uri: string, line: number, column: number): Identifier|VariableIdentifier|Macro|null {
+        for (const node of this.getNodesAt(uri, line, column)) {
+            if (this.isIdentifier(node)) {
+                return node;
+            }
+        }
+        return null;
+
         if (!this.exists(uri)) {
             throw new Error(`URI not found in map: ${uri}`);
         }
@@ -333,6 +378,9 @@ export default class FileAstMap {
         return this.getNestedIdentifierAtFromArray(this.maps[uri].data.body, line, column);
     }
 
+    /**
+     * @deprecated use getNestedNodesAt instead.
+     */
     getNestedIdentifierAt(node: SourceElement|AssignmentExpression|FormalParameter|VariableDeclaration|ArrayDeclaration|DefaultClause|CaseClause|SelectCaseClause|SwitchCaseValue|null, line: number, column: number): VariableIdentifier|Identifier|Macro|null {//FunctionDeclaration|VariableDeclaration|Identifier|IdentifierName|VariableIdentifier|null {
         if (node === null) {
             return null;
@@ -441,6 +489,9 @@ export default class FileAstMap {
         return null;
     }
 
+    /**
+     * @deprecated use getNestedNodesAtFromArray instead.
+     */
     getNestedIdentifierAtFromArray(array: SourceElements|ArgumentList|VariableDeclarationList|FormalParameterList|(DefaultClause | CaseClause | SelectCaseClause)[]|ArrayDeclarationElementList|CaseValueList|null, line: number, column: number): VariableIdentifier|Identifier|Macro|null {// FunctionDeclaration|VariableDeclaration|Identifier|VariableIdentifier|null {
         if (array === null) {
             return null;
@@ -454,6 +505,291 @@ export default class FileAstMap {
         }
 
         return null;
+    }
+
+    /** Get AST nodes at script position */
+    getNodesAt(uri: string, line: number, column: number): Array<Node> {
+        if (!this.exists(uri)) {
+            throw new Error(`URI not found in map: ${uri}`);
+        }
+
+        const matches: Array<Node> = [];
+        this.getNestedNodesAtFromArray(this.maps[uri].data.body, line, column, matches);
+        return matches;
+    }
+
+    getNestedNodesAt(node: Node|null, line: number, column: number, matches: Array<Node>): Node|null {
+        if (node === null) {
+            return null;
+        }
+        if (node.location === undefined) {
+            throw new Error("location is undefined on node type: "+node.type);
+        }
+        //MemberExpression order is reversed, so location of top object is the last part of the MemberExpression(s)
+        if (node.type !== "MemberExpression" && !this.isPositionWithinLocation(line, column, node.location)) {
+            return null;
+        }
+
+        matches.push(node);
+
+        switch (node.type) {
+            case "ArrayDeclaration":
+                return this.getNestedNodesAtFromArray(node.elements, line, column, matches);
+            case "AssignmentExpression":
+            case "BinaryExpression":
+                return this.getNestedNodesAt(node.left, line, column, matches) ?? this.getNestedNodesAt(node.right, line, column, matches);
+            case "CallExpression":
+                return this.getNestedNodesAt(node.callee, line, column, matches) ?? this.getNestedNodesAtFromArray(node.arguments, line, column, matches);
+            case "ConditionalExpression":
+                return this.getNestedNodesAt(node.test, line, column, matches) ?? this.getNestedNodesAt(node.consequent, line, column, matches) ?? this.getNestedNodesAt(node.alternate, line, column, matches);
+            case "ContinueCaseStatement":
+                return null;
+            case "ContinueLoopStatement":
+                return this.getNestedNodesAt(node.level, line, column, matches);
+            case "DoWhileStatement":
+                return this.getNestedNodesAt(node.test, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+            case "EmptyStatement":
+                return node;
+            case "ExitLoopStatement":
+                return this.getNestedNodesAt(node.level, line, column, matches);
+            case "ExitStatement":
+                return this.getNestedNodesAt(node.argument, line, column, matches);
+            case "ExpressionStatement":
+                return this.getNestedNodesAt(node.expression, line, column, matches);
+            case "ForInStatement":
+                return this.getNestedNodesAt(node.left, line, column, matches) ?? this.getNestedNodesAt(node.right, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+            case "ForStatement":
+                return this.getNestedNodesAt(node.id, line, column, matches) ??  this.getNestedNodesAt(node.init, line, column, matches) ??  this.getNestedNodesAt(node.test, line, column, matches) ??  this.getNestedNodesAt(node.update, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+            case "FunctionDeclaration":
+                return this.getNestedNodesAt(node.id, line, column, matches) ?? this.getNestedNodesAtFromArray(node.params, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+            case "Identifier":
+                return node;
+            case "IfStatement":
+                let identifier = this.getNestedNodesAt(node.test, line, column, matches);
+                if (identifier === null) {
+                    return Array.isArray(node.consequent) ? this.getNestedNodesAtFromArray(node.consequent, line, column, matches) : this.getNestedNodesAt(node.consequent, line, column, matches)
+                }
+                return identifier;
+            case "IncludeOnceStatement":
+                return node;
+            case "IncludeStatement":
+                return node;
+            case "Keyword":
+                return node;//FIXME: return keywords also?
+            case "Literal":
+                return node;
+            case "LogicalExpression":
+                return this.getNestedNodesAt(node.left, line, column, matches) ?? this.getNestedNodesAt(node.right, line, column, matches);
+            case "Macro":
+                return node;
+            case "MemberExpression":
+                return this.getNestedNodesAt(node.object, line, column, matches) ?? this.getNestedNodesAt(node.property, line, column, matches);
+            case "MultiLineComment":
+                return node;
+            case "NotExpression":
+                return this.getNestedNodesAt(node.value, line, column, matches);
+            case "Parameter":
+                return this.getNestedNodesAt(node.id, line, column, matches) ?? this.getNestedNodesAt(node.init, line, column, matches);
+            case "PreProcStatement":
+                return node;
+            case "RedimExpression":
+                //return this.getNestedNodesAtFromArray(node.declarations, line, column);
+                throw new Error("RedimExpression not correcly implemented as an AST node yet!");
+            case "ReturnStatement":
+                return this.getNestedNodesAt(node.value, line, column, matches);
+            case "SelectCase":
+                return this.getNestedNodesAt(node.tests, line, column, matches) ?? this.getNestedNodesAtFromArray(node.consequent, line, column, matches);
+            case "SelectStatement":
+                return this.getNestedNodesAtFromArray(node.cases, line, column, matches);
+            case "SingleLineComment":
+                return null;
+            case "SwitchCase":
+                return this.getNestedNodesAtFromArray(node.tests, line, column, matches) ?? this.getNestedNodesAtFromArray(node.consequent, line, column, matches);
+            case "SwitchCaseRange":
+                return this.getNestedNodesAt(node.from, line, column, matches) ?? this.getNestedNodesAt(node.to, line, column, matches);
+            case "SwitchStatement":
+                return this.getNestedNodesAt(node.discriminant, line, column, matches) ?? this.getNestedNodesAtFromArray(node.cases, line, column, matches);
+            case "UnaryExpression":
+                return this.getNestedNodesAt(node.argument, line, column, matches)
+            case "VariableDeclaration":
+                return this.getNestedNodesAtFromArray(node.declarations, line, column, matches);
+            case "VariableDeclarator":
+                return this.getNestedNodesAt(node.id, line, column, matches) ?? this.getNestedNodesAt(node.init, line, column, matches);
+            case "VariableIdentifier":
+                return node;
+            case "WhileStatement":
+                return this.getNestedNodesAt(node.test, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+            case "WithStatement":
+                return this.getNestedNodesAt(node.object, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+            default:
+                //@ts-ignore
+                throw new Error("Unsupported type: "+node.type);
+        }
+
+        return null;
+    }
+
+    getNestedNodesAtFromArray(nodeList: NodeList|null, line: number, column: number, matches: Array<Node>): Node|null {
+        if (nodeList === null) {
+            return null;
+        }
+
+        let result:Node|null = null;
+        for (const node of nodeList) {
+            result = this.getNestedNodesAt(node, line, column, matches) ?? result;
+        }
+
+        return result ?? null;
+    }
+
+    /**
+     * Filter nodes and returned flattened array with results.
+     */
+    filterNodes(uri: string, fn: (node: Node) => NodeFilterAction|never): Array<Node> {
+        if (!this.exists(uri)) {
+            throw new Error(`URI not found in map: ${uri}`);
+        }
+        
+        const matches: Array<Node> = [];
+        this.filterNestedNodes(this.maps[uri].data.body, fn, matches);
+        return matches;
+    }
+
+    filterNestedNode(node: Node|null, fn: (node: Node) => NodeFilterAction|never, matches: Array<Node>): NodeFilterAction {
+        if (node === null) {
+            return NodeFilterAction.Skip;
+        }
+
+        switch (fn(node)) {
+            case NodeFilterAction.Continue:
+                matches.push(node);
+                break;
+            case NodeFilterAction.Skip:
+                //Do nothing.
+                break;
+            case NodeFilterAction.SkipAndStopPropagation:
+                return NodeFilterAction.Continue;
+            case NodeFilterAction.Stop:
+                matches.push(node);
+                return NodeFilterAction.Stop;
+            case NodeFilterAction.StopAndSkip:
+                return NodeFilterAction.Stop;
+            case NodeFilterAction.StopPropagation:
+                return NodeFilterAction.Continue;
+        }
+
+        switch (node.type) {
+            case "ArrayDeclaration":
+                return this.filterNestedNodes(node.elements, fn, matches);
+            case "AssignmentExpression":
+            case "BinaryExpression":
+                return this.filterNestedNode(node.left, fn, matches) ?? this.filterNestedNode(node.right, fn, matches);
+            case "CallExpression":
+                return this.filterNestedNode(node.callee, fn, matches) ?? this.filterNestedNodes(node.arguments, fn, matches);
+            case "ConditionalExpression":
+                return this.filterNestedNode(node.test, fn, matches) ?? this.filterNestedNode(node.consequent, fn, matches) ?? this.filterNestedNode(node.alternate, fn, matches);
+            case "ContinueCaseStatement":
+                break;
+            case "ContinueLoopStatement":
+                return this.filterNestedNode(node.level, fn, matches);
+            case "DoWhileStatement":
+                return this.filterNestedNode(node.test, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
+            case "EmptyStatement":
+                break;
+            case "ExitLoopStatement":
+                return this.filterNestedNode(node.level, fn, matches);
+            case "ExitStatement":
+                return this.filterNestedNode(node.argument, fn, matches);
+            case "ExpressionStatement":
+                return this.filterNestedNode(node.expression, fn, matches);
+            case "ForInStatement":
+                return this.filterNestedNode(node.left, fn, matches) ?? this.filterNestedNode(node.right, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
+            case "ForStatement":
+                return this.filterNestedNode(node.id, fn, matches) ??  this.filterNestedNode(node.init, fn, matches) ??  this.filterNestedNode(node.test, fn, matches) ??  this.filterNestedNode(node.update, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
+            case "FunctionDeclaration":
+                return this.filterNestedNode(node.id, fn, matches) ?? this.filterNestedNodes(node.params, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
+            case "Identifier":
+                break;
+            case "IfStatement":
+                let identifier = this.filterNestedNode(node.test, fn, matches);
+                if (identifier === null) {
+                    return Array.isArray(node.consequent) ? this.filterNestedNodes(node.consequent, fn, matches) : this.filterNestedNode(node.consequent, fn, matches)
+                }
+                return identifier;
+            case "IncludeOnceStatement":
+                break;
+            case "IncludeStatement":
+                break;
+            case "Keyword":
+                break;
+            case "Literal":
+                break;
+            case "LogicalExpression":
+                return this.filterNestedNode(node.left, fn, matches) ?? this.filterNestedNode(node.right, fn, matches);
+            case "Macro":
+                break;
+            case "MemberExpression":
+                return this.filterNestedNode(node.object, fn, matches) ?? this.filterNestedNode(node.property, fn, matches);
+            case "MultiLineComment":
+                break;
+            case "NotExpression":
+                return this.filterNestedNode(node.value, fn, matches);
+            case "Parameter":
+                return this.filterNestedNode(node.id, fn, matches) ?? this.filterNestedNode(node.init, fn, matches);
+            case "PreProcStatement":
+                break;
+            case "RedimExpression":
+                //return this.filterNestedNodes(node.declarations, line, column);
+                throw new Error("RedimExpression not correcly implemented as an AST node yet!");
+            case "ReturnStatement":
+                return this.filterNestedNode(node.value, fn, matches);
+            case "SelectCase":
+                return this.filterNestedNode(node.tests, fn, matches) ?? this.filterNestedNodes(node.consequent, fn, matches);
+            case "SelectStatement":
+                return this.filterNestedNodes(node.cases, fn, matches);
+            case "SingleLineComment":
+                break;
+            case "SwitchCase":
+                return this.filterNestedNodes(node.tests, fn, matches) ?? this.filterNestedNodes(node.consequent, fn, matches);
+            case "SwitchCaseRange":
+                return this.filterNestedNode(node.from, fn, matches) ?? this.filterNestedNode(node.to, fn, matches);
+            case "SwitchStatement":
+                return this.filterNestedNode(node.discriminant, fn, matches) ?? this.filterNestedNodes(node.cases, fn, matches);
+            case "UnaryExpression":
+                return this.filterNestedNode(node.argument, fn, matches)
+            case "VariableDeclaration":
+                return this.filterNestedNodes(node.declarations, fn, matches);
+            case "VariableDeclarator":
+                return this.filterNestedNode(node.id, fn, matches) ?? this.filterNestedNode(node.init, fn, matches);
+            case "VariableIdentifier":
+                break;
+            case "WhileStatement":
+                return this.filterNestedNode(node.test, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
+            case "WithStatement":
+                return this.filterNestedNode(node.object, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
+            default:
+                //@ts-ignore
+                throw new Error("Unsupported type: "+node.type);
+        }
+
+        return NodeFilterAction.Continue;
+    }
+
+    filterNestedNodes(nodeList: NodeList|null, fn: (node: Node) => NodeFilterAction|never, matches: Array<Node>): NodeFilterAction {
+        if (nodeList === null) {
+            return NodeFilterAction.Skip;
+        }
+
+        for (const node of nodeList) {
+            switch(this.filterNestedNode(node, fn, matches)) {
+                case NodeFilterAction.Stop:
+                case NodeFilterAction.StopAndSkip:
+                case NodeFilterAction.StopPropagation:
+                    return NodeFilterAction.Stop;
+            }
+        }
+
+        return NodeFilterAction.Continue;
     }
 
     isPositionWithinLocation(line: number, column: number, location: LocationRange):boolean {
