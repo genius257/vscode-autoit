@@ -1,7 +1,25 @@
-import { ArgumentList, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, Initialiser, LeftHandSideExpression, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, Statement, StatementList, SwitchCaseValue, VariableDeclaration, VariableDeclarationList } from "autoit3-pegjs";
-import { Range } from "vscode-languageserver";
+import parser, { ArgumentList, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, Initialiser, LeftHandSideExpression, Location, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, Statement, StatementList, SwitchCaseValue, SyntaxError, VariableDeclaration, VariableDeclarationList } from "autoit3-pegjs";
+import { Position, Range } from "vscode-languageserver";
 
 export default class Parser {
+    public static parse(input: string, grammarSource: string|undefined): Program {
+        return parser.parse(input, {grammarSource: grammarSource});
+    }
+
+    public static isSyntaxError(e: any): e is SyntaxError {
+        return e instanceof Error && 'location' in e && 'expected' in e && 'found' in e && 'format' in e;
+    }
+
+    public static isPositionWithinLocation(line: number, column: number, location: LocationRange): boolean {
+        if (location.start.line <= line && location.end.line >= line) {
+            if (location.start.line === line && location.end.line === line) {
+                return location.start.column <= column && location.end.column > column;
+            }
+            return true;
+        }
+        return false;
+    }
+
     /** Converts a autoit3-pegjs Location to a vscode Range */
     public static locationToRange(location: LocationRange): Range {
         return {
