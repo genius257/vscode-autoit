@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { Color, ColorInformation, Range, InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, ColorPresentation, TextEdit, TextDocumentIdentifier, CompletionItem, CompletionItemKind, VersionedTextDocumentIdentifier, DidChangeTextDocumentParams, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind } from 'vscode-languageserver';
+import { Color, ColorInformation, Range, InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, ColorPresentation, TextEdit, TextDocumentIdentifier, CompletionItem, CompletionItemKind, VersionedTextDocumentIdentifier, DidChangeTextDocumentParams, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI, Utils } from 'vscode-uri';
@@ -12,8 +12,10 @@ import { URI, Utils } from 'vscode-uri';
 import FileAstMap from './FileAstMap';
 
 import nativeSuggestions from "./autoit/internal";
-import { Program, StatementList, SyntaxError } from 'autoit3-pegjs';
+import { CallExpression, Identifier, IncludeStatement, Macro, Program, StatementList, SyntaxError, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
+import { Workspace } from './autoit/Workspace';
+import { NodeFilterAction } from './autoit/Script';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -33,17 +35,24 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 		completionProvider: {
 			resolveProvider: false,
 			triggerCharacters: ['$', '.', '@'],
+			workDoneProgress: false,
 		},
 		definitionProvider: {
 			workDoneProgress: false,
 		},
 		documentLinkProvider: {
-			resolveProvider: false
+			resolveProvider: false,
+			workDoneProgress: false,
 		},
 		hoverProvider: {
 			workDoneProgress: false,
 		},
 		documentSymbolProvider: {
+			workDoneProgress: false,
+		},
+		signatureHelpProvider: {
+			triggerCharacters: ['(', ','],
+			retriggerCharacters: [','],
 			workDoneProgress: false,
 		},
 		textDocumentSync: TextDocumentSyncKind.Full,
@@ -55,65 +64,37 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 
-const fileAstMap = new FileAstMap(connection);
+function debounce<F extends Function>(cb: F, delay = 250) {
+	let timeout
+  
+	return <F>(<any>((...args) => {
+	  clearTimeout(timeout)
+	  timeout = setTimeout(() => {
+		cb(...args)
+	  }, delay)
+	}));
+  }
+
+//const fileAstMap = new FileAstMap(connection);
+const workspace = new Workspace(connection);
+workspace.onDiagnostics(debounce(function (uri, diagnostics) {
+    connection.window.showWarningMessage("onDiagnostics");
+    connection.sendDiagnostics({
+        uri,
+        diagnostics,
+    });
+}, 100))
+
 connection.onDidOpenTextDocument(params => {
-	try {
-		fileAstMap.add(params.textDocument.uri, fileAstMap.parse(params.textDocument.text, params.textDocument.uri));
-		connection.sendDiagnostics({
-			uri: params.textDocument.uri,
-			diagnostics: [],
-		});
-	} catch (error) {
-		fileAstMap.add(params.textDocument.uri, fileAstMap.parse("", params.textDocument.uri));
-		if (!isSyntaxError(error)) {throw error;}
-		connection.sendDiagnostics({
-			uri: params.textDocument.uri,
-			diagnostics: [{
-				message: error.message,
-				range: Parser.locationToRange(error.location),
-			}]
-		});
-	}
+	workspace.createOrUpdate(params.textDocument.uri, params.textDocument.text);
 });
 
 connection.onDidChangeTextDocument(params => {
-	try {
-		let ast: Program;
-		try {
-			ast = fileAstMap.parse(params.contentChanges[0].text, params.textDocument.uri);
-		} catch (error) {
-			if (!isSyntaxError(error)) {throw error;}
-			try {
-				ast = fileAstMap.parse(params.contentChanges[0].text.substring(0, error.location.start.offset-1), params.textDocument.uri);
-			} catch (_error) {
-				throw error;
-			}
-		}
-		fileAstMap.add(params.textDocument.uri, ast);
-		connection.sendDiagnostics({
-			uri: params.textDocument.uri,
-			diagnostics: [],
-		});
-	} catch (error) {
-		fileAstMap.add(params.textDocument.uri, fileAstMap.parse("", params.textDocument.uri));
-		if (isSyntaxError(error)) {
-			connection.sendDiagnostics({
-				uri: params.textDocument.uri,
-				diagnostics: [{
-					message: error.message,
-					range: Parser.locationToRange(error.location),
-				}]
-			});
-		}
-	}
+    workspace.createOrUpdate(params.textDocument.uri, params.contentChanges[0].text);
 });
 
 connection.onDidCloseTextDocument(params => {
-	fileAstMap.release(params.textDocument.uri);
-	connection.sendDiagnostics({
-		uri: params.textDocument.uri,
-		diagnostics: [],
-	});
+	workspace.get(params.textDocument.uri)?.release();
 });
 
 // Register providers
@@ -122,15 +103,17 @@ connection.onDidCloseTextDocument(params => {
 connection.onDocumentSymbol(getDocumentSymbol);
 connection.onDefinition(getDefinition);
 connection.onCompletion(getCompletionItems);
+connection.onSignatureHelp(getSignatureHelp);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
 	const documentText = documents.get(params.textDocument.uri)?.getText();
 	//const ast:{body?: Autoit3AstNode[]} = documentText !== undefined ? parser.parse(documentText) : [];
-	const ast = fileAstMap.get(params.textDocument.uri);
+	//const ast = fileAstMap.get(params.textDocument.uri);
 	//connection.console.info(params.textDocument.uri);
 	//URI.parse(params.textDocument.uri)
 
-	return ast.body.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue) => {
+	return workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "IncludeStatement" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*
+	return ast.body*/.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue) => {
 		switch (currentValue.type) {
 			case "IncludeStatement":
 				//connection.console.info(resolveIncludePath(params.textDocument.uri, currentValue.file || "."));
@@ -166,8 +149,16 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 	//return null;
 	//const path = resolveIncludePath(hoverParams.textDocument.uri, ".");
 
-	const identifierAtPos = fileAstMap.getIdentifierAt(hoverParams.textDocument.uri, hoverParams.position.line + 1, hoverParams.position.character + 1);
-	if (identifierAtPos === null) {
+	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
+
+	//FIXME: when hovering over a function-declaration, FunctionDeclaration is not the first element, but items like EmptyStatement. It makes no sense, a unit test should be added.
+	if (nodesAt?.find(node => node.type === "FunctionDeclaration") !== undefined) {
+		return null; //FIXME: identifier declarator lookup needs to implement a scope first approatch.
+	}
+
+	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	//const identifierAtPos = fileAstMap.getIdentifierAt(hoverParams.textDocument.uri, hoverParams.position.line + 1, hoverParams.position.character + 1);
+	if (identifierAtPos === undefined) {
 		return null;
 	}
 
@@ -184,7 +175,7 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 	}
 
 	//const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
-	const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
+	const identifier = workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
 	if (!identifier) {
 		return null;
 	}
@@ -218,7 +209,17 @@ connection.listen();
 function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 	const symbols: DocumentSymbol[] = [];
 
-	const map = fileAstMap.getMap(params.textDocument.uri);
+	//const map = fileAstMap.getMap(params.textDocument.uri);
+	const map = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclarator" ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip).forEach((declaration) => {
+		if (declaration.type === "FunctionDeclaration" || declaration.type === "VariableDeclarator") {
+			symbols.push({
+				kind: declaration.type === "FunctionDeclaration" ? SymbolKind.Function : SymbolKind.Variable,
+				name: declaration.id.name,
+				range: Parser.locationToRange(declaration.location),
+				selectionRange: Parser.locationToRange(declaration.id.location),
+			});
+		}
+	})
 /*
 	Object.keys(map.scopes).forEach(scopeKey => {
 		const scope = map.scopes[scopeKey];
@@ -231,6 +232,7 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 		});
 	});
 */
+	/*
 	Object.keys(map.identifiers.global).forEach(globalKey => {
 		const global = map.identifiers.global[globalKey];
 		symbols.push({
@@ -240,13 +242,22 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 			selectionRange: Parser.locationToRange(global.id.location),
 		});
 	});
+	*/
 
 	return symbols;
 }
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
-	const identifierAtPos = fileAstMap.getIdentifierAt(params.textDocument.uri, params.position.line + 1, params.position.character + 1);
-	const declarator = fileAstMap.getIdentifierDeclarator(params.textDocument.uri, identifierAtPos);
+
+	const nodesAt = workspace.get(params.textDocument.uri)?.getNodesAt(params.position);
+	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	if (identifierAtPos === undefined) {
+		return [];
+	}
+	const declarator = workspace.get(params.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
+	if (!declarator) {
+		return [];
+	}
 	if (declarator === null) {
 		return [];
 	}
@@ -264,13 +275,13 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 	//const documentText = documents.get(params.textDocument.uri)?.getText();
 	//params.position
 	//const ast:{body?: Autoit3AstNode[]} = documentText !== undefined ? parser.parse(documentText) : [];
-	const ast = fileAstMap.get(params.textDocument.uri);
+	//const ast = fileAstMap.get(params.textDocument.uri);
 
 	// FIXME: filter the top level function declarations and varaible declarations, extract identifiers and return the array
 	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" || item.type === "VariableDeclaration" )
 	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" ).map<CompletionItem>((item: { id: { name: string; }; }) => ({label: item.id.name, kind: CompletionItemKind.Function}));
 
-	const astItems = ast.body?.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue) => {
+	const astItems = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclaration" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*ast.body?*/.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue) => {
 		// FIXME: we need to extract global variable declarations from FunctionDeclaration statements.
 		// FIXME: keep a ref map, to check if var is already defined, to only show one suggestion of the same variable multiple times.
 		// FIXME: show scope information in the completion item detail text.
@@ -343,6 +354,66 @@ function extractCompletionItems(nodes: StatementList): CompletionItem[] {
 		}
 		return previousValue;
 	}, []);
+}
+
+function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
+{
+	if (params.context?.isRetrigger && params.context?.triggerCharacter === "," && params.context.activeSignatureHelp !== undefined) {
+		if (params.context.activeSignatureHelp.activeParameter !== null){
+			params.context.activeSignatureHelp.activeParameter += 1;
+		}
+		return params.context.activeSignatureHelp;
+	}
+
+	const nodesAt = workspace.get(params.textDocument.uri)?.getNodesAt(params.position);
+	const callExpression = nodesAt?.reverse().find((node):node is CallExpression => node.type === "CallExpression");
+	if (callExpression === undefined) {
+		return null;
+	}
+
+	//const callExpression = fileAstMap.getCallExpressionAt(params.textDocument.uri, params.position.line + 1, params.position.character + 1);
+	if (params.context?.isRetrigger && params.context.activeSignatureHelp !== undefined && callExpression !== null) {
+		return params.context.activeSignatureHelp;
+	}
+
+	//FIXME: this currently won't work for member expressions!
+
+	if (callExpression.callee.type === "ExpressionStatement" || callExpression.callee.type === "Macro" || callExpression.callee.type === "MemberExpression" || callExpression.callee.type === "Literal" || callExpression.callee.type === "Keyword") {
+		return null;
+	}
+
+	const declarator = workspace.get(params.textDocument.uri)?.getIdentifierDeclarator(callExpression.callee);
+	if (!declarator) {
+		return null;
+	}
+	//const declarator = fileAstMap.getIdentifierDeclarator(params.textDocument.uri, fileAstMap.getNestedIdentifiers(callExpression)?.[0] ?? null);
+
+	if (declarator === null || declarator.type === "VariableDeclarator") {//FIXME: currently we don't look for identifier in the VariableDeclarator init!
+		return null;
+	}
+
+	connection.window.showInformationMessage(documents.keys().length.toString());
+	const x = documents.get(params.textDocument.uri)?.getText(Parser.locationToRange(declarator.location));
+	if (x !== undefined) {
+		connection.window.showInformationMessage(x);
+	} else {
+		connection.window.showInformationMessage("x is undefined.");
+	}
+
+	return {
+		signatures: [
+			{
+				label: declarator.id.name+"("+Parser.AstArrayToStringArray(declarator.params).join(", ")+")",
+				documentation: undefined,//FIXME: built in funcs have this as not undefined
+				parameters: declarator.params.map((parameter): ParameterInformation => ({
+					label: '$'+parameter.id.name,
+					documentation: undefined,//FIXME: built in funcs have this as not undefined in the future
+				})),
+			}
+		],
+		activeParameter: 0,
+		activeSignature: 0,
+	};
 }
 
 const colorRegExp = /#([0-9A-Fa-f]{6})/g;
