@@ -9,8 +9,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI, Utils } from 'vscode-uri';
 
-import FileAstMap from './FileAstMap';
-
 import nativeSuggestions from "./autoit/internal";
 import { CallExpression, Identifier, IncludeStatement, Macro, Program, StatementList, SyntaxError, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
@@ -75,7 +73,6 @@ function debounce<F extends Function>(cb: F, delay = 250) {
 	}));
   }
 
-//const fileAstMap = new FileAstMap(connection);
 const workspace = new Workspace(connection);
 workspace.onDiagnostics(debounce(function (uri, diagnostics) {
     connection.window.showWarningMessage("onDiagnostics");
