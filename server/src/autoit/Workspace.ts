@@ -1,0 +1,147 @@
+import parser, { FunctionDeclaration, Identifier, IncludeStatement, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { Connection, Diagnostic } from 'vscode-languageserver';
+import { URI, Utils } from 'vscode-uri';
+import Parser from './Parser';
+import Script from "./Script";
+
+export type scriptList = {
+    [uri: string]: Script | undefined,
+}
+
+type uri = string | URI;
+
+export type diagnosticsListner = (uri: string, diagnostics: Array<Diagnostic>) => void;
+
+export type IncludeResolve = {uri: URI, text: string};
+export type IncludePromise = Promise<IncludeResolve|null>;
+
+export type AutoIt3Configuration = {
+    "installDir": string|null,
+    "userDefinedLibraries": string[],
+    "version": string,
+};
+
+export class Workspace {
+    protected scripts: scriptList = {};
+    protected connection: Connection|null;
+
+    protected diagnosticsListners: Array<diagnosticsListner> = [];
+
+    constructor(connection: Connection|null = null) {
+        this.connection = connection;
+    }
+
+    public onDiagnostics(fn: diagnosticsListner): void {
+        this.diagnosticsListners.push(fn);
+    }
+
+    public triggerDiagnostics(uri: string, diagnostics: Array<Diagnostic>): void {
+        for (const fn of this.diagnosticsListners) {
+            fn.call(this, uri, diagnostics);
+        }
+    }
+
+    public add(script: Script): void {
+        const uri = script.getUri();
+        if (uri === undefined) {
+            throw new Error("No URI defined on script object");
+        }
+        script.workspace = this;
+        this.scripts[uri.toString()] = script;
+    }
+
+    public get(uri: uri): Script | undefined {
+        return this.scripts[uri.toString()];
+    }
+
+    public exists(uri: uri) {
+        return uri.toString() in this.scripts;
+    }
+
+    public createOrUpdate(uri: uri, text: string): Script {
+        uri = uri.toString();
+        let script = this.scripts?.[uri];
+
+        if (script !== undefined) {
+            script.update(text);
+            return script;
+        }
+
+        script = new Script(text, URI.parse(uri), this);
+        this.add(script);
+        script.triggerDiagnostics();
+        return script;
+    }
+
+    public remove(uri: uri): void {
+        delete this.scripts[uri.toString()];
+    }
+
+    /**
+     * Get first declaration statement for matching identifier
+     * @param uri file uri
+     * @param identifier identifier to match declarator
+     * @param includes if includes should be searched as well.
+     */
+    /*getIdentifierDeclarator(uri: string, identifier: Identifier|VariableIdentifier|Macro|null): FunctionDeclaration|VariableDeclaration|null {
+        if (identifier?.type === "Macro") {
+            return null;
+        }
+        //return this._getIdentifierDeclarator(uri, identifier) ?? (includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : null);
+        return includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : this._getIdentifierDeclarator(uri, identifier);
+    }*/
+
+    public resolveInclude(include: IncludeStatement): Promise<IncludeResolve | null> {
+        let promise = this.connection?.workspace.getConfiguration("autoit3").then((configuration: AutoIt3Configuration) => {
+            let promise:IncludePromise = Promise.resolve(null);
+
+            promise = include.library ? this.includeLibrary(include.file, promise, configuration) : this.includeLocal(include.file, include.location.source, promise);
+
+            promise = this.includeUserDefined(include.file, promise, configuration);
+
+            promise = !include.library ? this.includeLibrary(include.file, promise, configuration) : this.includeLocal(include.file, include.location.source, promise);
+
+            return promise;
+        }) ?? Promise.resolve(null);
+
+        /*
+        //FIXME: check if this is needed in Workspace class (from FileAstMap)
+        promise = promise.then(x => {
+            if (x !== null) {
+                if (this.exists(x.uri.toString())) {
+                    this.maps[x.uri.toString()].counter++;
+                } else {
+                    this.add(x.uri.toString(), this.parse(x.text, x.uri.toString()));
+                }
+            }
+            return x;
+        });
+        */
+
+        return promise;
+    }
+
+    protected includeLibrary(uri: string, promise: IncludePromise, configuration: AutoIt3Configuration|null): IncludePromise {
+        return promise.then(x => x === null && typeof configuration?.installDir === "string" ? this.openTextDocument(Utils.resolvePath(URI.parse(configuration.installDir), uri)) : x);
+    }
+
+    protected includeUserDefined(uri: string, promise: IncludePromise, configuration: AutoIt3Configuration|null): IncludePromise {
+        for (const path of configuration?.userDefinedLibraries ?? []) {
+            promise = promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(URI.file(path), uri)) : null);
+        }
+
+        return promise;
+    }
+
+    protected includeLocal(uri: string, documentUri: string, promise: IncludePromise): IncludePromise {
+        return promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
+    }
+
+    protected openTextDocument(uri: URI): IncludePromise {
+        const promise = this.connection?.sendRequest<string|null>("openTextDocument", uri.toString()).then<IncludeResolve|null>(x => x === null ? x : ({uri: uri, text: x})) ?? Promise.resolve(null);
+
+        promise.then(value => {if (value !== null) {this.createOrUpdate(value.uri, value.text);}} );
+
+        return promise;
+    }
+}
