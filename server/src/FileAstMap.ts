@@ -60,6 +60,7 @@ export enum NodeFilterAction {
     Stop,
 };
 
+/** @deprecated use workspace and script classes instead */
 export default class FileAstMap {
     protected maps: Maps = {};
     protected parser: AutoItParser;
