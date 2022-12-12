@@ -20,6 +20,32 @@
         "Programming Languages"
     ],
     "contributes": {
+        "configuration": {
+            "title": "AutoIt",
+            "properties": {
+                "autoit3.installDir": {
+                    "scope": "window",
+                    "type": "string",
+                    "default": null,
+                    "description": "The path to a AutoIt3 installation directory."
+                },
+                "autoit3.userDefinedLibraries": {
+                    "scope": "window",
+                    "type": "array",
+                    "default": [],
+                    "description": "Array of directories that should be searched for files when intellisense are resolving #include's in addition to the standard locations."
+                },
+                "autoit3.version": {
+                    "scope": "window",
+                    "type": "string",
+                    "default": "3.3.14.5",
+                    "enum": [
+                        "3.3.14.5"
+                    ],
+                    "description": "The target AutoIt3 version for the intellisense."
+                }
+            }
+        },
         "languages": [
             {
                 "id": "au3",
