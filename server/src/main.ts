@@ -104,10 +104,6 @@ connection.onSignatureHelp(getSignatureHelp);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
 	const documentText = documents.get(params.textDocument.uri)?.getText();
-	//const ast:{body?: Autoit3AstNode[]} = documentText !== undefined ? parser.parse(documentText) : [];
-	//const ast = fileAstMap.get(params.textDocument.uri);
-	//connection.console.info(params.textDocument.uri);
-	//URI.parse(params.textDocument.uri)
 
 	return workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "IncludeStatement" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*
 	return ast.body*/.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue) => {
@@ -141,10 +137,7 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 	const uri = hoverParams.textDocument.uri;
 
 	//FIXME: use hoverParams.position to find identifier or varaible.
-	//hoverParams.position
 	//workDoneProgress.done();
-	//return null;
-	//const path = resolveIncludePath(hoverParams.textDocument.uri, ".");
 
 	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
 
@@ -154,7 +147,6 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 	}
 
 	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
-	//const identifierAtPos = fileAstMap.getIdentifierAt(hoverParams.textDocument.uri, hoverParams.position.line + 1, hoverParams.position.character + 1);
 	if (identifierAtPos === undefined) {
 		return null;
 	}
@@ -171,7 +163,6 @@ connection.onHover((hoverParams, token, workDoneProgress) => {
 		}
 	}
 
-	//const identifier = fileAstMap.getIdentifierDeclarator(uri, identifierAtPos);
 	const identifier = workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
 	if (!identifier) {
 		return null;
@@ -206,7 +197,6 @@ connection.listen();
 function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 	const symbols: DocumentSymbol[] = [];
 
-	//const map = fileAstMap.getMap(params.textDocument.uri);
 	const map = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclarator" ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip).forEach((declaration) => {
 		if (declaration.type === "FunctionDeclaration" || declaration.type === "VariableDeclarator") {
 			symbols.push({
@@ -217,29 +207,6 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 			});
 		}
 	})
-/*
-	Object.keys(map.scopes).forEach(scopeKey => {
-		const scope = map.scopes[scopeKey];
-		symbols.push({
-			kind: SymbolKind.Function,
-			name: scope.id.name,
-			range: Parser.locationToRange(scope.location),
-			selectionRange: Parser.locationToRange(scope.id.location),
-			children: [],
-		});
-	});
-*/
-	/*
-	Object.keys(map.identifiers.global).forEach(globalKey => {
-		const global = map.identifiers.global[globalKey];
-		symbols.push({
-			kind: global.type === "FunctionDeclaration" ? SymbolKind.Function : SymbolKind.Variable,
-			name: global.id.name,
-			range: Parser.locationToRange(global.location),
-			selectionRange: Parser.locationToRange(global.id.location),
-		});
-	});
-	*/
 
 	return symbols;
 }
@@ -269,14 +236,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 }
 
 function getCompletionItems(params: CompletionParams): CompletionItem[] {
-	//const documentText = documents.get(params.textDocument.uri)?.getText();
-	//params.position
-	//const ast:{body?: Autoit3AstNode[]} = documentText !== undefined ? parser.parse(documentText) : [];
-	//const ast = fileAstMap.get(params.textDocument.uri);
-
 	// FIXME: filter the top level function declarations and varaible declarations, extract identifiers and return the array
-	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" || item.type === "VariableDeclaration" )
-	//return ast.body.filter((item: { type: string; }) => item.type === "FunctionDeclaration" ).map<CompletionItem>((item: { id: { name: string; }; }) => ({label: item.id.name, kind: CompletionItemKind.Function}));
 
 	const astItems = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclaration" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*ast.body?*/.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue) => {
 		// FIXME: we need to extract global variable declarations from FunctionDeclaration statements.
@@ -368,7 +328,6 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 		return null;
 	}
 
-	//const callExpression = fileAstMap.getCallExpressionAt(params.textDocument.uri, params.position.line + 1, params.position.character + 1);
 	if (params.context?.isRetrigger && params.context.activeSignatureHelp !== undefined && callExpression !== null) {
 		return params.context.activeSignatureHelp;
 	}
@@ -383,7 +342,6 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 	if (!declarator) {
 		return null;
 	}
-	//const declarator = fileAstMap.getIdentifierDeclarator(params.textDocument.uri, fileAstMap.getNestedIdentifiers(callExpression)?.[0] ?? null);
 
 	if (declarator === null || declarator.type === "VariableDeclarator") {//FIXME: currently we don't look for identifier in the VariableDeclarator init!
 		return null;
