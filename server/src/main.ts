@@ -448,7 +448,3 @@ function resolveIncludePath(textDocumentUri: string, includeStatementUri: string
 	// This may hovever not be needed in the webworker version?
 	return Utils.resolvePath(Utils.dirname(URI.parse(textDocumentUri)), includeStatementUri).toString();
 }
-
-function isSyntaxError(e: any): e is SyntaxError {
-	return 'location' in e && 'expected' in e && 'found' in e && 'format' in e;
-}
