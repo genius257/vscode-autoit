@@ -1,5 +1,5 @@
 import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
-import { Diagnostic, DiagnosticSeverity, Location, Position, Range } from "vscode-languageserver";
+import { Diagnostic, DiagnosticSeverity, Position } from "vscode-languageserver";
 import { URI } from 'vscode-uri';
 import AST from './AST';
 import Parser from "./Parser";
@@ -131,11 +131,11 @@ export default class Script {
             return isDeclerator ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip;
         });
 
-        const previousIncludes = this.includes;
+        //const previousIncludes = this.includes;
         const currrentIncludes = this.program?.body.filter((node): node is IncludeStatement => node.type === "IncludeStatement");
 
-        const detached = previousIncludes.filter(previous => currrentIncludes?.findIndex(current => previous.statement.file === current.file && previous.statement.library === current.library) === -1);
-        const added = currrentIncludes?.filter(current => previousIncludes?.findIndex(previous => previous.statement.file === current.file && previous.statement.library === current.library) === -1);
+        //const detached = previousIncludes.filter(previous => currrentIncludes?.findIndex(current => previous.statement.file === current.file && previous.statement.library === current.library) === -1);
+        //const added = currrentIncludes?.filter(current => previousIncludes?.findIndex(previous => previous.statement.file === current.file && previous.statement.library === current.library) === -1);
 
         this.includes = currrentIncludes?.map((include) => {
             const cacheIndex = this.includeCache.findIndex(cacheItem => cacheItem.statement.file === include.file && cacheItem.statement.library === include.library);

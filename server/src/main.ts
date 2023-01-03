@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { Color, ColorInformation, Range, InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, ColorPresentation, TextEdit, TextDocumentIdentifier, CompletionItem, CompletionItemKind, VersionedTextDocumentIdentifier, DidChangeTextDocumentParams, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, /*ColorPresentation, TextEdit, TextDocumentIdentifier,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI, Utils } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, Identifier, IncludeStatement, Macro, Program, StatementList, SyntaxError, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, Identifier, Macro, StatementList, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
@@ -102,7 +102,7 @@ connection.onCompletion(getCompletionItems);
 connection.onSignatureHelp(getSignatureHelp);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
-	const documentText = documents.get(params.textDocument.uri)?.getText();
+	//const documentText = documents.get(params.textDocument.uri)?.getText();
 
 	return workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "IncludeStatement" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*
 	return ast.body*/.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue) => {
@@ -133,7 +133,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 });
 
 connection.onHover((hoverParams, token, workDoneProgress) => {
-	const uri = hoverParams.textDocument.uri;
+	//const uri = hoverParams.textDocument.uri;
 
 	//FIXME: use hoverParams.position to find identifier or varaible.
 	//workDoneProgress.done();
@@ -196,7 +196,7 @@ connection.listen();
 function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 	const symbols: DocumentSymbol[] = [];
 
-	const map = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclarator" ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip).forEach((declaration) => {
+	workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclarator" ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip).forEach((declaration) => {
 		if (declaration.type === "FunctionDeclaration" || declaration.type === "VariableDeclarator") {
 			symbols.push({
 				kind: declaration.type === "FunctionDeclaration" ? SymbolKind.Function : SymbolKind.Variable,
@@ -370,9 +370,10 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 	};
 }
 
-const colorRegExp = /#([0-9A-Fa-f]{6})/g;
+//const colorRegExp = /#([0-9A-Fa-f]{6})/g;
 
 //NOTE: currently colorization is done via simple vscode tmLanguage logic, but using the parser, when ready may be a better choice. Time will tell.
+/*
 function getColorInformation(textDocument: TextDocumentIdentifier) {
 	const colorInfos: ColorInformation[] = [];
 
@@ -441,6 +442,7 @@ function parseColor(content: string, offset: number): Color {
 	const b = (16 * parseHexDigit(content.charCodeAt(offset + 5)) + parseHexDigit(content.charCodeAt(offset + 6))) / 255;
 	return Color.create(r, g, b, 1);
 }
+*/
 
 function resolveIncludePath(textDocumentUri: string, includeStatementUri: string): string {
 	//FIXME: currently we only resolve the include uri's as "Script directory" includes. Implementation need for "User-defined libraries" and "Standard library".

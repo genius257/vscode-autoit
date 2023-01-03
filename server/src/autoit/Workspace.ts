@@ -1,7 +1,6 @@
-import parser, { FunctionDeclaration, Identifier, IncludeStatement, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { IncludeStatement } from 'autoit3-pegjs';
 import { Connection, Diagnostic } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
-import Parser from './Parser';
 import Script from "./Script";
 
 export type scriptList = {
