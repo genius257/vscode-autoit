@@ -74,7 +74,7 @@ function debounce<F extends Function>(cb: F, delay = 250) {
 
 const workspace = new Workspace(connection);
 workspace.onDiagnostics(debounce(function (uri, diagnostics) {
-    connection.window.showWarningMessage("onDiagnostics");
+    //connection.window.showWarningMessage("onDiagnostics");
     connection.sendDiagnostics({
         uri,
         diagnostics,
@@ -346,12 +346,12 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 		return null;
 	}
 
-	connection.window.showInformationMessage(documents.keys().length.toString());
+	//connection.window.showInformationMessage(documents.keys().length.toString());
 	const x = documents.get(params.textDocument.uri)?.getText(Parser.locationToRange(declarator.location));
 	if (x !== undefined) {
-		connection.window.showInformationMessage(x);
+		//connection.window.showInformationMessage(x);
 	} else {
-		connection.window.showInformationMessage("x is undefined.");
+		//connection.window.showInformationMessage("x is undefined.");
 	}
 
 	return {
