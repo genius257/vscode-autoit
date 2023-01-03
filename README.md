@@ -10,3 +10,4 @@ Current version targets are:
 
 * AutoIt2 Syntax highlighting
 * AutoIt3 Syntax highlighting
+* AutoIt3 Partial IntelliSense
