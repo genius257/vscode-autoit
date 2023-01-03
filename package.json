@@ -12,10 +12,40 @@
     "engines": {
         "vscode": "^1.61.0"
     },
+    "activationEvents": [
+        "onLanguage:au3"
+    ],
+    "browser": "./client/dist/main",
     "categories": [
         "Programming Languages"
     ],
     "contributes": {
+        "configuration": {
+            "title": "AutoIt",
+            "properties": {
+                "autoit3.installDir": {
+                    "scope": "window",
+                    "type": "string",
+                    "default": null,
+                    "description": "The path to a AutoIt3 installation directory."
+                },
+                "autoit3.userDefinedLibraries": {
+                    "scope": "window",
+                    "type": "array",
+                    "default": [],
+                    "description": "Array of directories that should be searched for files when intellisense are resolving #include's in addition to the standard locations."
+                },
+                "autoit3.version": {
+                    "scope": "window",
+                    "type": "string",
+                    "default": "3.3.14.5",
+                    "enum": [
+                        "3.3.14.5"
+                    ],
+                    "description": "The target AutoIt3 version for the intellisense."
+                }
+            }
+        },
         "languages": [
             {
                 "id": "au3",
@@ -26,7 +56,11 @@
                 "extensions": [
                     "au3"
                 ],
-                "configuration": "./au3-language-configuration.json"
+                "configuration": "./au3-language-configuration.json",
+                "icon": {
+                    "light": "./images/file.svg",
+                    "dark": "./images/file.svg"
+                }
             },
             {
                 "id": "aut",
@@ -53,9 +87,35 @@
             }
         ]
     },
-    "dependencies": {},
+    "dependencies": {
+        "autoit3-pegjs": "git+https://github.com/genius257/autoit3-pegjs.git#413532f"
+    },
     "devDependencies": {
+        "@types/jest": "^29.1.2",
+        "@types/mocha": "^8.2.2",
+        "@typescript-eslint/eslint-plugin": "^4.23.0",
+        "@typescript-eslint/parser": "^4.23.0",
+        "@vscode/test-web": "^0.0.22",
+        "eslint": "^7.26.0",
+        "jest": "^29.1.2",
+        "mocha": "^8.3.2",
+        "path-browserify": "^1.0.1",
         "svg-png-converter": "0.0.9",
-        "vsce": "^1.100.2"
+        "ts-jest": "^29.0.3",
+        "ts-loader": "^9.4.1",
+        "typescript": "^4.8.4",
+        "vsce": "^1.103.1",
+        "webpack": "^5.74.0",
+        "webpack-cli": "^4.10.0"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+        "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+        "chrome": "npm run compile && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ./test-data",
+        "test": "jest"
     }
 }
