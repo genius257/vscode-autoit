@@ -87,7 +87,9 @@
             }
         ]
     },
-    "dependencies": {},
+    "dependencies": {
+        "autoit3-pegjs": "git+https://github.com/genius257/autoit3-pegjs.git#413532f"
+    },
     "devDependencies": {
         "@types/jest": "^29.1.2",
         "@types/mocha": "^8.2.2",
