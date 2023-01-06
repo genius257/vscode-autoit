@@ -169,8 +169,6 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		case "VariableDeclarator":
 			let value: string | number | boolean | null | undefined;
 			if (identifier.init !== null) {
-			//if (identifier.init?.type === "Literal") {
-				//value = identifier.init.value;
 				value = Parser.AstToString(identifier.init);
 			}
 
