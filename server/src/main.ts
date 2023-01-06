@@ -155,6 +155,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		if (suggestion !== undefined) {
 			return {
 				contents: suggestion.detail + "\n\n" + suggestion.documentation,
+				range: Parser.locationToRange(identifierAtPos.location),
 			};
 		}
 	}
