@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, /*ColorPresentation, TextEdit, TextDocumentIdentifier,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, /*ColorPresentation, TextEdit, TextDocumentIdentifier,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI, Utils } from 'vscode-uri';
@@ -132,7 +132,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 	}, []);
 });
 
-connection.onHover((hoverParams, token, workDoneProgress) => {
+connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 	//const uri = hoverParams.textDocument.uri;
 
 	//FIXME: use hoverParams.position to find identifier or varaible.
