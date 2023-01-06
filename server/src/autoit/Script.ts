@@ -526,7 +526,7 @@ export default class Script {
             case "WithStatement":
                 return this.filterNestedNode(node.object, fn, matches) ?? this.filterNestedNodes(node.body, fn, matches);
             default:
-                //@ts-ignore
+                //@ts-expect-error
                 throw new Error("Unsupported type: " + node.type);
         }
 
