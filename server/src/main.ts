@@ -10,10 +10,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI, Utils } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, Identifier, Macro, StatementList, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, Macro, StatementList, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
-import { NodeFilterAction } from './autoit/Script';
+import Script, { NodeFilterAction } from './autoit/Script';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -141,9 +141,6 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
 
 	//FIXME: when hovering over a function-declaration, FunctionDeclaration is not the first element, but items like EmptyStatement. It makes no sense, a unit test should be added.
-	if (nodesAt?.find(node => node.type === "FunctionDeclaration") !== undefined) {
-		return null; //FIXME: identifier declarator lookup needs to implement a scope first approatch.
-	}
 
 	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
@@ -160,7 +157,28 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		}
 	}
 
-	const identifier = workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
+	let identifier: FormalParameter | FunctionDeclaration | VariableDeclaration | null | undefined = null;
+	//conditional block to check for variable declaritions within a function scope.
+	if (identifierAtPos.type === "VariableIdentifier") {
+		const functionDeclaration: FunctionDeclaration | undefined = nodesAt?.find((node): node is FunctionDeclaration => node.type === "FunctionDeclaration");
+		if (functionDeclaration !== undefined) {
+			const script = new Script("");
+			const variableDeclaratorsInScope: Array<VariableDeclaration|EnumDeclaration> = [];
+			script.filterNestedNode(functionDeclaration, (node) => node.type === "VariableDeclarator" && node.id.name.toLowerCase() === identifierAtPos.name.toLowerCase() ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip, variableDeclaratorsInScope);
+			//script.filterNestedNode(functionDeclaration, (node) => {connection.console.log(node.type);return /*node.type === "VariableDeclarator" ? NodeFilterAction.StopPropagation :*/ NodeFilterAction.Continue}, variableDeclaratorsInScope);
+			identifier = variableDeclaratorsInScope.filter(variableDeclarator => identifierAtPos.location.start.offset > variableDeclarator.location.end.offset).reverse()[0];
+			if (!identifier) {
+				//fallback to check function parameters, if no identifier was found.
+				identifier = functionDeclaration.params.filter(param => param.id.name.toLowerCase() === identifierAtPos.name.toLowerCase())[0];
+				/*if (parameter !== undefined) {
+					identifier = {type: "VariableDeclarator", id: parameter.id, init: parameter.init, location: parameter.location};//FIXME: this should be done differently. the accepted type of identifier should allow FormalParameter and a case in the swiotch below should be added.
+				}*/
+			}
+			connection.console.log(identifier.type);
+		}
+	}
+
+	identifier = identifier ?? workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
 	if (!identifier) {
 		return null;
 	}
@@ -173,11 +191,22 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 			}
 
 			return {
-				contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + (identifier.id.name ?? "") + (value === undefined ? "" : " = " + value),
+				contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + identifier.id.name + (value === undefined ? "" : " = " + value),
+				range: Parser.locationToRange(identifierAtPos.location),
 			};
 		case "FunctionDeclaration":
 			return {
 				contents: identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+				range: Parser.locationToRange(identifierAtPos.location),
+			};
+		case "Parameter":
+			let parameterValue: string | number | boolean | null | undefined;
+			if (identifier.init !== null) {
+				parameterValue = Parser.AstToString(identifier.init);
+			}
+			return {
+				contents: "(parameter) $" + identifier.id.name + (parameterValue === undefined ? "" : " = " + parameterValue),
+				range: Parser.locationToRange(identifierAtPos.location),
 			};
 		default:
 			break;
