@@ -340,7 +340,9 @@ export default class Script {
                 break;
             case "RedimExpression":
                 //return this.getNestedNodesAtFromArray(node.declarations, line, column);
-                throw new Error("RedimExpression not correcly implemented as an AST node yet!");
+                //NOTE: redim ts type is not implemented as of writing this code iteration, and not needed for current intellisense anyways.
+                //TODO: implement at a later date, for hover support on the variables, and more.
+                break;
             case "ReturnStatement":
                 return this.getNestedNodesAt(node.value, line, column, matches);
             case "SelectCase":
@@ -494,7 +496,9 @@ export default class Script {
                 break;
             case "RedimExpression":
                 //return this.filterNestedNodes(node.declarations, line, column);
-                throw new Error("RedimExpression not correcly implemented as an AST node yet!");
+                //NOTE: redim ts type is not implemented as of writing this code iteration, and not needed for current intellisense anyways.
+                //TODO: implement at a later date, for hover support on the variables, and more.
+                break;
             case "ReturnStatement":
                 return this.filterNestedNode(node.value, fn, matches);
             case "SelectCase":
