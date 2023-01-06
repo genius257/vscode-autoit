@@ -154,10 +154,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		const suggestion = identifierAtPos.type === "Identifier" ? nativeSuggestions[identifierAtPos.name.toLowerCase()] : nativeSuggestions[identifierAtPos.value.toLowerCase()];
 		if (suggestion !== undefined) {
 			return {
-				//code: 0,
 				contents: suggestion.detail + "\n\n" + suggestion.documentation,
-				//message: "message",
-				name: suggestion.detail,
 			};
 		}
 	}
