@@ -380,7 +380,9 @@ export default class Script {
                 this.getNestedNodesAtFromArray(node.body, line, column, matches);
                 break;
             case "WithStatement":
-                return this.getNestedNodesAt(node.object, line, column, matches) ?? this.getNestedNodesAtFromArray(node.body, line, column, matches);
+                this.getNestedNodesAt(node.object, line, column, matches);
+                this.getNestedNodesAtFromArray(node.body, line, column, matches);
+                break;
             default:
                 this.assertCannotReach(node, `Unsupported node type: "${type}"`);
         }
