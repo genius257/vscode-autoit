@@ -129,14 +129,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 });
 
 connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
-	//const uri = hoverParams.textDocument.uri;
-
-	//FIXME: use hoverParams.position to find identifier or varaible.
-	//workDoneProgress.done();
-
 	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
-
-	//FIXME: when hovering over a function-declaration, FunctionDeclaration is not the first element, but items like EmptyStatement. It makes no sense, a unit test should be added.
 
 	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
