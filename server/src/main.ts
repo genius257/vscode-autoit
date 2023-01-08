@@ -367,7 +367,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 		return null;
 	}
 
-	if (declarator === null || declarator.type === "VariableDeclarator") {//FIXME: currently we don't look for identifier in the VariableDeclarator init!
+	if (declarator === null || declarator.type === "VariableDeclarator" || declarator.type === "Parameter") {//FIXME: currently we don't look for identifier in the VariableDeclarator init!
 		return null;
 	}
 
