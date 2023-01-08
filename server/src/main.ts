@@ -170,9 +170,6 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 			if (!identifier) {
 				//fallback to check function parameters, if no identifier was found.
 				identifier = functionDeclaration.params.filter(param => param.id.name.toLowerCase() === identifierAtPos.name.toLowerCase())[0];
-				/*if (parameter !== undefined) {
-					identifier = {type: "VariableDeclarator", id: parameter.id, init: parameter.init, location: parameter.location};//FIXME: this should be done differently. the accepted type of identifier should allow FormalParameter and a case in the swiotch below should be added.
-				}*/
 			}
 			connection.console.log(identifier.type);
 		}
