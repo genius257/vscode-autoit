@@ -715,4 +715,8 @@ export default class Script {
 
         return declaration as FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null ?? null;
     }
+
+    public getIncludes(): Readonly<Array<Include>> {
+        return this.includes;
+    }
 }

@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, /*ColorPresentation, TextEdit, TextDocumentIdentifier,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, /*ColorPresentation, TextEdit, TextDocumentIdentifier,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { URI, Utils } from 'vscode-uri';
+import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, Macro, StatementList, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, Macro, StatementList, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import Script, { NodeFilterAction } from './autoit/Script';
@@ -104,32 +104,28 @@ connection.onSignatureHelp(getSignatureHelp);
 connection.onDocumentLinks((params: DocumentLinkParams) => {
 	//const documentText = documents.get(params.textDocument.uri)?.getText();
 
-	return workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "IncludeStatement" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*
-	return ast.body*/.reduce<DocumentLink[]>((previousValue: DocumentLink[], currentValue) => {
-		switch (currentValue.type) {
-			case "IncludeStatement":
-				//connection.console.info(resolveIncludePath(params.textDocument.uri, currentValue.file || "."));
-				//TODO: check if some code for handling multi-line include statement text handling is needed.
-				previousValue.push({
-					range: {
-						start: {
-							line: (currentValue.location?.start.line || 1) - 1,
-							character: (currentValue.location?.end.column || 0) - (currentValue.file?.length || 0) - 3
-						},
-						end: {
-							line: (currentValue.location?.end.line || 1) - 1,
-							character: (currentValue.location?.end.column || 0) - 1
-						},
-					},
-					target: resolveIncludePath(params.textDocument.uri, currentValue.file || "."), //TODO: if resolve fails, we should either mark a warning/notice of missing file, and/or not show a broken link.
-				});
-				break;
-			default:
-				break;
-		}
-
-		return previousValue;
-	}, []);
+	const includes = workspace.get(params.textDocument.uri)?.getIncludes();
+	if (includes !== undefined) {
+		const statementToRange = (statement: IncludeStatement): Range => ({
+			start: {
+				line: statement.location.start.line - 1,
+				character: statement.location.end.column - statement.file.length - 3
+			},
+			end: {
+				line: statement.location.end.line - 1,
+				character: statement.location.end.column - 1
+			}
+		});
+		return Promise
+			.all(includes.map(include => include.promise))
+			.then<DocumentLink[]>(() => includes.map<DocumentLink>(include => ({
+				range: statementToRange(include.statement),
+				target: include.uri ?? undefined,
+				tooltip: include.uri === null ? undefined : URI.parse(include.uri).fsPath
+			})));
+	} else {
+		return [];
+	}
 });
 
 connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
@@ -464,10 +460,3 @@ function parseColor(content: string, offset: number): Color {
 	return Color.create(r, g, b, 1);
 }
 */
-
-function resolveIncludePath(textDocumentUri: string, includeStatementUri: string): string {
-	//FIXME: currently we only resolve the include uri's as "Script directory" includes. Implementation need for "User-defined libraries" and "Standard library".
-	// An extra parameter indicating starting from script or standard library when looking for the file is needed.
-	// This may hovever not be needed in the webworker version?
-	return Utils.resolvePath(Utils.dirname(URI.parse(textDocumentUri)), includeStatementUri).toString();
-}
