@@ -171,7 +171,6 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				//fallback to check function parameters, if no identifier was found.
 				identifier = functionDeclaration.params.filter(param => param.id.name.toLowerCase() === identifierAtPos.name.toLowerCase())[0];
 			}
-			connection.console.log(identifier.type);
 		}
 	}
 
