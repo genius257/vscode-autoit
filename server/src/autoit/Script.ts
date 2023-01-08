@@ -669,7 +669,7 @@ export default class Script {
      * @param identifier identifier to find a matching declarator for
      * @param stack a stack of already processed uri's that will be skipped from being processed any further.
      */
-    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = []): FunctionDeclaration | VariableDeclaration | null {
+    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = []): FormalParameter | FunctionDeclaration | VariableDeclaration | null {
         if (identifier === null || identifier.type === "Macro") {
             return null;
         }
@@ -685,11 +685,13 @@ export default class Script {
         }
 
         // first we check current script for a declaration.
-        let declaration: FunctionDeclaration | VariableDeclaration | undefined | null = this.filterNodes((node) => {
+        let declaration: FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null = this.filterNodes((node) => {
             switch (node.type) {
                 case "FunctionDeclaration":
                     return identifier.type === "Identifier" && identifier.name.toLowerCase() === node.id.name.toLowerCase() ? NodeFilterAction.Stop : ((node.location.start.offset < identifier.location.start.offset && node.location.end.offset > identifier.location.end.offset) ? NodeFilterAction.Skip : NodeFilterAction.SkipAndStopPropagation);
                 case "VariableDeclarator":
+                    return identifier.type === "VariableIdentifier" && node.id.name.toLowerCase() === identifier.name.toLowerCase() ? NodeFilterAction.Stop : NodeFilterAction.Skip;
+                case "Parameter":
                     return identifier.type === "VariableIdentifier" && node.id.name.toLowerCase() === identifier.name.toLowerCase() ? NodeFilterAction.Stop : NodeFilterAction.Skip;
                 //case "VariableDeclaration":
                     //node.
@@ -711,6 +713,6 @@ export default class Script {
             }
         }
 
-        return declaration as FunctionDeclaration | VariableDeclaration | undefined | null ?? null;
+        return declaration as FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null ?? null;
     }
 }
