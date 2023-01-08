@@ -688,7 +688,7 @@ export default class Script {
         let declaration: FunctionDeclaration | VariableDeclaration | undefined | null = this.filterNodes((node) => {
             switch (node.type) {
                 case "FunctionDeclaration":
-                    return identifier.type === "Identifier" && identifier.name.toLowerCase() === node.id.name.toLowerCase() ? NodeFilterAction.Stop : NodeFilterAction.Skip;
+                    return identifier.type === "Identifier" && identifier.name.toLowerCase() === node.id.name.toLowerCase() ? NodeFilterAction.Stop : ((node.location.start.offset < identifier.location.start.offset && node.location.end.offset > identifier.location.end.offset) ? NodeFilterAction.Skip : NodeFilterAction.SkipAndStopPropagation);
                 case "VariableDeclarator":
                     return identifier.type === "VariableIdentifier" && node.id.name.toLowerCase() === identifier.name.toLowerCase() ? NodeFilterAction.Stop : NodeFilterAction.Skip;
                 //case "VariableDeclaration":
