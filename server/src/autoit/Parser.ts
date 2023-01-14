@@ -11,13 +11,23 @@ export default class Parser {
     }
 
     public static isPositionWithinLocation(line: number, column: number, location: LocationRange): boolean {
-        if (location.start.line <= line && location.end.line >= line) {
-            if (location.start.line === line && location.end.line === line) {
-                return location.start.column <= column && location.end.column > column;
-            }
-            return true;
+        // Check if position line is above the start line or below the end line
+        if (line < location.start.line || line > location.end.line) {
+            return false;
         }
-        return false;
+
+        // Check if position is on the start line but before the start column
+        if (line === location.start.line && column < location.start.column) {
+            return false;
+        }
+
+        // Check if position is on the end line but after the end column
+        if (line === location.end.line && column > location.end.column) {
+            return false;
+        }
+
+        // If none of the above conditions are met, the position is within the range
+        return true;
     }
 
     /** Converts a autoit3-pegjs Location to a vscode Range */
