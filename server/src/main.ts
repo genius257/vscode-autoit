@@ -130,6 +130,15 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 
 connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
+	nodesAt?.reverse();
+
+	if (nodesAt?.[0]?.type === "ExitStatement") {
+		connection.console.log(JSON.stringify(nodesAt[0]));
+		return {
+			contents: "Exit ( [return code] )\n\nTerminates the script.",
+			range: Parser.locationToRange(nodesAt[0].location),
+		};
+	}
 
 	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
