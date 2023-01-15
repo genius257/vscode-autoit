@@ -140,7 +140,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		};
 	}
 
-	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	const identifierAtPos = nodesAt?.find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
 		return null;
 	}
