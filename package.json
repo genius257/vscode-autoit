@@ -71,7 +71,11 @@
                 "extensions": [
                     "aut"
                 ],
-                "configuration": "./aut-language-configuration.json"
+                "configuration": "./aut-language-configuration.json",
+                "icon": {
+                    "light": "./images/au2.file.svg",
+                    "dark": "./images/au2.file.svg"
+                }
             }
         ],
         "grammars": [
