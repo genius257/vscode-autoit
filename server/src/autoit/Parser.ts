@@ -98,7 +98,11 @@ export default class Parser {
             case "Macro":
                 return ast.value;
             case "MemberExpression":
-                return this.AstToString(ast.object)+"."+this.AstToString(ast.property);
+                if (ast.computed) { // array index accessor
+                    return this.AstToString(ast.object)+"["+this.AstToString(ast.property)+"]";
+                } else { // object property accessor
+                    return this.AstToString(ast.object)+"."+this.AstToString(ast.property);
+                }
             case "MultiLineComment":
                 return "#cs" + ast.body + "\n#ce";
             case "NotExpression":
