@@ -1,7 +1,6 @@
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
 import { Diagnostic, DiagnosticSeverity, Position } from "vscode-languageserver";
 import { URI } from 'vscode-uri';
-import AST from './AST';
 import Parser from "./Parser";
 import { Workspace } from "./Workspace";
 
@@ -19,8 +18,8 @@ export type ScriptHint = Diagnostic & { severity: typeof DiagnosticSeverity.Hint
 
 export type ScriptDiagnostic = ScriptError | ScriptWarning | ScriptInformation | ScriptHint;
 
-export type Node = SourceElement | AssignmentExpression | FormalParameter | VariableDeclaration | ArrayDeclaration | DefaultClause | CaseClause | SelectCaseClause | SwitchCaseValue | Macro | IncludeStatement;
-export type NodeList = SourceElements | ArgumentList | VariableDeclarationList | FormalParameterList | (DefaultClause | CaseClause | SelectCaseClause)[] | ArrayDeclarationElementList | CaseValueList;
+export type Node = SourceElement | AssignmentExpression | FormalParameter | VariableDeclaration | ArrayDeclaration | DefaultClause | CaseClause | SelectCaseClause | SwitchCaseValue | Macro | IncludeStatement | ElseIfClause | ElseClause;
+export type NodeList = SourceElements | ArgumentList | VariableDeclarationList | FormalParameterList | (DefaultClause | CaseClause | SelectCaseClause)[] | ArrayDeclarationElementList | CaseValueList | ElseIfClauses | ElseClause[];
 
 export enum NodeFilterAction {
     /** Adds the current node and continues down the branch */
@@ -222,9 +221,9 @@ export default class Script {
         return this.uri;
     }
 
-    public getNodesAt(position: Position): Array<AST.Node>;
-    public getNodesAt(line: number, column: number): Array<AST.Node>;
-    public getNodesAt(line: Position | number, column: number = 0): Array<AST.Node> {
+    public getNodesAt(position: Position): Array<Node>;
+    public getNodesAt(line: number, column: number): Array<Node>;
+    public getNodesAt(line: Position | number, column: number = 0): Array<Node> {
         if (typeof line !== "number") {
             column = line.character + 1;
             line = line.line + 1;
@@ -238,7 +237,7 @@ export default class Script {
     }
 
     /** @internal */
-    public getNestedNodesAt(node: AST.Node | null, line: number, column: number, matches: Array<AST.Node>): Array<AST.Node> {
+    public getNestedNodesAt(node: Node | null, line: number, column: number, matches: Array<Node>): Array<Node> {
         if (node === null) {
             return matches;
         }
@@ -279,6 +278,13 @@ export default class Script {
                 this.getNestedNodesAt(node.test, line, column, matches);
                 this.getNestedNodesAtFromArray(node.body, line, column, matches);
                 break;
+            case "ElseIfStatement":
+                this.getNestedNodesAt(node.test, line, column, matches);
+                this.getNestedNodesAtFromArray(node.consequent, line, column, matches);
+                break;
+            case "ElseStatement":
+                this.getNestedNodesAtFromArray(node.consequent, line, column, matches);
+                break;
             case "EmptyStatement":
                 break;
             case "ExitLoopStatement":
@@ -309,6 +315,9 @@ export default class Script {
             case "IfStatement":
                 this.getNestedNodesAt(node.test, line, column, matches);
                 Array.isArray(node.consequent) ? this.getNestedNodesAtFromArray(node.consequent, line, column, matches) : this.getNestedNodesAt(node.consequent, line, column, matches)
+                if ('alternate' in node ) {
+                    this.getNestedNodesAtFromArray(node.alternate, line, column, matches);
+                }
                 break;
             case "IncludeOnceStatement":
                 break;
@@ -391,7 +400,7 @@ export default class Script {
     }
 
     /** @internal */
-    protected getNestedNodesAtFromArray(nodeList: AST.NodeList | null, line: number, column: number, matches: Array<AST.Node>): Array<AST.Node> {
+    protected getNestedNodesAtFromArray(nodeList: NodeList | null, line: number, column: number, matches: Array<Node>): Array<Node> {
         if (nodeList === null) {
             return matches;
         }
@@ -477,6 +486,15 @@ export default class Script {
                 }
                 status = this.filterNestedNodes(node.body, fn, matches);
                 return status;
+            case "ElseIfStatement":
+                status = this.filterNestedNode(node.test, fn, matches);
+                if (status === NodeFilterAction.Stop || status === NodeFilterAction.StopAndSkip) {
+                    return status;
+                }
+                status = this.filterNestedNodes(node.consequent, fn, matches);
+                return status;
+            case "ElseStatement":
+                return this.filterNestedNodes(node.consequent, fn, matches);
             case "EmptyStatement":
                 break;
             case "ExitLoopStatement":
@@ -531,11 +549,18 @@ export default class Script {
             case "Identifier":
                 break;
             case "IfStatement":
-                let identifier = this.filterNestedNode(node.test, fn, matches);
-                if (identifier === null) {
-                    return Array.isArray(node.consequent) ? this.filterNestedNodes(node.consequent, fn, matches) : this.filterNestedNode(node.consequent, fn, matches)
+                status = this.filterNestedNode(node.test, fn, matches);
+                if (status === NodeFilterAction.Stop || status === NodeFilterAction.StopAndSkip) {
+                    return status;
                 }
-                return identifier;
+                status = Array.isArray(node.consequent) ? this.filterNestedNodes(node.consequent, fn, matches) : this.filterNestedNode(node.consequent, fn, matches)
+                if ('alternate' in node ) {
+                    if (status === NodeFilterAction.Stop || status === NodeFilterAction.StopAndSkip) {
+                        return status;
+                    }
+                    status = this.filterNestedNodes(node.alternate, fn, matches);
+                }
+                return status;
             case "IncludeOnceStatement":
                 break;
             case "IncludeStatement":
