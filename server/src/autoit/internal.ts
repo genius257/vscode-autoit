@@ -147,25 +147,25 @@ export default {
     '@error': {
         title: '@error',
         detail: '@error',
-        documentation: 'Status of the error flag. See the function',
+        documentation: 'Status of the error flag. See the function SetError().',
         kind: CompletionItemKind.Constant
     },
     '@exitcode': {
         title: '@exitCode',
         detail: '@exitCode',
-        documentation: 'Exit code as set by',
+        documentation: 'Exit code as set by Exit statement.',
         kind: CompletionItemKind.Constant
     },
     '@exitmethod': {
         title: '@exitMethod',
         detail: '@exitMethod',
-        documentation: 'Exit method. See the function',
+        documentation: 'Exit method. See the function OnAutoItExitRegister().',
         kind: CompletionItemKind.Constant
     },
     '@extended': {
         title: '@extended',
         detail: '@extended',
-        documentation: 'Extended function return - used in certain functions such as',
+        documentation: 'Extended function return - used in certain functions such as StringReplace().',
         kind: CompletionItemKind.Constant
     },
     '@favoritescommondir': {
@@ -183,37 +183,37 @@ export default {
     '@gui_ctrlhandle': {
         title: '@GUI_CtrlHandle',
         detail: '@GUI_CtrlHandle',
-        documentation: 'Last click GUI Control handle. Only valid in an event Function. See the',
+        documentation: 'Last click GUI Control handle. Only valid in an event Function. See the GUICtrlSetOnEvent() function.',
         kind: CompletionItemKind.Constant
     },
     '@gui_ctrlid': {
         title: '@GUI_CtrlId',
         detail: '@GUI_CtrlId',
-        documentation: 'Last click GUI Control identifier. Only valid in an event Function. See the',
+        documentation: 'Last click GUI Control identifier. Only valid in an event Function. See the GUICtrlSetOnEvent() function.',
         kind: CompletionItemKind.Constant
     },
     '@gui_dragfile': {
         title: '@GUI_DragFile',
         detail: '@GUI_DragFile',
-        documentation: 'Filename of the file being dropped. Only valid on Drop Event. See the',
+        documentation: 'Filename of the file being dropped. Only valid on Drop Event. See the GUISetOnEvent() function.',
         kind: CompletionItemKind.Constant
     },
     '@gui_dragid': {
         title: '@GUI_DragId',
         detail: '@GUI_DragId',
-        documentation: 'Drag GUI Control identifier. Only valid on Drop Event. See the',
+        documentation: 'Drag GUI Control identifier. Only valid on Drop Event. See the GUISetOnEvent() function.',
         kind: CompletionItemKind.Constant
     },
     '@gui_dropid': {
         title: '@GUI_DropId',
         detail: '@GUI_DropId',
-        documentation: 'Drop GUI Control identifier. Only valid on Drop Event. See the',
+        documentation: 'Drop GUI Control identifier. Only valid on Drop Event. See the GUISetOnEvent() function.',
         kind: CompletionItemKind.Constant
     },
     '@gui_winhandle': {
         title: '@GUI_WinHandle',
         detail: '@GUI_WinHandle',
-        documentation: 'Last click GUI window handle. Only valid in an event Function. See the',
+        documentation: 'Last click GUI window handle. Only valid in an event Function. See the GUICtrlSetOnEvent() function.',
         kind: CompletionItemKind.Constant
     },
     '@homedrive': {
@@ -237,7 +237,7 @@ export default {
     '@hotkeypressed': {
         title: '@HotKeyPressed',
         detail: '@HotKeyPressed',
-        documentation: 'Last hotkey pressed. See the',
+        documentation: 'Last hotkey pressed. See the HotKeySet() function.',
         kind: CompletionItemKind.Constant
     },
     '@hour': {
@@ -273,13 +273,13 @@ export default {
     '@kblayout': {
         title: '@KBLayout',
         detail: '@KBLayout',
-        documentation: 'Returns code denoting Keyboard Layout.  See',
+        documentation: 'Returns code denoting Keyboard Layout. See Appendix for possible values.',
         kind: CompletionItemKind.Constant
     },
     '@lf': {
         title: '@LF',
         detail: '@LF',
-        documentation: 'Line feed,',
+        documentation: 'Line feed, Chr(10); occasionally used for line breaks.',
         kind: CompletionItemKind.Constant
     },
     '@localappdatadir': {
@@ -333,7 +333,7 @@ export default {
     '@muilang': {
         title: '@MUILang',
         detail: '@MUILang',
-        documentation: 'Returns code denoting Multi Language if available (Vista is OK by default).  See',
+        documentation: 'Returns code denoting Multi Language if available (Vista is OK by default). See Appendix for possible values.',
         kind: CompletionItemKind.Constant
     },
     '@mydocumentsdir': {
@@ -363,7 +363,7 @@ export default {
     '@oslang': {
         title: '@OSLang',
         detail: '@OSLang',
-        documentation: 'Returns code denoting OS Language.  See',
+        documentation: 'Returns code denoting OS Language. See Appendix for possible values.',
         kind: CompletionItemKind.Constant
     },
     '@osservicepack': {
@@ -381,7 +381,7 @@ export default {
     '@osversion': {
         title: '@OSVersion',
         detail: '@OSVersion',
-        documentation: 'Returns one of the following: "WIN_11", "WIN_10", "WIN_81", "WIN_8", "WIN_7", "WIN_VISTA", "WIN_XP", "WIN_XPe",',
+        documentation: 'Returns one of the following: "WIN_11", "WIN_10", "WIN_81", "WIN_8", "WIN_7", "WIN_VISTA", "WIN_XP", "WIN_XPe",\nfor Windows servers: "WIN_2019", "WIN_2022", "WIN_2016", "WIN_2012R2", "WIN_2012", "WIN_2008R2", "WIN_2008", "WIN_2003".',
         kind: CompletionItemKind.Constant
     },
     '@programfilesdir': {
@@ -561,7 +561,7 @@ export default {
     '@tab': {
         title: '@TAB',
         detail: '@TAB',
-        documentation: 'Tab character,',
+        documentation: 'Tab character, Chr(9)',
         kind: CompletionItemKind.Constant
     },
     '@tempdir': {
@@ -573,7 +573,7 @@ export default {
     '@tray_id': {
         title: '@TRAY_ID',
         detail: '@TRAY_ID',
-        documentation: 'Last clicked item identifier during a',
+        documentation: 'Last clicked item identifier during a TraySetOnEvent() or TrayItemSetOnEvent() action.',
         kind: CompletionItemKind.Constant
     },
     '@trayiconflashing': {
