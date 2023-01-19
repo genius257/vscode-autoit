@@ -2172,6 +2172,12 @@ export default {
         documentation: 'UnRegisters a function that was called when AutoIt exits.',
         kind: CompletionItemKind.Function
     },
+    get opt() {return {
+        title: "Opt",
+        detail: 'Opt ( "option" [, param] )',
+        documentation: this.autoitsetoption.documentation,
+        kind: this.autoitsetoption.kind,
+    }},
     ping: {
         title: 'Ping',
         detail: 'Ping ( "address/hostname" [, timeout = 4000] )',
