@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added hover support for the Exit keyword (issue #10)
+- Added icon for AutoIt2 files
+
+### Fixed
+
+- Fixed issue with wrong hover information sometimes shown due to bad position check.
+- Fixed issue with hover not working in ElseIf/Else-Statement
+- Fixed missing hover information support for built-in function Opt (issue #13)
+- Fixed incomplete text on some macro descriptions (issue #12)
+- Fixed AST to string showing array access as property access instead (issue #14)
+- Fixed isse with IncludeStatement document links using backslash fails to resolve on web and linux
+
 ## [1.1.1] - 2023-01-09
 
 ### Fixed
