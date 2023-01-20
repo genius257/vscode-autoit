@@ -94,11 +94,13 @@ export class Workspace {
         let promise = this.connection?.workspace.getConfiguration("autoit3").then((configuration: AutoIt3Configuration) => {
             let promise:IncludePromise = Promise.resolve(null);
 
-            promise = include.library ? this.includeLibrary(include.file, promise, configuration) : this.includeLocal(include.file, include.location.source, promise);
+            const fileUri = include.file.replace(/\\/g, '/');
 
-            promise = this.includeUserDefined(include.file, promise, configuration);
+            promise = include.library ? this.includeLibrary(fileUri, promise, configuration) : this.includeLocal(fileUri, include.location.source, promise);
 
-            promise = !include.library ? this.includeLibrary(include.file, promise, configuration) : this.includeLocal(include.file, include.location.source, promise);
+            promise = this.includeUserDefined(fileUri, promise, configuration);
+
+            promise = !include.library ? this.includeLibrary(fileUri, promise, configuration) : this.includeLocal(fileUri, include.location.source, promise);
 
             return promise;
         }) ?? Promise.resolve(null);
