@@ -254,8 +254,6 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 }
 
 function getCompletionItems(params: CompletionParams): CompletionItem[] {
-	// FIXME: filter the top level function declarations and varaible declarations, extract identifiers and return the array
-
 	const astItems = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclaration" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*ast.body?*/.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue) => {
 		// FIXME: we need to extract global variable declarations from FunctionDeclaration statements.
 		// FIXME: keep a ref map, to check if var is already defined, to only show one suggestion of the same variable multiple times.
