@@ -300,7 +300,7 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 
 	return astItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({
 		label: nativeSuggestions[nativeSuggestion].title || "",
-		kind: CompletionItemKind.Function,
+		kind: nativeSuggestions[nativeSuggestion].kind,
 		documentation: nativeSuggestions[nativeSuggestion].documentation,
 		detail: nativeSuggestions[nativeSuggestion].detail,
 	})));
