@@ -18,6 +18,252 @@ export type documentationCollection = {
 }
 
 export default {
+    'And': {
+        title: "And",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'ByRef': {
+        title: "ByRef",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Case': {
+        title: "Case",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Const': {
+        title: "Const",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'ContinueCase': {
+        title: "ContinueCase",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'ContinueLoop': {
+        title: "ContinueLoop",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Default': {
+        title: "Default",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Dim': {
+        title: "Dim",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Do': {
+        title: "Do",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Else': {
+        title: "Else",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'ElseIf': {
+        title: "ElseIf",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'EndFunc': {
+        title: "EndFunc",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'EndIf': {
+        title: "EndIf",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'EndSelect': {
+        title: "EndSelect",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'EndSwitch': {
+        title: "EndSwitch",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'EndWith': {
+        title: "EndWith",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Enum': {
+        title: "Enum",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Exit': {
+        title: "Exit",
+        detail: "Exit ( [return code] )",
+        documentation: "Terminates the script.",
+        kind: CompletionItemKind.Function
+    },
+    'ExitLoop': {
+        title: "ExitLoop",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'For': {
+        title: "For",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Func': {
+        title: "Func",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Global': {
+        title: "Global",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'If': {
+        title: "If",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'In': {
+        title: "In",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Local': {
+        title: "Local",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Next': {
+        title: "Next",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Not': {
+        title: "Not",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Or': {
+        title: "Or",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Redim': {
+        title: "Redim",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Return': {
+        title: "Return",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Select': {
+        title: "Select",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Static': {
+        title: "Static",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Step': {
+        title: "Step",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Switch': {
+        title: "Switch",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Then': {
+        title: "Then",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'To': {
+        title: "To",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Until': {
+        title: "Until",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'Volatile': {
+        title: "Volatile",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'WEnd': {
+        title: "WEnd",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'While': {
+        title: "While",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
+    'With': {
+        title: "With",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
     '@appdatacommondir': {
         title: '@AppDataCommonDir',
         detail: '@AppDataCommonDir',
