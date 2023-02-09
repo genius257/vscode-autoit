@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing hover information support for built-in function Opt (issue #13)
 - Fixed incomplete text on some macro descriptions (issue #12)
 - Fixed AST to string showing array access as property access instead (issue #14)
-- Fixed isse with IncludeStatement document links using backslash fails to resolve on web and linux
+- Fixed issue with IncludeStatement document links using backslash fails to resolve on web and linux (issue #15)
 
 ## [1.1.1] - 2023-01-09
 
