@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, /*ColorPresentation, TextEdit, TextDocumentIdentifier,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, TextDocuments, CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, Macro, StatementList, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import Script, { NodeFilterAction } from './autoit/Script';
@@ -254,79 +254,66 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 }
 
 function getCompletionItems(params: CompletionParams): CompletionItem[] {
-	const astItems = workspace.get(params.textDocument.uri)?.filterNodes((node) => node.type === "FunctionDeclaration" || node.type === "VariableDeclaration" ? NodeFilterAction.StopPropagation : NodeFilterAction.SkipAndStopPropagation)/*ast.body?*/.reduce<CompletionItem[]>((previousValue: CompletionItem[], currentValue) => {
-		// FIXME: we need to extract global variable declarations from FunctionDeclaration statements.
-		// FIXME: keep a ref map, to check if var is already defined, to only show one suggestion of the same variable multiple times.
-		// FIXME: show scope information in the completion item detail text.
+	let completionItems: CompletionItem[] = [];
+	const includes: string[] = [params.textDocument.uri];
 
-		switch (currentValue.type) {
-			case "FunctionDeclaration":
-				previousValue.push({
-					label: currentValue.id?.name || "",
-					kind: CompletionItemKind.Function,
-				});
-
-				if (params.position.line >= ((currentValue.location?.start.line || 1) - 1) && params.position.line < ((currentValue.location?.end.line || 1) - 1)) {
-					currentValue.params?.forEach(value => previousValue.push({
-						label: "$" + value.id?.name,
-						kind: CompletionItemKind.Variable,
-						insertText: "$" + value.id?.name,
-					}))
-					previousValue.push(...extractCompletionItems(currentValue.body || []));
-				}
-				break;
-			case "VariableDeclaration":
-				(currentValue.declarations||[]).forEach(declaration => {
-					if(declaration.type === "VariableDeclarator" && declaration.id?.type === "VariableIdentifier") {
-						previousValue.push({
+	// Loop though all unique included files and add completion items found in each.
+	for (let index = 0; index < includes.length; index++) {
+		let script = workspace.get(includes[index]);
+		if (script !== undefined) {
+			let _completionItems = script.declarations.reduce<CompletionItem[]>((completionItems, declaration) => {
+				switch (declaration.type) {
+					case "FunctionDeclaration":
+						completionItems.push({
+							label: declaration.id.name,
+							kind: CompletionItemKind.Function,
+						});
+						break;
+					case "VariableDeclarator":
+						completionItems.push({
 							label: "$" + declaration.id.name,
 							kind: CompletionItemKind.Variable,
-							insertText: "$" + declaration.id.name, //FIXME: this need to have start of string removed equal to current typed in string.
-							documentation: "documentation",
-							detail: "detail",
-							commitCharacters: ['$'],
+							insertText: "$" + declaration.id.name,
 						});
-					}
-				});
-				break;
-			default:
-				break;
+						break;
+				}
+		
+				return completionItems;
+			}, []);
+			completionItems.push(..._completionItems);
+			includes.push(...script.getIncludes().map(x => x.uri).filter((x):x is string => x!==null && !includes.includes(x)));
 		}
+	}
 
-		return previousValue;
-	}, []) || [];
+	// If within a function, add everything defined before cursor as suggestions from the scope
+	let script = workspace.get(params.textDocument.uri);
+	if (script !== undefined) {
+		const matches: Array<VariableDeclaration|FormalParameter> = [];
+		script.filterNestedNode(
+			script.declarations.find(declaration => declaration.type === "FunctionDeclaration" && Parser.isPositionWithinLocation(params.position.line, params.position.character, declaration.location)) ?? null,
+			(node) => {
+				if (node.location.start.line >= (params.position.line + 1)) {return NodeFilterAction.SkipAndStopPropagation;}
+				if (node.type === "Parameter" || node.type === "VariableDeclarator") { node; return NodeFilterAction.Continue;}
+				return NodeFilterAction.Skip;
+			},
+			matches
+		);
 
-	return astItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({
+		completionItems.push(...matches.map<CompletionItem>(match => ({label: "$" + match.id.name, kind: CompletionItemKind.Variable})));
+	}
+
+	//Filter duplicate suggestions out based on case insensetive name comparison
+	completionItems = completionItems.filter((completionItem, index, array) => array.findIndex(x => x.label.toLowerCase() === completionItem.label.toLowerCase()) === index);
+
+	//Add all native suggestions
+	completionItems = completionItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({
 		label: nativeSuggestions[nativeSuggestion].title || "",
 		kind: nativeSuggestions[nativeSuggestion].kind,
 		documentation: nativeSuggestions[nativeSuggestion].documentation,
 		detail: nativeSuggestions[nativeSuggestion].detail,
 	})));
-}
 
-/**
- * Extracts completion items from function declation and nested elemenets within, containing completion items.
- * This is needed to get things in current scope, within functions.
- */
-function extractCompletionItems(nodes: StatementList): CompletionItem[] {
-	return nodes.reduce((previousValue: CompletionItem[], currentValue) => {
-		switch (currentValue.type) {
-			case "VariableDeclaration":
-				(currentValue.declarations||[]).forEach(declaration => {
-					if(declaration.type === "VariableDeclarator" && declaration.id?.type === "VariableIdentifier") {
-						previousValue.push({
-							label: "$" + declaration.id.name,
-							kind: CompletionItemKind.Variable,
-						});
-					}
-				});
-				break;
-				//FIXME: add cases for IF, FOR, SWITCH and more expressions.
-			default:
-				break;
-		}
-		return previousValue;
-	}, []);
+	return completionItems;
 }
 
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
