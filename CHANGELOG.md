@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated autoit3-pegjs to 1.1.0
+
+### Fixed
+
+- Fixed issue with resolving IncludeStatement document links for Standard library files (issue #19)
+- Fixed include statement document link position broken if immidialy followed by a single line comment (issue #16)
+- Fixed issue where all builtin suggestions types were marked as functions
+- Fixed issue with keywords not included in completion suggestions (issue #20)
+- Fixed issue function and variables suggestions from included files not shown (issue #18)
+
 ## [1.2.0] - 2023-01-20
 
 ### Added
