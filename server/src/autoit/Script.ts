@@ -113,6 +113,7 @@ export default class Script {
     }
 
     public release(): number {
+        /*
         if (0 >= --this.refCount) {
             if (this.uri !== undefined) {
                 this.workspace?.remove(this.uri);
@@ -120,6 +121,7 @@ export default class Script {
             this.workspace = undefined;
             this.resetDiagnostics();
         }
+        */
 
         return this.refCount;
     }
