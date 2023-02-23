@@ -135,7 +135,8 @@ export class Workspace {
     }
 
     protected includeLocal(uri: string, documentUri: string, promise: IncludePromise): IncludePromise {
-        return promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
+        //HACK: currently i check if the documentUri startsWith 'untitled:' to detect files not yet saved to disk. I cannot find a better solution so far...
+        return promise.then(x => x === null && !documentUri.startsWith('untitled:') ? this.openTextDocument(Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
     }
 
     protected openTextDocument(uri: URI): IncludePromise {
