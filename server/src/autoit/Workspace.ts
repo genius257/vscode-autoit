@@ -30,6 +30,10 @@ export class Workspace {
         this.connection = connection;
     }
 
+    public getConnection(): Connection|null {
+        return this.connection;
+    }
+
     public onDiagnostics(fn: diagnosticsListner): void {
         this.diagnosticsListners.push(fn);
     }
