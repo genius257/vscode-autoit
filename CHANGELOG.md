@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2023-02-24
+
+### Fixed
+
+- Fixed issue with suggestion from includes would stop working seemlingly randomly (issue #22)
+- Fixed issue where include statements would fail on new files not existing on disk with: Request textDocument/documentLink failed. (issue #8)
+
 ## [1.2.1] - 2023-02-11
 
 ### Changed
