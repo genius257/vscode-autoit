@@ -1,5 +1,3 @@
-#####
-
 # Changelog
 
 All notable changes to "vscode-autoit", display name "AutoIt", will be documented in this file.
@@ -79,18 +77,3 @@ Go to [legend](#legend---types-of-changes) for further information about the typ
 [1.1.1]: https://github.com/genius257/vscode-autoit/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/genius257/vscode-autoit/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/genius257/vscode-autoit/releases/tag/1.0.0
-
----
-
-### Legend - Types of changes
-
-- `Added` for new features.
-- `Changed` for changes in existing functionality.
-- `Deprecated` for soon-to-be removed features.
-- `Fixed` for any bug fixes.
-- `Removed` for now removed features.
-- `Security` in case of vulnerabilities.
-
-##
-
-[To the top](#)
