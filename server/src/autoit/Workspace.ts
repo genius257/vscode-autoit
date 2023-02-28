@@ -132,7 +132,7 @@ export class Workspace {
 
     protected includeUserDefined(uri: string, promise: IncludePromise, configuration: AutoIt3Configuration|null): IncludePromise {
         for (const path of configuration?.userDefinedLibraries ?? []) {
-            promise = promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(URI.file(path), uri)) : null);
+            promise = promise.then(x => x === null ? this.openTextDocument(Utils.resolvePath(URI.file(path), uri)) : x);
         }
 
         return promise;
