@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed issue with standard library first includes whilst using 
+- Fixed issue with standard library first includes not working when user-defined libraries are used in extension settings. (issue #27)
 
 ## [1.2.2] - 2023-02-24
 
@@ -74,7 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.2.2...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.2.3...HEAD
+[1.2.3]: https://github.com/genius257/vscode-autoit/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/genius257/vscode-autoit/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/genius257/vscode-autoit/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/genius257/vscode-autoit/compare/1.1.1...1.2.0
