@@ -10,10 +10,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
-import Script, { NodeFilterAction } from './autoit/Script';
+import { NodeFilterAction } from './autoit/Script';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -156,21 +156,6 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 	}
 
 	let identifier: FormalParameter | FunctionDeclaration | VariableDeclaration | null | undefined = null;
-	//conditional block to check for variable declaritions within a function scope.
-	if (identifierAtPos.type === "VariableIdentifier") {
-		const functionDeclaration: FunctionDeclaration | undefined = nodesAt?.find((node): node is FunctionDeclaration => node.type === "FunctionDeclaration");
-		if (functionDeclaration !== undefined) {
-			const script = new Script("");
-			const variableDeclaratorsInScope: Array<VariableDeclaration|EnumDeclaration> = [];
-			script.filterNestedNode(functionDeclaration, (node) => node.type === "VariableDeclarator" && node.id.name.toLowerCase() === identifierAtPos.name.toLowerCase() ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip, variableDeclaratorsInScope);
-			//script.filterNestedNode(functionDeclaration, (node) => {connection.console.log(node.type);return /*node.type === "VariableDeclarator" ? NodeFilterAction.StopPropagation :*/ NodeFilterAction.Continue}, variableDeclaratorsInScope);
-			identifier = variableDeclaratorsInScope.filter(variableDeclarator => identifierAtPos.location.start.offset > variableDeclarator.location.end.offset).reverse()[0];
-			if (!identifier) {
-				//fallback to check function parameters, if no identifier was found.
-				identifier = functionDeclaration.params.filter(param => param.id.name.toLowerCase() === identifierAtPos.name.toLowerCase())[0];
-			}
-		}
-	}
 
 	identifier = identifier ?? workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
 	if (!identifier) {
@@ -230,7 +215,6 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 }
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
-
 	const nodesAt = workspace.get(params.textDocument.uri)?.getNodesAt(params.position);
 	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {

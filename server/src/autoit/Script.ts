@@ -695,8 +695,10 @@ export default class Script {
      * Get the declarator for the matching identifier.
      * @param identifier identifier to find a matching declarator for
      * @param stack a stack of already processed uri's that will be skipped from being processed any further.
+     * @param functions Function map for fallback lookups
+     * @param depth Recursive depth tracking variable
      */
-    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = []): FormalParameter | FunctionDeclaration | VariableDeclaration | null {
+    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = [], functions: FunctionDeclaration[] = [], depth: number = 0): FormalParameter | FunctionDeclaration | VariableDeclaration | null {
         if (identifier === null || identifier.type === "Macro") {
             return null;
         }
@@ -711,36 +713,99 @@ export default class Script {
             stack.push(uri);
         }
 
-        // first we check current script for a declaration.
-        let declaration: FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null = this.filterNodes((node) => {
-            switch (node.type) {
-                case "FunctionDeclaration":
-                    return identifier.type === "Identifier" && identifier.name.toLowerCase() === node.id.name.toLowerCase() ? NodeFilterAction.Stop : ((node.location.start.offset < identifier.location.start.offset && node.location.end.offset > identifier.location.end.offset) ? NodeFilterAction.Skip : NodeFilterAction.SkipAndStopPropagation);
-                case "VariableDeclarator":
-                    return identifier.type === "VariableIdentifier" && node.id.name.toLowerCase() === identifier.name.toLowerCase() ? NodeFilterAction.Stop : NodeFilterAction.Skip;
-                case "Parameter":
-                    return identifier.type === "VariableIdentifier" && node.id.name.toLowerCase() === identifier.name.toLowerCase() ? NodeFilterAction.Stop : NodeFilterAction.Skip;
-                //case "VariableDeclaration":
-                    //node.
-                    //return identifier.type === "VariableIdentifier" && node.declarations.find((value) => value.id.name.toLowerCase() === identifier.name.toLowerCase()) ? NodeFilterAction.Stop : NodeFilterAction.Skip;
-                default:
-                    return NodeFilterAction.Skip;
-                    break;
-            }
-        })[0] as FunctionDeclaration | VariableDeclaration | undefined;
+        let declaration: FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null;
 
-        if (declaration === undefined && this.workspace !== undefined) {
-            for (const include of this.includes) {
-                if (include.uri !== null) {
-                    declaration = this.workspace.get(include.uri)?.getIdentifierDeclarator(identifier, stack);
-                    if (declaration !== null && declaration !== undefined) {
-                        break;
+        switch (identifier.type) {
+            case "Identifier":
+                declaration = this.declarations.find((declaration) => declaration.type === "FunctionDeclaration" && declaration.id.name.toLowerCase() === identifier.name.toLowerCase());
+
+                if ((declaration??null === null) && this.workspace !== undefined) {
+                    for (const include of this.includes) {
+                        if (include.uri !== null) {
+                            declaration = this.workspace.get(include.uri)?.getIdentifierDeclarator(identifier, stack, functions, depth + 1);
+                            if (declaration !== null && declaration !== undefined) {
+                                break;
+                            }
+                        }
                     }
                 }
-            }
+                break;
+            case "VariableIdentifier":
+                if (stack.length === 1) { //if length is 1, we are in the same file, as the initial identifier
+                    const nodesAtPosition = this.getNodesAt(identifier.location.start.line, identifier.location.start.column);
+                    //Check if we are within a function
+                    if (nodesAtPosition[0]?.type === "FunctionDeclaration") {
+                        if (identifier.type === "VariableIdentifier") {
+                            //check function parameters
+                            declaration = declaration ?? nodesAtPosition[0].params.find((parameter) => parameter.id.name.toLowerCase() === identifier.name.toLowerCase());
+
+                            //check lines/column BEFORE the node
+                            if ((declaration??null) === null) {
+                                let matches = [];
+                                this.filterNestedNode(nodesAtPosition[0], (node) => (node.type === "VariableDeclarator" && node.id.name.toLowerCase() === identifier.name.toLowerCase() && identifier.location.start.offset >= node.location.start.offset) ? NodeFilterAction.Stop : NodeFilterAction.Skip, matches);
+                                declaration = matches[0];
+                            }
+                        }
+                    }
+                }
+
+                if ((declaration??null) === null) {
+                    //Global lookup
+                    const matches: Array<VariableDeclaration> = [];
+                    this.filterNestedNodes(this.program?.body ?? null, (node) => {
+                        if (node.type === "FunctionDeclaration") {
+                            functions.push(node);
+                            return NodeFilterAction.SkipAndStopPropagation;
+                        }
+
+                        if (node.type === "VariableDeclarator" && (node.location.source !== identifier.location.source || node.location.start.offset <= identifier.location.start.offset)) {
+                            if (node.id.name.toLowerCase() === identifier.name.toLowerCase()) {
+                                return NodeFilterAction.Stop;
+                            }
+                        }
+
+                        if (node.type === "IncludeStatement" && this.workspace !== undefined) {
+                            let uri = this.includes.find((include) => include.statement.file === node.file && include.statement.library === node.library)?.uri;
+                            if (typeof uri === "string") {
+                                declaration = this.workspace.get(uri)?.getIdentifierDeclarator(identifier, [], functions, depth + 1);
+                                if ((declaration??null) !== null) {
+                                    return NodeFilterAction.StopAndSkip;
+                                }
+                            }
+                        }
+
+                        return NodeFilterAction.Skip;
+                    }, matches);
+                    if ((declaration??null) === null) {
+                        declaration = matches[0];
+                    }
+                    if ((declaration??null) === null && depth === 0) {
+                        this.filterNestedNodes(functions, (node) => {
+                            switch (node.type) {
+                                case "VariableDeclaration":
+                                    return (node.scope?.toLowerCase() === "global") ? NodeFilterAction.Skip : NodeFilterAction.SkipAndStopPropagation;
+                                case "VariableDeclarator":
+                                    if (node.id.name.toLowerCase() === identifier.name.toLowerCase()) {
+                                        declaration = node;
+                                        return NodeFilterAction.StopAndSkip;
+                                    }
+                                    return NodeFilterAction.Skip;
+                                case "FunctionDeclaration":
+                                    return NodeFilterAction.Skip;
+                                default:
+                                    return NodeFilterAction.SkipAndStopPropagation;
+                            }
+                        }, []);
+                    }
+                }
+                break;
+            default:
+                const exhaustiveCheck: never = identifier;
+                //@ts-expect-error
+                throw new Error(`Unhandled identifier type: ${exhaustiveCheck?.type}`);
         }
 
-        return declaration as FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null ?? null;
+        return declaration ?? null;
     }
 
     public getIncludes(): Readonly<Array<Include>> {
