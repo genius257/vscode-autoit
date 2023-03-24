@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.4] - 2023-03-24
+
+### Fixed
+
+- Fixed issue with declaration lookup not working as expected. (issue #24)
+
 ## [1.2.3] - 2023-03-01
 
 ### Fixed
@@ -74,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.2.3...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.2.4...HEAD
+[1.2.4]: https://github.com/genius257/vscode-autoit/compare/1.2.3...1.2.4
 [1.2.3]: https://github.com/genius257/vscode-autoit/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/genius257/vscode-autoit/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/genius257/vscode-autoit/compare/1.2.0...1.2.1
