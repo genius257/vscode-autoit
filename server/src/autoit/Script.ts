@@ -719,7 +719,7 @@ export default class Script {
             case "Identifier":
                 declaration = this.declarations.find((declaration) => declaration.type === "FunctionDeclaration" && declaration.id.name.toLowerCase() === identifier.name.toLowerCase());
 
-                if ((declaration??null === null) && this.workspace !== undefined) {
+                if ((declaration == null) && this.workspace !== undefined) {
                     for (const include of this.includes) {
                         if (include.uri !== null) {
                             declaration = this.workspace.get(include.uri)?.getIdentifierDeclarator(identifier, stack, functions, depth + 1);
