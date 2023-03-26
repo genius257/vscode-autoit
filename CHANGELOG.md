@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.5] - 2023-03-27
+
 ### Fixed
 
 - Fixed issue with function declaration lookup when using include statement(s) in script. (issue #35)
