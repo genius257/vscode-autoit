@@ -224,7 +224,7 @@
 				},
 				{
 					"name": "constant.numeric.hex.au3",
-					"match": "\\b0x[0-9A-Fa-f]+\\b"
+					"match": "\\b0(?i:x[0-9a-f]+)\\b"
 				},
 				{
 					"name": "constant.numeric.scientific_notation.au3",
