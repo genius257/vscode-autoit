@@ -519,7 +519,7 @@ export default {
     '@kblayout': {
         title: '@KBLayout',
         detail: '@KBLayout',
-        documentation: 'Returns code denoting Keyboard Layout. See Appendix for possible values.',
+        documentation: 'Returns code denoting Keyboard Layout. See [Appendix](https://www.autoitscript.com/autoit3/docs/appendix/OSLangCodes.htm) for possible values.',
         kind: CompletionItemKind.Constant
     },
     '@lf': {
@@ -579,7 +579,7 @@ export default {
     '@muilang': {
         title: '@MUILang',
         detail: '@MUILang',
-        documentation: 'Returns code denoting Multi Language if available (Vista is OK by default). See Appendix for possible values.',
+        documentation: 'Returns code denoting Multi Language if available (Vista is OK by default). See [Appendix](https://www.autoitscript.com/autoit3/docs/appendix/OSLangCodes.htm) for possible values.',
         kind: CompletionItemKind.Constant
     },
     '@mydocumentsdir': {
@@ -609,7 +609,7 @@ export default {
     '@oslang': {
         title: '@OSLang',
         detail: '@OSLang',
-        documentation: 'Returns code denoting OS Language. See Appendix for possible values.',
+        documentation: 'Returns code denoting OS Language. See [Appendix](https://www.autoitscript.com/autoit3/docs/appendix/OSLangCodes.htm) for possible values.',
         kind: CompletionItemKind.Constant
     },
     '@osservicepack': {
