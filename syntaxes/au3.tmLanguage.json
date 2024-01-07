@@ -202,7 +202,7 @@
 					}
 				},
 				{
-					"match": "^\\s*(#(?i:pragma))\\s+((?i:compile))\\(([^,]+),\\s*((?<a>[\"'])(?:(?!\\k<a>).)*\\k<a>|[^,)]+)(?:,\\s*((?<b>[\"'])(?:(?!\\k<b>).)*\\k<b>|[^,)]+))?\\)",
+					"match": "^\\s*(#(?i:pragma))\\s+((?i:compile))\\(([^,]+),\\s*(?:((?<a>[\"'])(?:(?!\\k<a>).)*\\k<a>)|([^,)]+))(?:,\\s*(?:((?<b>[\"'])(?:(?!\\k<b>).)*\\k<b>)|([^,)]+)))?\\)",
 					"captures": {
 						"1": {
 							"name": "keyword.control.pragma.au3"
@@ -214,9 +214,15 @@
 							"name": "keyword.control.pragma.key.au3"
 						},
 						"4": {
-							"name": "string.unquoted.pragma.value.au3"
+							"name": "string.quoted.pragma.value.au3"
 						},
 						"6": {
+							"name": "string.unquoted.pragma.value.au3"
+						},
+						"7": {
+							"name": "string.quoted.pragma.value.au3"
+						},
+						"9": {
 							"name": "string.unquoted.pragma.value.au3"
 						}
 					}
