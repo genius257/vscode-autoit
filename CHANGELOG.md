@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt2 syntax highlighting
 
 [Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.2.5...HEAD
-[1.2.4]: https://github.com/genius257/vscode-autoit/compare/1.2.4...1.2.5
+[1.2.5]: https://github.com/genius257/vscode-autoit/compare/1.2.4...1.2.5
 [1.2.4]: https://github.com/genius257/vscode-autoit/compare/1.2.3...1.2.4
 [1.2.3]: https://github.com/genius257/vscode-autoit/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/genius257/vscode-autoit/compare/1.2.1...1.2.2
