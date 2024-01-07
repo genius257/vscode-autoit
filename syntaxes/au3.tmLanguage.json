@@ -175,8 +175,51 @@
 		"meta": {
 			"patterns": [
 				{
+					"name": "keyword.control.notrayicon.au3",
+					"match": "^\\s*#(?i:notrayicon)\\b"
+				},
+				{
+					"name": "keyword.control.requireadmin.au3",
+					"match": "^\\s*#(?i:requireadmin)\\b"
+				},
+				{
 					"name": "keyword.control.includeonce.au3",
 					"match": "^\\s*#(?i:include-once)\\b"
+				},
+				{
+					"match": "^\\s*(#(?i:onautoitstartregister))\\s+(.*)",
+					"captures": {
+						"1": {
+							"name": "keyword.control.onautoitstartregister.au3"
+						},
+						"2": {
+							"patterns": [
+								{
+									"include": "#strings"
+								}
+							]
+						}
+					}
+				},
+				{
+					"match": "^\\s*(#(?i:pragma))\\s+((?i:compile))\\(([^,]+),\\s*((?<a>[\"'])(?:(?!\\k<a>).)*\\k<a>|[^,)]+)(?:,\\s*((?<b>[\"'])(?:(?!\\k<b>).)*\\k<b>|[^,)]+))?\\)",
+					"captures": {
+						"1": {
+							"name": "keyword.control.pragma.au3"
+						},
+						"2": {
+							"name": "support.function.pragma.au3"
+						},
+						"3": {
+							"name": "keyword.control.pragma.key.au3"
+						},
+						"4": {
+							"name": "string.unquoted.pragma.value.au3"
+						},
+						"6": {
+							"name": "string.unquoted.pragma.value.au3"
+						}
+					}
 				},
 				{
 					"match": "^\\s*(#(?i:include))\\b(.*)",
