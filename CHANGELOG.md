@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Syntax highlight support for more au3 preproc expressions: #NoTrayIcon, #RequireAdmin, #OnAutoItStartRegister and #pragma
+
+### Fixed
+
+- Syntax highlight for hexadecimal numbers not working when using uppercase X. (issue #40)
+- Syntax highlight for double, integer, hex and scientific notation litterals, most notabli, in regards to leading posetive or negative value indicator.
+- Missing link to Appendix of possible values in hover text for relevant macros: @KBLayout, @MUILang and @OSLang
+
+
 ## [1.2.5] - 2023-03-27
 
 ### Fixed
