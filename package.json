@@ -20,6 +20,40 @@
         "Programming Languages"
     ],
     "contributes": {
+        "configurationDefaultsz": {
+            "editor.tokenColorCustomizations": {
+                "textMateRules": [
+                    {
+                        "scope": "constant.numeric.scientific_notation.au3",
+                        "settings": {
+                            "foreground": "#FF0000",
+                            "fontStyle": "bold"
+                        }
+                    },
+                    {
+                        "scope": "constant.numeric.integer.au3",
+                        "settings": {
+                            "foreground": "#00FF00",
+                            "fontStyle": "bold"
+                        }
+                    },
+                    {
+                        "scope": "constant.numeric.double.au3",
+                        "settings": {
+                            "foreground": "#0000FF",
+                            "fontStyle": "bold"
+                        }
+                    },
+                    {
+                        "scope": "constant.numeric.hex.au3",
+                        "settings": {
+                            "foreground": "#FF00FF",
+                            "fontStyle": "bold"
+                        }
+                    }
+                ]
+            }
+        },
         "configuration": {
             "title": "AutoIt",
             "properties": {
@@ -92,7 +126,7 @@
         ]
     },
     "dependencies": {
-        "autoit3-pegjs": "git+https://github.com/genius257/autoit3-pegjs.git#1.1.0"
+        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.3"
     },
     "devDependencies": {
         "@types/jest": "^29.4.0",

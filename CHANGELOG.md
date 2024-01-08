@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Syntax highlight for double, integer, hex and scientific notation litterals, most notabli, in regards to leading posetive or negative value indicator.
 - Missing link to Appendix of possible values in hover text for relevant macros: @KBLayout, @MUILang and @OSLang
 
+### Changed
+
+- Upgrade dependency: autoit3-pegjs
 
 ## [1.2.5] - 2023-03-27
 
