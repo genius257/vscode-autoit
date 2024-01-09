@@ -289,6 +289,8 @@ export default class Script {
                 break;
             case "EmptyStatement":
                 break;
+            case "EnumDeclaration":
+                return this.getNestedNodesAtFromArray(node.declarations, line, column, matches);
             case "ExitLoopStatement":
                 return this.getNestedNodesAt(node.level, line, column, matches);
             case "ExitStatement":
@@ -499,6 +501,8 @@ export default class Script {
                 return this.filterNestedNodes(node.consequent, fn, matches);
             case "EmptyStatement":
                 break;
+            case "EnumDeclaration":
+                return this.filterNestedNodes(node.declarations, fn, matches);
             case "ExitLoopStatement":
                 return this.filterNestedNode(node.level, fn, matches);
             case "ExitStatement":
