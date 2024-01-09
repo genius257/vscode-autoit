@@ -117,7 +117,7 @@
 					"name": "keyword.control.include.aut"
 				},
 				"2": {
-					"name": "string.other.include.au3",
+					"name": "string.other.include.aut",
 					"patterns": [
 						{
 							"include": "#strings"
@@ -140,7 +140,7 @@
 		"comment.line": {
 			"patterns": [
 				{
-					"name": "comment.line.au3",
+					"name": "comment.line.aut",
 					"match": "(;).*"
 				}
 			]
