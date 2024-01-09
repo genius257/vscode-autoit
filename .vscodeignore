@@ -9,3 +9,5 @@ vsc-extension-quickstart.md
 contributing.md
 .travis.yml
 **/node_modules/**
+README copy.md
+**/*.au3
