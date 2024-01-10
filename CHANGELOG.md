@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2024-01-09
+
 ### Added
 
 - Syntax highlight support for more au3 preproc expressions: #NoTrayIcon, #RequireAdmin, #OnAutoItStartRegister and #pragma
@@ -100,7 +102,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.2.5...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/genius257/vscode-autoit/compare/1.2.5...1.3.0
 [1.2.5]: https://github.com/genius257/vscode-autoit/compare/1.2.4...1.2.5
 [1.2.4]: https://github.com/genius257/vscode-autoit/compare/1.2.3...1.2.4
 [1.2.3]: https://github.com/genius257/vscode-autoit/compare/1.2.2...1.2.3
