@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Syntax highlight for hexadecimal numbers not working when using uppercase X. (issue #40)
-- Syntax highlight for double, integer, hex and scientific notation litterals, most notabli, in regards to leading posetive or negative value indicator.
+- Syntax highlight for double, integer, hex and scientific notation litterals, most notably, in regards to leading posetive or negative value indicator.
 - Missing link to Appendix of possible values in hover text for relevant macros: @KBLayout, @MUILang and @OSLang
 
 ### Changed
