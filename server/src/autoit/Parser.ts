@@ -134,7 +134,7 @@ export default class Parser {
             case "VariableDeclaration":
                 return (ast.scope === null ? "" : ast.scope+" " )+(ast.constant ? "Const " : "")+this.AstArrayToStringArray(ast.declarations);
             case "VariableDeclarator":
-                return this.AstToString(ast.id)+this.AstToString(ast.init);
+                return this.AstToString(ast.id)+" = "+this.AstToString(ast.init);
             case "VariableIdentifier":
                 return "$"+ast.name;
             case "WhileStatement":
