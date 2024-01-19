@@ -48,7 +48,8 @@ export default class Parser {
         if (ast === null) {
             return "";
         }
-        switch (ast.type) {
+        const type = ast.type;
+        switch (type) {
             case "Program":
                 return ast.body.map(sourceElement => this.AstToString(sourceElement)).join("\n");
             case "ArrayDeclaration":
@@ -144,8 +145,9 @@ export default class Parser {
             case "WithStatement":
                 return "With "+this.AstToString(ast.object)+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nEndWith";
             default:
-                // @ts-ignore
-                throw new Error("AST type not supported: "+ast.type);
+                (function(type: never): never {
+                    throw new Error(`AST type not supported: "${type}"`);
+                })(type);
         }
     }
 
