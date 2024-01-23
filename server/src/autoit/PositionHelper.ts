@@ -49,12 +49,10 @@ export default class PositionHelper {
 
     public static offsetToLocation(offset: number, text: string): Location {
         const textBeforeOffset = text.substring(0, offset);
-        const regEx = /\n/g;
-        regEx.exec(textBeforeOffset);
-        const lastNewLineOffset = regEx.lastIndex;
+        const  lastNewLineOffset = textBeforeOffset.match(/\n(?=[^\n]*$)/)?.index;
         return {
-            column: textBeforeOffset.length - lastNewLineOffset - 1,
-            line: (textBeforeOffset.match(regEx) || []).length + 1, // https://stackoverflow.com/a/4009768/3958400
+            column: textBeforeOffset.substring(lastNewLineOffset === undefined ? 0 : lastNewLineOffset).length,
+            line: (textBeforeOffset.match(/\n/g) || []).length + 1, // https://stackoverflow.com/a/4009768/3958400
             offset: offset,
         }
     }
