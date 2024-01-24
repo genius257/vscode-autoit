@@ -58,8 +58,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 });
 
 // Track open, change and close text document events
-const documents = new TextDocuments(TextDocument);
-documents.listen(connection);
+// This currently does not work! Maybe caused by current dependency version or a limitation for a JS worker script LSP?
+// const documents = new TextDocuments(TextDocument);
+// documents.listen(connection);
 
 function debounce<F extends Function>(cb: F, delay = 250) {
 	let timeout
