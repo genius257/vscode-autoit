@@ -1,4 +1,4 @@
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, LocationRange, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
 import { Diagnostic, DiagnosticSeverity, Position } from "vscode-languageserver";
 import { URI } from 'vscode-uri';
 import Parser from "./Parser";
@@ -39,6 +39,7 @@ export enum NodeFilterAction {
 export default class Script {
     public workspace: Workspace | undefined;
     protected uri: URI | undefined;
+    protected text: string;
 
     protected errors: Array<ScriptError> = [];
     protected warnings: Array<ScriptWarning> = [];
@@ -59,6 +60,7 @@ export default class Script {
     constructor(text: string, uri?: URI, workspace: Workspace | undefined = undefined) {
         this.uri = uri;
         this.workspace = workspace;
+        this.text = text;
         this.parseText(text);
     }
 
@@ -104,6 +106,7 @@ export default class Script {
 
     /** Update the script text content */
     public update(text: string) {
+        this.text = text;
         this.resetDiagnostics();
         this.parseText(text);
     }
@@ -814,5 +817,13 @@ export default class Script {
 
     public getIncludes(): Readonly<Array<Include>> {
         return this.includes;
+    }
+
+    public getText(location?: LocationRange): string {
+        if (location === undefined) {
+            return this.text;
+        }
+
+        return this.text.slice(location.start.offset, location.end.offset);
     }
 }
