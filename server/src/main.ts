@@ -10,8 +10,9 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
+import PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
 
@@ -302,20 +303,64 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 {
-	if (params.context?.isRetrigger && params.context?.triggerCharacter === "," && params.context.activeSignatureHelp !== undefined) {
-		if (params.context.activeSignatureHelp.activeParameter !== null){
-			params.context.activeSignatureHelp.activeParameter += 1;
-		}
-		return params.context.activeSignatureHelp;
+	const script = workspace.get(params.textDocument.uri);
+	if (script === undefined) {
+		return null;
 	}
 
-	const nodesAt = workspace.get(params.textDocument.uri)?.getNodesAt(params.position);
-	const callExpression = nodesAt?.reverse().find((node):node is CallExpression => node.type === "CallExpression");
+	const nodesAt = script.getNodesAt(params.position);
+	if (nodesAt === undefined) {
+		return null;
+	}
+
+	const callExpression = nodesAt.reverse().find((node):node is CallExpression => node.type === "CallExpression");
 	if (callExpression === undefined) {
 		return null;
 	}
 
-	if (params.context?.isRetrigger && params.context.activeSignatureHelp !== undefined && callExpression !== null) {
+	const text = script.getText();
+	if (text === undefined) {
+		return null;
+	}
+
+	let parameterIndex: number|null = null;
+
+	if (callExpression.arguments.length > 0) {
+		// Make new array of deep cloned location ranges, to prevent modifying original AST location values.
+		const argumentLocations = callExpression.arguments.map<LocationRange>(argument => JSON.parse(JSON.stringify(argument.location)));
+		let textBetween = text.substring(callExpression.callee.location.end.offset, argumentLocations[0].start.offset);
+		let parenthesisIndex = textBetween.indexOf('(');
+		argumentLocations[0].start = PositionHelper.offsetToLocation(argumentLocations[0].start.offset - Math.abs((textBetween.length - 1) - parenthesisIndex), text);
+		if (argumentLocations.length > 1) {
+			for (let index = 0; index < argumentLocations.length - 1; index++) {
+				const argumentLeft = argumentLocations[index];
+				const argumentRight = argumentLocations[index + 1];
+				const textBetween = text.substring(argumentLeft.end.offset, argumentRight.start.offset);
+				const commaIndex = textBetween.indexOf(',');
+				argumentLeft.end = PositionHelper.offsetToLocation(argumentLeft.end.offset + commaIndex, text);
+				argumentRight.start = PositionHelper.offsetToLocation(argumentRight.start.offset - Math.abs((textBetween.length - 1) - commaIndex), text);
+			}
+		}
+		textBetween = text.substring(argumentLocations[argumentLocations.length - 1].end.offset, callExpression.location.end.offset);
+		parenthesisIndex = textBetween.indexOf(')');
+		argumentLocations[argumentLocations.length - 1].end = PositionHelper.offsetToLocation(argumentLocations[argumentLocations.length - 1].end.offset + parenthesisIndex, text);
+
+		parameterIndex = argumentLocations.findIndex(location => PositionHelper.isPositonWithinLocationRange(params.position, location));
+	}
+
+	if (params.context?.isRetrigger && params.context.activeSignatureHelp !== undefined) {
+		if (callExpression.arguments.length > 0) {
+			if (parameterIndex === -1) {
+				return null;
+			}
+
+			if (params.context.activeSignatureHelp.activeParameter !== null && parameterIndex !== -1){
+				params.context.activeSignatureHelp.activeParameter = parameterIndex;
+			}
+		} else {
+			params.context.activeSignatureHelp.activeParameter = null;
+		}
+
 		return params.context.activeSignatureHelp;
 	}
 
@@ -325,21 +370,13 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 		return null;
 	}
 
-	const declarator = workspace.get(params.textDocument.uri)?.getIdentifierDeclarator(callExpression.callee);
+	const declarator = script.getIdentifierDeclarator(callExpression.callee);
 	if (!declarator) {
 		return null;
 	}
 
 	if (declarator === null || declarator.type === "VariableDeclarator" || declarator.type === "Parameter") {//FIXME: currently we don't look for identifier in the VariableDeclarator init!
 		return null;
-	}
-
-	//connection.window.showInformationMessage(documents.keys().length.toString());
-	const x = documents.get(params.textDocument.uri)?.getText(Parser.locationToRange(declarator.location));
-	if (x !== undefined) {
-		//connection.window.showInformationMessage(x);
-	} else {
-		//connection.window.showInformationMessage("x is undefined.");
 	}
 
 	return {
@@ -353,7 +390,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 				})),
 			}
 		],
-		activeParameter: 0,
+		activeParameter: parameterIndex,
 		activeSignature: 0,
 	};
 }
