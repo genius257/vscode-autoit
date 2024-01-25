@@ -30,20 +30,6 @@ export default class Parser {
         return true;
     }
 
-    /** Converts a autoit3-pegjs Location to a vscode Range */
-    public static locationToRange(location: LocationRange): Range {
-        return {
-            start: {
-                character: location.start.column - 1,
-                line: location.start.line - 1,
-            },
-            end: {
-                character: location.end.column - 1,
-                line: location.end.line - 1,
-            }
-        }
-    }
-
     public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement|RedimIdentifierExpression|DefaultClause|SelectCaseClause|CaseClause|VariableDeclaration|EnumDeclaration|Initialiser|SwitchCaseValue): string {
         if (ast === null) {
             return "";
