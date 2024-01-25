@@ -137,7 +137,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 	if (nodesAt?.[0]?.type === "ExitStatement") {
 		return {
 			contents: "Exit ( [return code] )\n\nTerminates the script.",
-			range: Parser.locationToRange(nodesAt[0].location),
+			range: PositionHelper.locationRangeToRange(nodesAt[0].location),
 		};
 	}
 
@@ -151,7 +151,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		if (suggestion !== undefined) {
 			return {
 				contents: { kind: MarkupKind.Markdown, value: suggestion.detail + "\n\n" + suggestion.documentation } satisfies MarkupContent,
-				range: Parser.locationToRange(identifierAtPos.location),
+				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		}
 	}
@@ -172,12 +172,12 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 
 			return {
 				contents: (identifierAtPos.type === "VariableIdentifier" ? "$" : "") + identifier.id.name + (value === undefined ? "" : " = " + value),
-				range: Parser.locationToRange(identifierAtPos.location),
+				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "FunctionDeclaration":
 			return {
 				contents: identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
-				range: Parser.locationToRange(identifierAtPos.location),
+				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "Parameter":
 			let parameterValue: string | number | boolean | null | undefined;
@@ -186,7 +186,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 			}
 			return {
 				contents: "(parameter) $" + identifier.id.name + (parameterValue === undefined ? "" : " = " + parameterValue),
-				range: Parser.locationToRange(identifierAtPos.location),
+				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		default:
 			break;
@@ -206,8 +206,8 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 			symbols.push({
 				kind: declaration.type === "FunctionDeclaration" ? SymbolKind.Function : SymbolKind.Variable,
 				name: declaration.id.name,
-				range: Parser.locationToRange(declaration.location),
-				selectionRange: Parser.locationToRange(declaration.id.location),
+				range: PositionHelper.locationRangeToRange(declaration.location),
+				selectionRange: PositionHelper.locationRangeToRange(declaration.id.location),
 			});
 		}
 	})
@@ -232,8 +232,8 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 	return [
 		{
 			targetUri: declarator.location.source,
-			targetRange: Parser.locationToRange(declarator.location),
-			targetSelectionRange: Parser.locationToRange(identifier.location),
+			targetRange: PositionHelper.locationRangeToRange(declarator.location),
+			targetSelectionRange: PositionHelper.locationRangeToRange(identifier.location),
 		}
 	];
 }

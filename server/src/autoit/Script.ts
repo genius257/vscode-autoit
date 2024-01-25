@@ -3,6 +3,7 @@ import { Diagnostic, DiagnosticSeverity, Position } from "vscode-languageserver"
 import { URI } from 'vscode-uri';
 import Parser from "./Parser";
 import { Workspace } from "./Workspace";
+import PositionHelper from "./PositionHelper";
 
 export type Include = {
     /** Resolved include statement URI path */
@@ -99,7 +100,7 @@ export default class Script {
 
             this.addError({
                 message: e.message,
-                range: Parser.locationToRange(e.location),
+                range: PositionHelper.locationRangeToRange(e.location),
             });
         }
     }
