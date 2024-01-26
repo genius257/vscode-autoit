@@ -176,7 +176,12 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 			};
 		case "FunctionDeclaration":
 			return {
-				contents: identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+				contents: [
+					{
+						language: 'au3',
+						value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+					},
+				],
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "Parameter":
