@@ -3,7 +3,7 @@
     "icon": "images/logo.svg.png",
     "displayName": "AutoIt",
     "description": "Syntax highlighting for AutoIt2 and AutoIt3",
-    "version": "1.2.5",
+    "version": "1.3.0",
     "publisher": "genius257",
     "repository": {
         "type": "git",
@@ -126,7 +126,7 @@
         ]
     },
     "dependencies": {
-        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.3"
+        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.4"
     },
     "devDependencies": {
         "@types/jest": "^29.4.0",

@@ -1,5 +1,4 @@
 import parser, { ArgumentList, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, Initialiser, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, Statement, StatementList, SwitchCaseValue, SyntaxError, VariableDeclaration, VariableDeclarationList } from "autoit3-pegjs";
-import { Range } from "vscode-languageserver";
 
 export default class Parser {
     public static parse(input: string, grammarSource: string|undefined): Program {
@@ -30,25 +29,12 @@ export default class Parser {
         return true;
     }
 
-    /** Converts a autoit3-pegjs Location to a vscode Range */
-    public static locationToRange(location: LocationRange): Range {
-        return {
-            start: {
-                character: location.start.column - 1,
-                line: location.start.line - 1,
-            },
-            end: {
-                character: location.end.column - 1,
-                line: location.end.line - 1,
-            }
-        }
-    }
-
     public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement|RedimIdentifierExpression|DefaultClause|SelectCaseClause|CaseClause|VariableDeclaration|EnumDeclaration|Initialiser|SwitchCaseValue): string {
         if (ast === null) {
             return "";
         }
-        switch (ast.type) {
+        const type = ast.type;
+        switch (type) {
             case "Program":
                 return ast.body.map(sourceElement => this.AstToString(sourceElement)).join("\n");
             case "ArrayDeclaration":
@@ -69,6 +55,8 @@ export default class Parser {
                 return "Do\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nWhile "+this.AstToString(ast.test);
             case "EmptyStatement":
                 return "";
+            case "EnumDeclaration":
+                return (ast.scope === null ? "" : ast.scope+" " ) + (ast.constant?"Const ":"") + "Enum Step " + ast.stepoperator + ast.stepval + this.AstArrayToStringArray(ast.declarations);
             case "ExitLoopStatement":
                 return "ExitLoop "+this.AstToString(ast.level);
             case "ExitStatement":
@@ -134,7 +122,7 @@ export default class Parser {
             case "VariableDeclaration":
                 return (ast.scope === null ? "" : ast.scope+" " )+(ast.constant ? "Const " : "")+this.AstArrayToStringArray(ast.declarations);
             case "VariableDeclarator":
-                return this.AstToString(ast.id)+this.AstToString(ast.init);
+                return this.AstToString(ast.id)+" = "+this.AstToString(ast.init);
             case "VariableIdentifier":
                 return "$"+ast.name;
             case "WhileStatement":
@@ -142,8 +130,9 @@ export default class Parser {
             case "WithStatement":
                 return "With "+this.AstToString(ast.object)+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nEndWith";
             default:
-                // @ts-ignore
-                throw new Error("AST type not supported: "+ast.type);
+                (function(type: never): never {
+                    throw new Error(`AST type not supported: "${type}"`);
+                })(type);
         }
     }
 
