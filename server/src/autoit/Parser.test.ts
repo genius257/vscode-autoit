@@ -66,4 +66,12 @@ describe("Parser", function () {
             )
         ).toEqual(false);
     });
+
+    test("AstToString, simple", function() {
+        const source = "$x = null";
+        const ast = Parser.parse(source, undefined);
+        const actual = Parser.AstToString(ast);
+
+        expect(actual).toBe(source);
+    });
 });
