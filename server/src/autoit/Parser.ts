@@ -1,5 +1,4 @@
 import parser, { ArgumentList, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, Initialiser, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, Statement, StatementList, SwitchCaseValue, SyntaxError, VariableDeclaration, VariableDeclarationList } from "autoit3-pegjs";
-import { Range } from "vscode-languageserver";
 
 export default class Parser {
     public static parse(input: string, grammarSource: string|undefined): Program {
