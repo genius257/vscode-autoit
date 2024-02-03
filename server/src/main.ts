@@ -131,17 +131,22 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 });
 
 connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
-	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
-	nodesAt?.reverse();
+	const script = workspace.get(hoverParams.textDocument.uri);
+	if (script === undefined) {
+		return null;
+	}
 
-	if (nodesAt?.[0]?.type === "ExitStatement") {
+	const nodesAt = script.getNodesAt(hoverParams.position);
+	nodesAt.reverse();
+
+	if (nodesAt[0]?.type === "ExitStatement") {
 		return {
 			contents: "Exit ( [return code] )\n\nTerminates the script.",
 			range: PositionHelper.locationRangeToRange(nodesAt[0].location),
 		};
 	}
 
-	const identifierAtPos = nodesAt?.find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	const identifierAtPos = nodesAt.find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
 		return null;
 	}
@@ -175,6 +180,35 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "FunctionDeclaration":
+			const precedingIdentifierSiblings = script.filterNodes((node) => {
+				if (node.location.end.line >= identifier!.location.start.line) {
+					return NodeFilterAction.StopAndSkip;
+				}
+
+				if (node.type === 'EmptyStatement') {
+					return NodeFilterAction.SkipAndStopPropagation;
+				}
+
+				return NodeFilterAction.StopPropagation;
+			});
+
+			const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
+			if (previousIdentifierSibling.type === 'MultiLineComment') {
+				return {
+					contents: [
+						{
+							language: 'plaintext',
+							value: previousIdentifierSibling.body,
+						},
+						{
+							language: 'au3',
+							value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+						},
+					],
+					range: PositionHelper.locationRangeToRange(identifierAtPos.location),
+				};
+			}
+
 			return {
 				contents: [
 					{
