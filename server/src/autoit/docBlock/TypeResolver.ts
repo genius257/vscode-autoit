@@ -4,9 +4,12 @@ import Lexer from "./Lexer/Lexer";
 import ConstExprParser from "./Parser/ConstExprParser";
 import Context from "./Types/Context";
 import TypeNode from "./Ast/Type/TypeNode";
+import TokenIterator from "./Parser/TokenIterator";
+import Mixed from "./Types/Mixed";
+import Type from "./Type";
 
 export default class TypeResolver {
-    private static readonly OPERATOR_NAMESPACE = '\\';
+    // private static readonly OPERATOR_NAMESPACE = '\\';
 
     /*
     private keywords: Record<string, TypeLike> = {
@@ -54,14 +57,14 @@ export default class TypeResolver {
     }
     */
 
-    private readonly fqsenResolver: FqsenResolver;
+    //private readonly fqsenResolver: FqsenResolver;
 
     private readonly typeParser: TypeParser;
 
     private readonly lexer: Lexer;
 
     public constructor(fqsenResolver: FqsenResolver|null = null) {
-        this.fqsenResolver = fqsenResolver ?? new FqsenResolver();
+        //this.fqsenResolver = fqsenResolver ?? new FqsenResolver();
         this.typeParser = new TypeParser(new ConstExprParser());
         this.lexer = new Lexer();
     }
@@ -80,9 +83,9 @@ export default class TypeResolver {
         const tokenIterator = new TokenIterator(tokens);
 
         const ast = this.parse(tokenIterator);
-        type = this.createType(ast, context);
+        const _type = this.createType(ast, context);
 
-        return this.tryParseRemainingCompoundTypes(tokenIterator, context, type);
+        return this.tryParseRemainingCompoundTypes(tokenIterator, context, _type);
     }
 
     public createType(type: TypeNode|null, context: Context): Type {
@@ -91,6 +94,7 @@ export default class TypeResolver {
         }
 
         switch (type.constructor) {
+            /*
             case ArrayTypeNode:
                 return new Array_(
                     this.createType(type.type, context)
@@ -141,6 +145,7 @@ export default class TypeResolver {
             case ConditionalTypeNode:
             case ConditionalTypeForParameterNode:
             case OffsetAccesTypeNode:
+            */
             default:
                 return new Mixed();
         }
@@ -175,12 +180,14 @@ export default class TypeResolver {
             const ast = this.typeParser.parse(tokenIterator);
             return ast;
         } catch (e) {
-            if (e instanceof ParserException) {
+            /*if (e instanceof ParserException) {
                 throw new Error(e.getMessage());
-            }
+            }*/
             throw e;
         }
     }
 
-    // private tryParseRemainingCompoundTypes(tokenIterator: TokenIterator, context: Context, type: Type): Type
+    private tryParseRemainingCompoundTypes(tokenIterator: TokenIterator, context: Context, type: Type): Type {
+        return type;//FIXME
+    }
 }

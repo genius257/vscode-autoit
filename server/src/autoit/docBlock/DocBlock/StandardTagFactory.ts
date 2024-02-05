@@ -147,7 +147,7 @@ export default class StandardTagFactory extends TagFactory {
         const _arguments = [];
 
         parameters.forEach(parameter => {
-            const type = parameter.id.name;
+            // const type = parameter.id.name;
             let typeHint = null;
             //if (type instanceof ReflectionNamedType) {} //FIXME:
 
@@ -169,7 +169,7 @@ export default class StandardTagFactory extends TagFactory {
     }
 
     private fetchParametersForHandlerFactoryMethod(handler: {new (...args: any[]): {}}|Factory): FormalParameter[] {
-        const handlerClassName = handler.name;
+        const handlerClassName = handler instanceof Factory ? handler.constructor.name : handler.name;
 
         if (!(handlerClassName in this.tagHandlerParameterCache)) {
             const methodReflection = new ReflectionMethod(handlerClassName, 'create'); //FIXME: fetch function declaration from workspace or context(script)

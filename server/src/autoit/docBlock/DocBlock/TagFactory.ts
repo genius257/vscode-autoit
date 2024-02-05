@@ -1,4 +1,4 @@
-import Tag, { TagLike } from "./Tag";
+import { TagLike } from "./Tag";
 import Factory from "./Tags/Factory/Factory";
 
 export default abstract class TagFactory extends Factory {

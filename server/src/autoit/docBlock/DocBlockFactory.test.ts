@@ -1,6 +1,5 @@
 import parser, { MultiLineComment } from "autoit3-pegjs";
 import DocBlockFactory from "./DocBlockFactory";
-import Description from "./DocBlock/Description";
 
 test('stripDocComment', () => {
     const s = `
