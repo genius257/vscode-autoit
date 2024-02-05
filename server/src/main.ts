@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /*TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /*TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, MarkedString } from 'vscode-languageserver';
 // import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI } from 'vscode-uri';
@@ -15,6 +15,7 @@ import Parser from './autoit/Parser';
 import PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
+import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -180,6 +181,13 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "FunctionDeclaration":
+			const hoverContents: MarkedString[] = [
+				{
+					language: 'au3',
+					value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+				},
+			];
+
 			const precedingIdentifierSiblings = script.filterNodes((node) => {
 				if (node.location.end.line >= identifier!.location.start.line) {
 					return NodeFilterAction.StopAndSkip;
@@ -194,28 +202,15 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 
 			const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
 			if (previousIdentifierSibling.type === 'MultiLineComment') {
-				return {
-					contents: [
-						{
-							language: 'plaintext',
-							value: previousIdentifierSibling.body,
-						},
-						{
-							language: 'au3',
-							value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
-						},
-					],
-					range: PositionHelper.locationRangeToRange(identifierAtPos.location),
-				};
+				const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling)
+				hoverContents.push({
+					language: 'plaintext',
+					value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
+				});
 			}
 
 			return {
-				contents: [
-					{
-						language: 'au3',
-						value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
-					},
-				],
+				contents: hoverContents,
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "Parameter":
