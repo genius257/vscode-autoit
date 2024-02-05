@@ -1,10 +1,12 @@
-import Tag from "./Tag";
+import Tag, { TagLike } from "./Tag";
 import TagFactory from "./TagFactory";
 import Author from "./Tags/Author";
 import Factory from "./Tags/Factory/Factory";
 import {FormalParameter} from "autoit3-pegjs";
-
-type TagLike = {new (...$args: any[]): Tag, prototype: Tag}
+import FqsenResolver from "../FqsenResolver";
+import TypeContext from "../Types/Context";
+import InvalidTag from "./Tags/InvalidTag";
+import Generic from "./Tags/Generic";
 
 // https://github.com/phpDocumentor/ReflectionDocBlock/blob/master/src/DocBlock/StandardTagFactory.php
 
@@ -39,16 +41,16 @@ export default class StandardTagFactory extends TagFactory {
     /**
      * A lazy-loading cache containing parameters for each tagHandler that has been used.
      */
-    private tagHandlerParameterCache: FormalParameter[] = [];
+    private tagHandlerParameterCache: FormalParameter[][] = [];
 
-    private fqsenResolver: unknown; //FIXME
+    private fqsenResolver: FqsenResolver; //FIXME
 
     /**
      * An array representing a simple Service Locator where we can store parameters and services that can be inserted into the Factory Methods of Tag Handlers.
      */
     private serviceLocator: unknown[] = [];
 
-    public constructor(fqsenResolver: unknown, tagHandlers: Record<string, TagLike>|null = null) {
+    public constructor(fqsenResolver: FqsenResolver, tagHandlers: Record<string, TagLike>|null = null) {
         super();
 
         this.fqsenResolver = fqsenResolver;
@@ -56,12 +58,12 @@ export default class StandardTagFactory extends TagFactory {
             this.tagHandlerMappings = tagHandlers;
         }
 
-        this.addService(fqsenResolver, FqsenResolver);
+        this.addService(fqsenResolver, FqsenResolver.name);
     }
 
-    public create(tagLine: string, context?: unknown): BaseTag {
-        if (context === undefined) {
-            context = TypeContext('');
+    public create(tagLine: string, context: TypeContext|null = null): Tag {
+        if (context === null) {
+            context = new TypeContext('');
         }
 
         const [tagName, tagBody] = this.extractTagParts(tagLine);
@@ -73,7 +75,7 @@ export default class StandardTagFactory extends TagFactory {
         this.serviceLocator[name] = value;
     }
 
-    public addService(service: object, alias: string|null = null): void {
+    public addService(service: any, alias: string|null = null): void {
         this.serviceLocator[alias ?? service.name] = service;
     }
 
@@ -92,7 +94,7 @@ export default class StandardTagFactory extends TagFactory {
     }
 
     private extractTagParts(tagLine: string): string[] {
-        const matches = tagLine.match(new RegExp(`/^@(${StandardTagFactory.REGEX_TAGNAME})((?:[\\s\\(\\{])\\s*([^\\s].*)|$)`, 'us'));
+        const matches = tagLine.match(new RegExp(`^@(${StandardTagFactory.REGEX_TAGNAME})((?:[\\s\\(\\{])\\s*([^\\s].*)|$)`, 'us'));
 
         if (matches === null) {
             throw new Error(`The tag "${tagLine}" does not seem to be wellformed, please check it for errors`);
@@ -108,16 +110,17 @@ export default class StandardTagFactory extends TagFactory {
     private createTag(body: string, name: string, context: TypeContext): Tag {
         const handlerClassName = this.findHandlerClassName(name, context);
         const _arguments = this.getArgumentsForParametersFromWiring(
-            this.fetchParametersForHandlerFacotyMethod(handlerClassName),
-            this.getServiceLocationWithDynami9cParameters(context, name, body),
+            this.fetchParametersForHandlerFactoryMethod(handlerClassName),
+            this.getServiceLocatorWithDynamicParameters(context, name, body),
         );
 
         if ('tagLine' in _arguments) {
-            arguments['tagLine'] = `@${name} ${body}`;
+            _arguments['tagLine'] = `@${name} ${body}`;
         }
 
         try {
-            const tag = handlerClassName.create(...arguments);
+            // @ts-expect-error
+            const tag = handlerClassName.create(..._arguments);
 
             return tag ?? InvalidTag.create(body, name);
         } catch (e) {
@@ -131,7 +134,7 @@ export default class StandardTagFactory extends TagFactory {
             handlerClassName = this.tagHandlerMappings[tagName];
         } else if (this.isAnnotation(tagName)) {
             // TODO: Annotation support is planned for a later stage and as such is disabled for now
-            tagName = this.fqsenResolver.resolve(tagName, context);
+            tagName = this.fqsenResolver.resolve(tagName, context).toString();
             if (tagName in this.annotationMappings) {
                 handlerClassName = this.annotationMappings[tagName];
             }
@@ -165,5 +168,36 @@ export default class StandardTagFactory extends TagFactory {
         return _arguments;
     }
 
-    private fetchParametersForHandlerFactoryMethod(handler: {new (...args: any[]): {}}|Factory): FormalParameter
+    private fetchParametersForHandlerFactoryMethod(handler: {new (...args: any[]): {}}|Factory): FormalParameter[] {
+        const handlerClassName = handler.name;
+
+        if (!(handlerClassName in this.tagHandlerParameterCache)) {
+            const methodReflection = new ReflectionMethod(handlerClassName, 'create'); //FIXME: fetch function declaration from workspace or context(script)
+            this.tagHandlerParameterCache[handlerClassName] = methodReflection.getParameters();
+        }
+
+        return this.tagHandlerParameterCache[handlerClassName];
+    }
+
+    private getServiceLocatorWithDynamicParameters(context: TypeContext, tagName: string, tagBody: string): unknown[] {
+        return {...this.serviceLocator, ...{name: tagName, body: tagBody, [TypeContext.name]: context}};
+    }
+
+    private isAnnotation(tegContext: string): boolean {
+        // 1. Contains a namespace separator
+        // 2. Contains parenthesis
+        // 3. Is present in a list of known annotations (make the algorithm smart by first checking is the last part
+        //    of the annotation class name matches the found tag name
+
+        return false;
+    }
+}
+
+class ReflectionMethod {
+    //FIXME
+    public constructor(name: string, method: string) {}
+
+    public getParameters(): FormalParameter[] {
+        return [];
+    }
 }

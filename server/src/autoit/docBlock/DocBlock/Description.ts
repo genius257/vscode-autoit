@@ -1,13 +1,13 @@
-import type BaseTag from "./Tags/BaseTag";
+import Tag from "./Tag";
 import Formatter from "./Tags/Formatter";
 import PassthroughFormatter from "./Tags/Formatter/PassthroughFormatter";
 
 export default class Description {
     private bodyTemplate: string;
 
-    private tags: BaseTag[];
+    private tags: Tag[];
 
-    public constructor(bodyTemplate: string, tags: BaseTag[] = []) {
+    public constructor(bodyTemplate: string, tags: Tag[] = []) {
         this.bodyTemplate = bodyTemplate;
         this.tags = tags;
     }
@@ -16,7 +16,7 @@ export default class Description {
         return this.bodyTemplate;
     }
 
-    public getTags(): Readonly<BaseTag[]> {
+    public getTags(): Readonly<Tag[]> {
         return this.tags;
     }
 

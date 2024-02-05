@@ -1,7 +1,7 @@
 import BaseTag from "./BaseTag";
 
 export default class Author extends BaseTag {
-    protected name: string = 'author';
+    protected override name: string = 'author';
 
     private authorName: string;
 
@@ -22,7 +22,7 @@ export default class Author extends BaseTag {
     }
 
     static override create(body: string): Author|null {
-        const splitTagContent = body.match(/^([^\<]*)(?:\<([^\>]*)\>)?$/u);
+        const splitTagContent = body.match(/^([^<]*)(?:<([^>]*)>)?$/u);
 
         if (splitTagContent === null) {
             return null;

@@ -1,5 +1,5 @@
-import type BaseTag from "./BaseTag";
+import Tag from "../Tag";
 
 export default interface Formatter {
-    format(tag: BaseTag): string
+    format(tag: Tag): string
 }

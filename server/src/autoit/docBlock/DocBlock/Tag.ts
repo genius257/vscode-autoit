@@ -12,3 +12,5 @@ export default abstract class Tag {
 
     public abstract toString(): string;
 }
+
+export type TagLike = {new (...$args: any[]): Tag, prototype: Tag, create(body: string, ...v: any[]): Tag|null};

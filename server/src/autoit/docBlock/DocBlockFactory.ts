@@ -1,9 +1,13 @@
-import type { Location, MultiLineComment } from "autoit3-pegjs";
+import type { Location, MultiLineComment/*, SingleLineComment*/ } from "autoit3-pegjs";
 import DocBlock from "./DocBlock";
 import DescriptionFactory from "./DocBlock/DescriptionFactory";
-import Tag from "./DocBlock/Tag";
+import Tag, { TagLike } from "./DocBlock/Tag";
 import TagFactory from "./DocBlock/TagFactory";
 import StandardTagFactory from "./DocBlock/StandardTagFactory";
+import Factory from "./DocBlock/Tags/Factory/Factory";
+import FqsenResolver from "./FqsenResolver";
+import TypeResolver from "./TypeResolver";
+import Context from "./Types/Context";
 
 export default class DocBlockFactory {
     private descriptionFactory: DescriptionFactory;
@@ -14,9 +18,37 @@ export default class DocBlockFactory {
         this.tagFactory = tagFactory;
     }
 
-    public static createInstance(additionalTags: Record<string, Tag|TagFactory> = {}): DocBlockFactory {
-        const tagFactory = new StandardTagFactory(null);//FIXME: parameters here
-        const descriptionFactory = new DescriptionFactory();
+    public static createInstance(additionalTags: Record<string, TagLike|TagFactory> = {}): DocBlockFactory {
+        const fqsenResolver = new FqsenResolver();
+        const tagFactory = new StandardTagFactory(fqsenResolver);
+        const descriptionFactory = new DescriptionFactory(tagFactory);
+        const typeResolver = new TypeResolver(fqsenResolver);
+
+        /*
+        //FIXME
+        const au3stanTagFactory = new AbstractAU3StanFactory(
+            new ParamFactory(typeResolver, descriptionFactory),
+            new VarFactory(typeResolver, descriptionFactory),
+            new ReturnFactory(typeResolver, descriptionFactory),
+            new PropertyFactory(typeResolver, descriptionFactory),
+            new PropertyReadFactory(typeResolver, descriptionFactory),
+            new PropertyWriteFactory(typeResolver, descriptionFactory),
+            new MethodFactory(typeResolver, descriptionFactory)
+        );
+        */
+
+        tagFactory.addService(descriptionFactory);
+        tagFactory.addService(typeResolver);
+        /*
+        //FIXME
+        tagFactory.registerTagHandler('param', au3stanTagFactory);
+        tagFactory.registerTagHandler('var', au3stanTagFactory);
+        tagFactory.registerTagHandler('return', au3stanTagFactory);
+        tagFactory.registerTagHandler('property', au3stanTagFactory);
+        tagFactory.registerTagHandler('property-read', au3stanTagFactory);
+        tagFactory.registerTagHandler('property-write', au3stanTagFactory);
+        tagFactory.registerTagHandler('method', au3stanTagFactory);
+        */
 
         const docBlockFactory = new this(descriptionFactory, tagFactory);
 
@@ -25,13 +57,20 @@ export default class DocBlockFactory {
         return docBlockFactory;
     }
 
-    public createFromMultilineComment(comment: MultiLineComment) {
+    /*
+    //FIXME: implement
+    public createFromLegacyComments(comments: SingleLineComment[]): DocBlock {
+        return this.create();
+    }
+    */
+
+    public createFromMultilineComment(comment: MultiLineComment): DocBlock {
         return this.create(comment.body);
     }
 
     public create(docblock: string, context: Context|null = null, location: Location|null = null) {
         if (context === null) {
-            context = new Context();
+            context = new Context('');
         }
         const [summary, description, tags] = this.splitDocBlock(this.stripDocComment(docblock));
 
@@ -101,7 +140,7 @@ export default class DocBlockFactory {
         return result;
     }
 
-    public registerTagHandler(tagName: string, handler: typeof Tag|Factory) {
+    public registerTagHandler(tagName: string, handler: TagLike|Factory) {
         this.tagFactory.registerTagHandler(tagName, handler);
     }
 
@@ -118,8 +157,4 @@ export default class DocBlockFactory {
 
         return tags;
     }
-}
-
-class Context {
-    //FIXME
 }
