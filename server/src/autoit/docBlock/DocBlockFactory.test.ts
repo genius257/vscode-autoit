@@ -1,5 +1,6 @@
 import parser, { MultiLineComment } from "autoit3-pegjs";
 import DocBlockFactory from "./DocBlockFactory";
+import Description from "./DocBlock/Description";
 
 test('stripDocComment', () => {
     const s = `
@@ -47,6 +48,7 @@ test('createFromMultilineComment', () => {
     const factory = DocBlockFactory.createInstance();
     const x = factory.createFromMultilineComment(comment);
     expect(x.summary).toBe('Summary.');
-    expect(x.description).toBe('Description');
+    expect(x.description.toString()).toBe('Description');
     expect(x.tags).toHaveLength(1);
+    expect(x.tags[0].render()).toBe('@see something');
 });
