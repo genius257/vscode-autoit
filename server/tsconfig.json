@@ -8,7 +8,8 @@
 		"strict": true,
 
 		"noImplicitAny": false,
-		"noUnusedLocals": true
+		"noUnusedLocals": true,
+		"noImplicitOverride": true
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test-web"]
