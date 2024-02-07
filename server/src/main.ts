@@ -10,7 +10,7 @@ import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult,
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, SingleLineComment, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
@@ -188,25 +188,53 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				},
 			];
 
-			const precedingIdentifierSiblings = script.filterNodes((node) => {
-				if (node.location.end.line >= identifier!.location.start.line) {
-					return NodeFilterAction.StopAndSkip;
-				}
+			const identifierScript = workspace.get(identifier.location.source);
+			if (identifierScript !== undefined) {
+				const precedingIdentifierSiblings = identifierScript.filterNodes((node) => {
+					if (node.location.end.line >= identifier!.location.start.line) {
+						return NodeFilterAction.StopAndSkip;
+					}
 
-				if (node.type === 'EmptyStatement') {
-					return NodeFilterAction.SkipAndStopPropagation;
-				}
+					if (node.type === 'EmptyStatement') {
+						return NodeFilterAction.SkipAndStopPropagation;
+					}
 
-				return NodeFilterAction.StopPropagation;
-			});
-
-			const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
-			if (previousIdentifierSibling.type === 'MultiLineComment') {
-				const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling)
-				hoverContents.push({
-					language: 'plaintext',
-					value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
+					return NodeFilterAction.StopPropagation;
 				});
+
+				const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
+				switch(previousIdentifierSibling.type) {
+					case 'MultiLineComment':
+						const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
+						hoverContents.push({
+							language: 'plaintext',
+							value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
+						});
+						break;
+					case 'SingleLineComment':
+						const comments: SingleLineComment[] = [previousIdentifierSibling];
+
+						for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
+							const element = precedingIdentifierSiblings[index];
+							if (element.type !== "SingleLineComment") {
+								break;
+							}
+							
+							comments.unshift(element);
+						}
+
+						if (comments.length >= 3) { // A minunum of 3 lines are needed for legacy UDF function header
+							const docBlock = DocBlockFactory.createInstance().createFromLegacyComments(comments);
+
+							if (docBlock !== null) {
+								hoverContents.push({
+									language: 'plaintext',
+									value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
+								});
+							}
+						}
+						break;
+				}
 			}
 
 			return {
