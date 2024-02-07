@@ -126,7 +126,7 @@
         ]
     },
     "dependencies": {
-        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.4"
+        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.5"
     },
     "devDependencies": {
         "@types/jest": "^29.4.0",
@@ -154,6 +154,6 @@
         "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
         "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
         "chrome": "npm run compile && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ./test-data",
-        "test": "jest"
+        "test": "jest --verbose"
     }
 }

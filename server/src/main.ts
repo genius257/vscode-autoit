@@ -4,17 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /*TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /*TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, MarkedString } from 'vscode-languageserver';
 // import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, SingleLineComment, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
+import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -131,17 +132,22 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 });
 
 connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
-	const nodesAt = workspace.get(hoverParams.textDocument.uri)?.getNodesAt(hoverParams.position);
-	nodesAt?.reverse();
+	const script = workspace.get(hoverParams.textDocument.uri);
+	if (script === undefined) {
+		return null;
+	}
 
-	if (nodesAt?.[0]?.type === "ExitStatement") {
+	const nodesAt = script.getNodesAt(hoverParams.position);
+	nodesAt.reverse();
+
+	if (nodesAt[0]?.type === "ExitStatement") {
 		return {
 			contents: "Exit ( [return code] )\n\nTerminates the script.",
 			range: PositionHelper.locationRangeToRange(nodesAt[0].location),
 		};
 	}
 
-	const identifierAtPos = nodesAt?.find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	const identifierAtPos = nodesAt.find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
 		return null;
 	}
@@ -175,13 +181,64 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "FunctionDeclaration":
+			const hoverContents: MarkedString[] = [
+				{
+					language: 'au3',
+					value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
+				},
+			];
+
+			const identifierScript = workspace.get(identifier.location.source);
+			if (identifierScript !== undefined) {
+				const precedingIdentifierSiblings = identifierScript.filterNodes((node) => {
+					if (node.location.end.line >= identifier!.location.start.line) {
+						return NodeFilterAction.StopAndSkip;
+					}
+
+					if (node.type === 'EmptyStatement') {
+						return NodeFilterAction.SkipAndStopPropagation;
+					}
+
+					return NodeFilterAction.StopPropagation;
+				});
+
+				const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
+				switch(previousIdentifierSibling.type) {
+					case 'MultiLineComment':
+						const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
+						hoverContents.push({
+							language: 'plaintext',
+							value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
+						});
+						break;
+					case 'SingleLineComment':
+						const comments: SingleLineComment[] = [previousIdentifierSibling];
+
+						for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
+							const element = precedingIdentifierSiblings[index];
+							if (element.type !== "SingleLineComment") {
+								break;
+							}
+							
+							comments.unshift(element);
+						}
+
+						if (comments.length >= 3) { // A minunum of 3 lines are needed for legacy UDF function header
+							const docBlock = DocBlockFactory.createInstance().createFromLegacyComments(comments);
+
+							if (docBlock !== null) {
+								hoverContents.push({
+									language: 'plaintext',
+									value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
+								});
+							}
+						}
+						break;
+				}
+			}
+
 			return {
-				contents: [
-					{
-						language: 'au3',
-						value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
-					},
-				],
+				contents: hoverContents,
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "Parameter":

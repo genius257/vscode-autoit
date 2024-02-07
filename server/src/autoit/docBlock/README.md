@@ -1,0 +1,4 @@
+https://github.com/phpDocumentor/ReflectionDocBlock/tree/29e383a759d575c66317e5229284dd0b8aca7e53
+https://github.com/phpDocumentor/TypeResolver/tree/bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353
+https://github.com/phpDocumentor/ReflectionCommon/tree/14771a86209a90da9df0c94178a42de6055c83e8
+https://github.com/phpstan/phpdoc-parser/tree/bd84b629c8de41aa2ae82c067c955e06f1b00240
