@@ -1,4 +1,4 @@
-import type { Location, MultiLineComment/*, SingleLineComment*/ } from "autoit3-pegjs";
+import type { Location, MultiLineComment, SingleLineComment} from "autoit3-pegjs";
 import DocBlock from "./DocBlock";
 import DescriptionFactory from "./DocBlock/DescriptionFactory";
 import Tag, { TagLike } from "./DocBlock/Tag";
@@ -57,12 +57,45 @@ export default class DocBlockFactory {
         return docBlockFactory;
     }
 
-    /*
-    //FIXME: implement
-    public createFromLegacyComments(comments: SingleLineComment[]): DocBlock {
-        return this.create();
+    public createFromLegacyComments(comments: SingleLineComment[]): DocBlock|null {
+        //TODO: move this to a legacy factory class maybe?
+        // Extract relevant information and convert legacy function documentaion header to DocBlock
+
+        const docBlock = comments.map(comment => comment.body).join("\n");
+
+        if (!/^[ \t]* #\w+# =*\n([ \t]* \w+[ \t]?\.*:( [^\n]*\n([ \t]* (?!\w+[ \t]?\.*:).*\n)*|\n))*[ \t]* =*$/.test(docBlock)) {
+            return null
+        }
+
+        const docBlockItems = [...docBlock.matchAll(/^[ \t]* ([\w ]+)[ \t]?\.*:([^\n]*\n(?:(?![ \t]*\w+[ \t]?\.*:|[ \t]*=+[ \t]*$)[^\n]+)?)/gm)];
+        if (docBlockItems.length === 0) {
+            throw new Error('Failed to split UDF header elements! RegEx failed!');
+        }
+
+        const dockBlockdata: Record<string, string> = docBlockItems.reduce((result, item) => {
+            result[item[1].trim().toLowerCase()] = item[2].trim();
+            return result;
+        }, {});
+
+        const summary = dockBlockdata['description'] ?? '';
+        const description = dockBlockdata['remarks'] ?? '';
+
+        if (summary === '' && description === '') {
+            return null;
+        }
+
+        if (description === '') {
+            return this.create(`# ${summary}`);
+        }
+
+        return this.create(
+`
+# ${summary}
+#
+# ${description}
+`
+        );
     }
-    */
 
     public createFromMultilineComment(comment: MultiLineComment): DocBlock {
         return this.create(comment.body);
