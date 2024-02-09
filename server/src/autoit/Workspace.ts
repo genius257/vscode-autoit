@@ -31,6 +31,7 @@ export class Workspace {
         this.connection = connection;
 
         const script = new Script(native, URI.from({scheme: 'internal', 'path': 'native'}));
+        script.addReference();// we falsely increment the reference count here, to make sure it is never released.
         this.add(script);
     }
 
