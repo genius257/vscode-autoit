@@ -1071,6 +1071,380 @@ Func DllCall($dll, $return_type, $function, $type1 = Default, $param1 = Default,
     #native code
 EndFunc;TODO: support DLLCALL param types (currently shown as a table in official docs)
 
+#cs
+# Dynamically calls a function at a specific memory address.
+#
+# @param String $return_type The return type of the function.
+# @param Ptr $address The address of a function. If this value is invalid your script will crash!
+# @param String $type1 The type of the first parameter.
+# @param Mixed $param1 The value of the first parameter.
+# @param String $type2 The type of the second parameter.
+# @param Mixed $param2 The value of the second parameter.
+# @param String $type3 The type of the third parameter.
+# @param Mixed $param3 The value of the third parameter.
+# @param String $type4 The type of the fourth parameter.
+# @param Mixed $param4 The value of the fourth parameter.
+# @param String $type5 The type of the fifth parameter.
+# @param Mixed $param5 The value of the fifth parameter.
+# @param String $type6 The type of the sixth parameter.
+# @param Mixed $param6 The value of the sixth parameter.
+# @param String $type7 The type of the seventh parameter.
+# @param Mixed $param7 The value of the seventh parameter.
+# @param String $type8 The type of the eighth parameter.
+# @param Mixed $param8 The value of the eighth parameter.
+# @param String $type9 The type of the ninth parameter.
+# @param Mixed $param9 The value of the ninth parameter.
+# @param String $type10 The type of the tenth parameter.
+# @param Mixed $param10 The value of the tenth parameter.
+#
+# @return Array
+#ce
+Func DllCallAddress($return_type, $address, $type1 = Default, $param1 = Default, $type2 = Default, $param2 = Default, $type3 = Default, $param3 = Default, $type4 = Default, $param4 = Default, $type5 = Default, $param5 = Default, $type6 = Default, $param6 = Default, $type7 = Default, $param7 = Default, $type8 = Default, $param8 = Default, $type9 = Default, $param9 = Default, $type10 = Default, $param10 = Default)
+    #native code
+EndFunc
+
+#cs
+# Frees a previously created handle created with DllCallbackRegister.
+#
+# @param Handle $handle The DllCallback handle, as returned by a previous call to DllCallbackRegister().
+#
+# @return Void
+#ce
+Func DllCallbackFree($handle)
+    #native code
+EndFunc
+
+#cs
+# Returns the pointer to a callback function that can be passed to the Win32 API.
+#
+# @param Handle $handle A DllCallback handle returned from DllCallbackRegister().
+#
+# @return Ptr the pointer to the callback function.
+#ce
+Func DllCallbackGetPtr($handle)
+    #native code
+EndFunc
+
+#cs
+# Creates a user-defined DLL Callback function.
+#
+# @param String $function The name of the User Defined Function to call.
+# @param String $return_type The return type and calling convention of the function (see DllCall).
+# @param String $params A semi-colon separated list of parameters that will be passed to this function. See Remarks.
+#
+# @return Handle A dll "handle" to be used with DllCallbackGetPtr() and DllCallbackFree() functions.
+#ce
+Func DllCallbackRegister($function, $return_type, $params)
+    #native code
+EndFunc
+
+#cs
+# Closes a previously opened DLL.
+#
+# @param Handle $dllhandle The handle of a dll, as returned by a previous call to DllOpen().
+#
+# @return Void
+#ce
+Func DllClose($dllhandle)
+    #native code
+EndFunc
+
+#cs
+# Opens a DLL file for use in DllCall.
+#
+# @param String $filename Filename of the DLL file to open.
+#
+# @return Handle a dll "handle" to be used with subsequent Dll functions or -1 if error occurs.
+#ce
+Func DllOpen($filename)
+    #native code
+EndFunc
+
+#cs
+# Creates a C/C++ style structure to be used in DllCall.
+#
+# @param String $struct A string representing the structure to create (See Remarks).
+# @param Ptr $pointer If supplied the struct will not allocate memory but use the pointer supplied.
+#
+# @return Handle
+#ce
+Func DllStructCreate($struct, $pointer = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns the data of an element of the struct.
+#
+# @param Handle $struct The struct returned by DllStructCreate().
+# @param String $element Which element of the struct you want to access, starting at 1 or the element name as defined in DllStructCreate().
+# @param Int $index For elements that are defined by [] this specifies the 1-based index to retrieve. If omitted or the Default keyword then for char[n], wchar[n] and byte[n] all elements are retrieved (Useful for quick retrieval).
+# Not used for non [] elements.
+#
+# @return Mixed
+#ce
+Func DllStructGetData($struct, $element, $index = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns the pointer to the struct or an element in the struct.
+#
+# @param Handle $struct The struct returned by DllStructCreate().
+# @param String|Int $element The element of the struct whose pointer you need, starting at 1 or the element name as defined in DllStructCreate().
+#
+# @return Ptr The pointer to the struct
+#ce
+Func DllStructGetPtr($struct, $element = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns the size of the struct in bytes.
+#
+# @param Handle $struct The struct returned by DllStructCreate().
+#
+# @return Int The size of the struct in bytes.
+#ce
+Func DllStructGetSize($struct)
+    #native code
+EndFunc
+
+#cs
+# Sets the data of an element in the struct.
+#
+# @param Handle $struct The struct returned by DllStructCreate().
+# @param String $element Which element of the struct you want to access, starting at 1 or the element name as defined in DllStructCreate().
+# @param Mixed $value The new value to place in the struct element.
+# @param Int $index For elements that are an array this specifies the 1-based index to set. If omitted or the Default keyword then as much of the value as possible will be set in element starting at index 1 (Useful for quickly setting strings). Not used for non-array elements.
+#
+# @return Mixed Value, which is read back from the struct.
+#ce
+Func DllStructSetData($struct, $element, $value, $index = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns an array containing the enumerated drives.
+#
+# @param String $type Type of drive to find:
+# $DT_ALL ("ALL")
+# $DT_CDROM ("CDROM")
+# $DT_REMOVABLE ("REMOVABLE")
+# $DT_FIXED ("FIXED")
+# $DT_NETWORK ("NETWORK")
+# $DT_RAMDISK ("RAMDISK")
+# $DT_UNKNOWN ("UNKNOWN")
+# Constants are defined in AutoItConstants.au3
+#
+# @return Array An array of strings (drive letter followed by colon) of drives found. The zeroth array element contains the number of drives.
+#ce
+Func DriveGetDrive($type)
+    #native code
+EndFunc
+
+#cs
+# Returns File System Type of a drive.
+#
+# @param String $path Path of drive to receive information from.
+#
+# @return String The File System Type of the drive as a string
+#ce
+Func DriveGetFileSystem($path)
+    #native code
+EndFunc
+
+#cs
+# Returns Volume Label of a drive, if it has one.
+#
+# @param String $path Path of drive to receive information from.
+#
+# @return String The Volume Label of the drive
+#ce
+Func DriveGetLabel($path)
+    #native code
+EndFunc
+
+#cs
+# Returns Serial Number of a drive.
+#
+# The value returned is not the hardware serial number as found on the label of the drive, it is the Windows Volume ID for the drive.
+#
+# @param String $path Path of drive to receive information from.
+#
+# @return String The Serial Number of the drive
+#ce
+Func DriveGetSerial($path)
+    #native code
+EndFunc
+
+#cs
+# Returns drive type.
+#
+# @param String $path Path of drive to receive information from.
+# @param Int $operation The drive type operation to perform.
+# $DT_DRIVETYPE (1) = the type of drive (default)
+# $DT_SSDSTATUS (2) = SSD status of the drive
+# $DT_BUSTYPE (3) = the bus type of drive
+# Constants are defined in AutoItConstants.au3.
+#
+# @return String The drive type
+#ce
+Func DriveGetType($path, $operation = 1)
+    #native code
+EndFunc
+
+#cs
+# Maps a network drive.
+#
+# @param String $device The device to map, for example "O:" or "LPT1:". If you pass an empty string for this parameter a connection is made but not mapped to a specific drive. If you specify "*" an unused drive letter will be automatically selected.
+# @param String $remote_share The remote share to connect to in the form "\\server\share".
+# @param Int $flags Any combination of the following:
+# $DMA_DEFAULT (0) = default
+# $DMA_PERSISTENT (1) = Persistent mapping
+# $DMA_AUTHENTICATION (8) = Show authentication dialog if required
+# Constants are defined in AutoItConstants.au3.
+# @param String $user The username to use to connect. In the form "username" or "domain\username".
+# @param String $password The password to use to connect.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func DriveMapAdd($device, $remote_share, $flags = 0, $user = Default, $password = Default)
+    #native code
+EndFunc
+
+#cs
+# Disconnects a network drive.
+#
+# @param String $device The device to disconnect, e.g. "O:" or "LPT1:".
+#
+# @return 0|1 1 if successful, 0 if the disconnection was unsuccessful.
+#ce
+Func DriveMapDel($drive)
+    #native code
+EndFunc
+
+#cs
+# Retrieves the details of a mapped drive.
+#
+# @param String $device The device to retrieve, e.g. "O:" or "LPT1:".
+#
+# @return String A details of the mapping, e.g. \\server\share
+#ce
+Func DriveMapGet($device)
+    #native code
+EndFunc
+
+#cs
+# Sets the Volume Label of a drive.
+#
+# @param String $path Path of drive to change.
+# @param String $label New volume label for the drive. (11 characters is usually max length)
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func DriveSetLabel($path, $label)
+    #native code
+EndFunc
+
+#cs
+# Returns the free disk space of a path in Megabytes.
+#
+# @param String $path Path of drive to receive information from.
+#
+# @return Float The free disk space of the drive
+#ce
+Func DriveSpaceFree($path)
+    #native code
+EndFunc
+
+#cs
+# Returns the total disk space of a path in Megabytes.
+#
+# @param String $path Path of drive to receive information from.
+#
+# @return Float The total disk space of the drive
+#ce
+Func DriveSpaceTotal($path)
+    #native code
+EndFunc
+
+#cs
+# Returns the status of the drive
+#
+# @param String $path Path of drive to receive information from.
+#
+# @return String The status of the drive
+#ce
+Func DriveStatus($path)
+    #native code
+EndFunc
+
+#cs
+# Retrieves an environment variable.
+#
+# @param String $envvariable The name of the environment variable to get such as "TEMP" or "PATH".
+#
+# @return String The value of the environment variable or empty string if the variable does not exist.
+#ce
+Func EnvGet($envvariable)
+    #native code
+EndFunc
+
+#cs
+# Writes an environment variable.
+#
+# If a value is not used the environment variable will be deleted.
+#
+# @param String $envvariable The name of the environment variable to set such as "TEMP" or "PATH".
+# @param String $value The value of the environment variable.
+#
+# @return Int 0 if unsuccessful, any other value if successful.
+#ce
+Func EnvSet($envvariable, $value = Default)
+    #native code
+EndFunc
+
+#cs
+# Refreshes the OS environment.
+#
+# @return Void
+#ce
+Func EnvUpdate()
+    #native code
+EndFunc
+
+#cs
+# Return the value of the variable defined by a string.
+#
+# @param String $variable The name of the variable.
+#
+# @return Mixed The value of the variable or empty string and sets the @error flag to non-zero on failure.
+#ce
+Func Eval($string)
+    #native code
+EndFunc
+
+#cs
+# Execute an expression.
+#
+# @param String $string The expression to be evaluated.
+#
+# @return Mixed The value of the evaluated expression or empty string and sets the @error flag to non-zero on failure.
+#ce
+Func Execute($string)
+    #native code
+EndFunc
+
+#cs
+# Calculates e to the power of a number.
+#
+# @param Number $expression Any valid numeric expression.
+#
+# @return Double
+#ce
+Func Exp($expression)
+    #native code
+EndFunc
 
 ; FIXME: a au3doc type for flags?
 ; FIXME: a au3doc type for variables (both existing, non exesting and varaibles taht will be defined by the function)
