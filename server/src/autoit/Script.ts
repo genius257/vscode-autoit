@@ -153,6 +153,16 @@ export default class Script {
             this.includeCache.push(newInclude);
             return newInclude;
         }) ?? [];
+
+        //TODO: This URI needs to only be declared once, and imported wherever needed.
+        const uri = URI.from({scheme: 'internal', 'path': 'native'}).toString();
+
+        // Adding native include at the top of the list, to make sure it is always processed first.
+        this.includes.unshift({
+            statement: {type: "IncludeStatement", file: '', library: true, location: {source: '',start: {line: 0, column: 0, offset: 0}, end: {line: 0, column: 0, offset: 0}}},
+            uri,
+            promise: Promise.resolve(uri),
+        });
     }
 
     public createInclude(include: IncludeStatement): Include {
@@ -726,10 +736,6 @@ export default class Script {
         switch (identifier.type) {
             case "Identifier":
                 declaration = this.declarations.find((declaration) => declaration.type === "FunctionDeclaration" && declaration.id.name.toLowerCase() === identifier.name.toLowerCase());
-
-                if ((declaration == null) && this.workspace !== undefined) {
-                    declaration = this.workspace.get(URI.from({scheme: 'internal', 'path': 'native'}))?.getIdentifierDeclarator(identifier, stack, functions, depth + 1);
-                }
 
                 if ((declaration == null) && this.workspace !== undefined) {
                     for (const include of this.includes) {
