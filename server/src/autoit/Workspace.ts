@@ -2,6 +2,7 @@ import { IncludeStatement } from 'autoit3-pegjs';
 import { Connection, Diagnostic } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from "./Script";
+import native from "./native.au3?raw";
 
 export type scriptList = {
     [uri: string]: Script | undefined,
@@ -28,6 +29,9 @@ export class Workspace {
 
     constructor(connection: Connection|null = null) {
         this.connection = connection;
+
+        const script = new Script(native, URI.from({scheme: 'internal', 'path': 'native'}));
+        this.add(script);
     }
 
     public getConnection(): Connection|null {

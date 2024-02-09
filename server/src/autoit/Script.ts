@@ -728,6 +728,10 @@ export default class Script {
                 declaration = this.declarations.find((declaration) => declaration.type === "FunctionDeclaration" && declaration.id.name.toLowerCase() === identifier.name.toLowerCase());
 
                 if ((declaration == null) && this.workspace !== undefined) {
+                    declaration = this.workspace.get(URI.from({scheme: 'internal', 'path': 'native'}))?.getIdentifierDeclarator(identifier, stack, functions, depth + 1);
+                }
+
+                if ((declaration == null) && this.workspace !== undefined) {
                     for (const include of this.includes) {
                         if (include.uri !== null) {
                             declaration = this.workspace.get(include.uri)?.getIdentifierDeclarator(identifier, stack, functions, depth + 1);

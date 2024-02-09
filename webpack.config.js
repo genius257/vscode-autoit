@@ -89,6 +89,10 @@ const serverConfig = {
 					},
 				],
 			},
+			{
+				resourceQuery: /raw/,
+				type: 'asset/source',
+			},
 		],
 	},
 	externals: {
