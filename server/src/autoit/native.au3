@@ -1446,6 +1446,275 @@ Func Exp($expression)
     #native code
 EndFunc
 
+#cs
+# Changes the current working directory.
+#
+# @param String $path The path to make the current working directory.
+#
+# @return 0|1 1 if successful, 0 if working directory was not changed.
+#ce
+Func FileChangeDir($path)
+    #native code
+EndFunc
+
+#cs
+# Closes a previously opened file.
+#
+# @param Int $filehandle The handle of a file, as returned by a previous call to FileOpen().
+#
+# @return 0|1 1 if successful, 0 if the filehandle is invalid.
+#ce
+Func FileClose($filehandle)
+    #native code
+EndFunc
+
+#cs
+# Copies one or more files.
+#
+# @param String $source The source path of the file(s) to copy.
+# @param String $dest The destination path of the copied file(s).
+# @param Int $flag The flag to determine whether to overwrite files if they already exist.
+# Can be a combination of the following:
+# $FC_NOOVERWRITE (0) = (default) do not overwrite existing files
+# $FC_OVERWRITE (1) = overwrite existing files
+# $FC_CREATEPATH (8) = Create destination directory structure if it doesn't exist (See Remarks).
+# Constants are defined in FileConstants.au3.
+#
+# @return 0|1 1 if successful, 0 if the file(s) could not be copied.
+#ce
+Func FileCopy($source, $dest, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates an NTFS hardlink to a file or a directory.
+#
+# @param String $source Path of the source to which the hardlink will be created.
+# @param String $hardlink Path of the hardlink.
+# @param Int $flag Determines whether to overwrite link if they already exist.
+# Can be a combination of the following:
+# $FC_NOOVERWRITE (0) = (default) do not overwrite existing link
+# $FC_OVERWRITE (1) = overwrite existing link
+# Constants are defined in FileConstants.au3.
+#
+# @return 0|1 1 if successful, 0 on failure.
+#ce
+Func FileCreateNTFSLink($source, $hardlink, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates a shortcut (.lnk) to a file.
+#
+# @param String $file Full path and file name of file to which the shortcut will point.
+# @param String $lnk Full path and file name of the shortcut.
+# @param String $workdir Working directory.
+# @param String $args Additional file arguments.
+# @param String $desc File Description.
+# @param String $icon Full Path/File name of icon to use.
+# @param String $hotkey Hotkey - same as the Send() key format.
+# @param Int $icon_number The icon instance to use (usually 0)
+# @param Int $state The state the shortcut is launched in. Use either @SW_SHOWNORMAL, @SW_SHOWMINNOACTIVE or @SW_SHOWMAXIMIZED
+#
+# @return 0|1 1 if successful, 0 if lnk cannot be created.
+#ce
+Func FileCreateShortcut($file, $lnk, $workdir = Default, $args = Default, $desc = Default, $icon = Default, $hotkey = Default, $icon_number = Default, $state = Default)
+    #native code
+EndFunc
+
+#cs
+# Delete one or more files.
+#
+# @param String $filename The path of the file(s) to delete.
+#
+# @return 0|1 1 if successful, 0 if files are not deleted or do not exist.
+#ce
+Func FileDelete($filename)
+    #native code
+EndFunc
+
+#cs
+# Checks if a file or directory exists.
+#
+# @param String $path The path of the file or directory to check.
+#
+# @return 0|1 1 if successful, 0 if path/file does not exist.
+#ce
+Func FileExists($path)
+    #native code
+EndFunc
+
+#cs
+# Creates a search handle, defined by a path and file mask.
+#
+# @param String $filename The path and file mask to search for.
+#
+# @return Handle The search handle or -1 if nothing is found. The value of the @error flag is set to 1 only if the Folder is empty.
+#ce
+Func FileFindFirstFile($filename)
+    #native code
+EndFunc
+
+#cs
+# Returns the next filename defined by the search handle.
+#
+# @param Handle $search The search handle, as returned by FileFindFirstFile().
+# @param Int32 $flag Determines whether to return detailed file attribute information in @extended.
+# 0 = (default) use @extended to return 1 or 0 if search item is a directory.
+# 1 = Return a string in @extended in the same format as FileGetAttrib().
+#
+# @return String The filename or path and filename.
+#ce
+Func FileFindNextFile($search, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Flushes the file's buffer to disk.
+#
+# @param Handle $filehandle The file handle to flush.
+#
+# @return Boolean True if the buffer was flushed (or did not need to be flushed), False if the buffer could not be flushed.
+#ce
+Func FileFlush($filehandle)
+    #native code
+EndFunc
+
+#cs
+# Returns a code string representing a file's attributes.
+#
+# @param String $filename The path and filename.
+#
+# @return String The code string.
+#ce
+Func FileGetAttrib($filename)
+    #native code
+EndFunc
+
+#cs
+# Determines the text encoding used in a file.
+#
+# @param String|Handle $file The handle of a file or string filename
+# @param 1|2 $mode The UTF8 detection mode to use.
+# $FE_ENTIRE_UTF8 (1) = Check entire file for UTF8 sequences (default)
+# $FE_PARTIALFIRST_UTF8 (2) = Check first part of file for UTF8 sequences (the same as FileOpen() uses by default)
+# Constants are defined in FileConstants.au3.
+#
+# @return Int
+#ce
+Func FileGetEncoding($file, $mode = 1)
+    #native code
+EndFunc
+
+#cs
+# Returns the long path+name of the path+name passed.
+#
+# @param String $filename Full path and file name to convert
+# @param 0|1 $flag 
+# $FN_FULLPATH (0) - Default
+# $FN_RELATIVEPATH (1) - file can have relative dir, e.g. "..\file.txt"
+#
+# @return String The long path+name of the path+name passed.
+#ce
+Func FileGetLongName($filename, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Retrieves the current file position.
+#
+# @param Handle $filehandle The file handle
+#
+# @return Int the position offset from the beginning of the file (First index is 0) or 0 and sets the @error flag to non-zero on failure.
+#ce
+Func FileGetPos($filehandle)
+    #native code
+EndFunc
+
+#cs
+# Retrieves details about a shortcut.
+#
+# @param String $lnk The path and filename of the shortcut.
+#
+# @return Array
+#ce
+Func FileGetShortcut($lnk)
+    #native code
+EndFunc
+
+#cs
+# Returns the short path+name of the path+name passed.
+#
+# @param String $filename Full path and file name to convert
+# @param 0|1 $flag 
+# $FN_FULLPATH (0) - Default
+# $FN_RELATIVEPATH (1) - file can have relative dir, e.g. "..\file.txt"
+# Constants are defined in FileConstants.au3.
+#
+# @return String The short path+name of the path+name passed.
+#ce
+Func FileGetShortName($filename, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns the size of a file in bytes.
+#
+# @param String $filename The path and filename.
+#
+# @return Int The file size in bytes or 0 and sets the @error flag to non-zero on failure.
+#ce
+Func FileGetSize($filename)
+    #native code
+EndFunc
+
+#cs
+# Returns the time a file was last modified.
+#
+# @param String $filenamem The path and filename.
+# @param 0|1|2 $option Flag to indicate which timestamp
+# $FT_MODIFIED (0) = Last modified (default)
+# $FT_CREATED (1) = Created
+# $FT_ACCESSED (2) = Last accessed
+# Constants are defined in FileConstants.au3
+# @param 0|1|2 $format Flag to indicate which format
+# $FT_ARRAY (0) = return an array (default)
+# $FT_STRING (1) = return a string YYYYMMDDHHMMSS
+# $FT_MSEC (2) = return Milliseconds
+# $FT_UTC (4) = return UTC time instead of Local time
+# Constants are defined in FileConstants.au3
+#
+# @return Array The time and date information of the file was last modified or 0 and sets the @error flag to non-zero on failure.
+#ce
+Func FileGetTime($filenamem, $option = 0, $format = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns version information stored in a file.
+#
+# @param String $filename The path and filename.
+# @param String $stringname Name of the string field to be retrieved from the header version file info:
+# $FV_COMMENTS ("Comments")
+# $FV_COMPANYNAME ("CompanyName")
+# $FV_FILEDESCRIPTION ("FileDescription")
+# $FV_FILEVERSION ("FileVersion")
+# $FV_INTERNALNAME ("InternalName")
+# $FV_LEGALCOPYRIGHT ("LegalCopyright")
+# $FV_LEGALTRADEMARKS ("LegalTrademarks")
+# $FV_ORIGINALFILENAME ("OriginalFilename")
+# $FV_PRODUCTNAME ("ProductName")
+# $FV_PRODUCTVERSION ("ProductVersion")
+# $FV_PRIVATEBUILD ("PrivateBuild")
+# $FV_SPECIALBUILD ("SpecialBuild")
+# Constants are defined in FileConstants.au3.
+#
+# @return String The version number ("#.#.#.#" format) - or the content of the specified string field or "0.0.0.0" if no version information (or other error) or "" if string field not filled - @error flag set to 1.
+#ce
+Func FileGetVersion($filename, $stringname = Default)
+    #native code
+EndFunc
+
 ; FIXME: a au3doc type for flags?
 ; FIXME: a au3doc type for variables (both existing, non exesting and varaibles taht will be defined by the function)
 ; FIXME: a au3doc tag for setting @error and @extended macro's
