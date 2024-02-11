@@ -2543,6 +2543,1092 @@ Func GUICtrlDestroy($controlID)
     #native code
 EndFunc
 
+#cs
+# Returns the handle for a control and some special (item) handles (Menu, ContextMenu, TreeViewItem).
+#
+# @param String $controlID The control identifier as returned by a GUICtrlCreate...() function.
+#
+# @return Int The handle of the control.
+#ce
+Func GUICtrlGetHandle($controlID)
+    #native code
+EndFunc
+
+#cs
+# Gets the current state of a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+#
+# @return Int The state of the control. See GUICtrlSetState() for values. -1 if control is not defined.
+#ce
+Func GUICtrlGetState($controlID)
+    #native code
+EndFunc
+
+#cs
+# Read state or data of a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int Extended information of a control.
+# $GUI_READ_DEFAULT (0) = (Default) Returns a value with state or data of a control.
+# $GUI_READ_EXTENDED (1) = Returns extended information of a control (see Remarks).
+# Constants are defined in GUIConstantsEx.au3.
+#
+# @return Mixed The data or state of the control.
+#ce
+Func GUICtrlRead($controlID, $advanced = 0)
+    #native code
+EndFunc
+
+#cs
+# Send a message to a control and retrieve information in lParam.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $msg The type of message to be send to the control as defined in the Windows controls documentation.
+# @param Int $wParam An integer first param to be send to the control.
+# @param Int $lParamType Define the type of lParam that will be returned: 0 (default) for wParam and lParam, 1 for lParam String, 2 for lParam RECT struct.
+#
+# @return Mixed The value returned by the SendMessage Windows API.
+#ce
+Func GUICtrlRecvMsg($controlID, $msg, $wParam, $lParamType)
+    #native code
+EndFunc
+
+#cs
+# Register a user defined function for an internal listview sorting callback function.
+#
+# @param String $controlID The listview controlID for which the user function should proceed.
+# @param String $function The name of the user function to call when the sorting callback runs.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlRegisterListViewSort($controlID, $function)
+    #native code
+EndFunc
+
+#cs
+# Send a message to a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $msg The type of message to be send to the control as defined in the Windows controls documentation.
+# @param Int $wParam The first param to be send to the control.
+# @param Int $lParam The second param to be send to the control.
+#
+# @return Mixed The value returned by the SendMessage Windows API.
+#ce
+Func GUICtrlSendMsg($controlID, $msg, $wParam, $lParam)
+    #native code
+EndFunc
+
+#cs
+# Sends a message to a Dummy control.
+#
+# @param String $controlID The control identifier (controlID) as returned by GUICtrlCreateDummy()
+# @param Mixed $state The value that can be retrieved later on by GUICtrlRead()
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSendToDummy($controlID, $state)
+    #native code
+EndFunc
+
+#cs
+# Sets the background color of a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $backgroundcolor The RGB color to use.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetBkColor($controlID, $backgroundcolor)
+    #native code
+EndFunc
+
+#cs
+# Sets the text color of a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $textcolor The RGB color to use.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetColor($controlID, $textcolor)
+    #native code
+EndFunc
+
+#cs
+# Sets the mouse cursor icon for a particular control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $cursorID The cursor ID as used by Windows SetCursor API (use -1 for the default mouse cursor for the control)
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetCursor($controlID, $cursorID)
+    #native code
+EndFunc
+
+#cs
+# Modifies the data for a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Mixed $data Combo, List, ListView, ListViewItem: An Opt("GUIDataSeparatorChar",...) separated list of items.
+Progress: The percentage.
+Slider: The value.
+Button, Checkbox, Combo, Edit, Group, Input, Label, List, Menu, MenuItem, Radio, TabItem, TreeViewItem: Replaces the text.
+Date : The date or time depending the style of the control and the regional settings.
+Dummy: The value.
+# @param Mixed $default
+# Combo, List: The default value.
+# Edit, Input: If non-empty (""), the string is inserted at the current insertion point (caret).
+#
+# @return -1|0|1 1 if successful, 0 if not, -1 in case of invalid data.
+#ce
+Func GUICtrlSetData($controlID, $data, $default = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the default background color of all the controls of the GUI window.
+#
+# @param Int $defbkcolor Default background color for all controls.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetDefBkColor($defbkcolor, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the default text color of all the controls of the GUI window.
+#
+# @param Int $deftextcolor Default text color for all controls.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetDefColor($deftextcolor, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the font for a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $size Fontsize (default is 8.5).
+# @param Int $weight The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used.
+The following values are defined for convenience.
+# $FW_DONTCARE = 0 (Use the default font weight)
+# $FW_THIN = 100
+# $FW_EXTRALIGHT = 200
+# $FW_LIGHT = 300
+# $FW_NORMAL = 400
+# $FW_MEDIUM = 500
+# $FW_SEMIBOLD = 600
+# $FW_BOLD = 700
+# $FW_EXTRABOLD = 800
+# $FW_HEAVY = 900
+# Constants are defined in FontConstants.au3.
+# @param Int $attribute Font attributes, which can be a combination of the following added together:
+# $GUI_FONTNORMAL (0) = Normal
+# $GUI_FONTITALIC (2) = Italic
+# $GUI_FONTUNDER (4) = Underlined
+# $GUI_FONTSTRIKE (8) = Strike
+# Constants are defined in GUIConstantsEx.au3.
+# @param String $fontname Name of the font to use. (OS default GUI font is used if the font is "" or is not found).
+# @param Int $quality Font quality to select. The following qualities are accepted:
+# $DEFAULT_QUALITY (0) = Appearance of the font does not matter.
+# $DRAFT_QUALITY (1) = Appearance of the font is less important than when $PROOF_QUALITY is used. For GDI raster fonts, scaling is enabled, which means that more font sizes are available, but the quality may be lower. Bold, italic, underline, and strikeout fonts are synthesized if necessary.
+# $PROOF_QUALITY (2) = (default) Character quality of the font is more important than exact matching of the logical-font attributes. For GDI raster fonts, scaling is disabled and the font closest in size is chosen. Although the chosen font size may not be mapped exactly when $PROOF_QUALITY is used, the quality of the font is high and there is no distortion of appearance. Bold, italic, underline, and strikeout fonts are synthesized if necessary.
+# $NONANTIALIASED_QUALITY (3) = Font is never antialiased.
+# $ANTIALIASED_QUALITY (4) = Font is always antialiased if the font supports it and the size of the font is not too small or too large.
+# $CLEARTYPE_QUALITY (5) = If set, text is rendered (when possible) using ClearType antialiasing method. See the remarks on the msdn page for LOGFONT for details about when cleartype is not available.
+# If neither $ANTIALIASED_QUALITY nor $NONANTIALIASED_QUALITY is selected, the font is antialiased only if the user chooses smooth screen fonts in Control Panel.
+# Constants are defined in FontConstants.au3
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetFont($controlID, $size, $weight = Default, $attribute = Default, $fontname = Default, $quality = Default)
+    #native code
+EndFunc
+
+#cs
+# Modifies the data for a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreateGraphic() function.
+# @param Mixed $type type of drawing : dot, line, bezier, rect, ellipse, pie.
+# @param Int $par1
+# @param Int $par2
+# @param Int $par3
+# @param Int $par4
+# @param Int $par5
+# @param Int $par6
+#
+# @return -1|0|1 1 if successful, 0 if not, -1 in case of invalid data.
+#ce
+Func GUICtrlSetGraphic($controlID, $type, $par1 = Default, $par2 = Default, $par3 = Default, $par4 = Default, $par5 = Default, $par6 = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the bitmap or icon image to use for a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param String $filename The filename containing the picture to be display on the control.
+# @param String $iconname The icon name if the file contains multiple icons. Can be an ordinal name if negative number. Otherwise -1.
+# @param Int $icontype To select a specific icon size : 0 = small, 1 = normal (default).
+# For a TreeViewItem the icon size : 2 = selected, 4 for non-selected item.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetImage($controlID, $filename, $iconname = Default, $icontype = Default)
+    #native code
+EndFunc
+
+#cs
+# Limits the number of characters/pixels for a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $max For List controls it is the extent you can scroll horizontally in pixels.
+# For Input/Edit controls it is the max number of characters that can be entered.
+# @param Int $min For Slider and UpDown controls you can specify a min value. Default = 0
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetLimit($controlID, $max, $min = 0)
+    #native code
+EndFunc
+
+#cs
+# Defines a user-defined function to be called when a control is clicked.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param String $function The name of the user function to call.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetOnEvent($controlID, $function)
+    #native code
+EndFunc
+
+#cs
+# Changes the position of a control within the GUI window.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $left The left side of the control.
+# @param Int $top The top of the control.
+# @param Int $width The width of the control.
+# @param Int $height The height of the control.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetPos($controlID, $left, $top = Default, $width = Default, $height = Default)
+    #native code
+EndFunc
+
+#cs
+# Defines the resizing method used by a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $resizing See the Docking Values table for values that can be used (add together multiple values if required).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetResizing($controlID, $resizing)
+    #native code
+EndFunc
+
+#cs
+# Changes the state of a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $state See the State table.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetState($controlID, $state)
+    #native code
+EndFunc
+
+#cs
+# Changes the style of a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# @param Int $exStyle Defines the extended Style of the control. See Extended Style Table.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetStyle($controlID, $style, $exStyle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the tip text associated with a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+# @param String $tiptext Tip text that will be displayed when the mouse is hovered over the control.
+# @param String $title The title for the tooltip.
+# @param Int $icon Pre-defined icon to show next to the title: requires a title.
+# $TIP_NOICON (0) = No icon
+# $TIP_INFOICON (1) = Info icon
+# $TIP_WARNINGICON (2) = Warning icon
+# $TIP_ERRORICON (3) = Error Icon
+# Constants are defined in "AutoItConstants.au3".
+# @param Int $options Sets different options for how the tooltip will be displayed (Can be added together):
+# $TIP_BALLOON (1) = Display as Balloon Tip.
+# $TIP_CENTER (2) = Center the tip horizontally along the control.
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlSetTip($controlID, $tiptext, $title = Default, $icon = Default, $options = Default)
+    #native code
+EndFunc
+
+#cs
+# Deletes a GUI window and all controls that it contains.
+#
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUIDelete($winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Gets the mouse cursor position relative to GUI window.
+#
+# @param Int $winhandle The handle of the window to use. If omitted the "current" window will be used.
+#
+# @return Array A five-element array that containing the mouse cursor information:
+# $aArray[0] = X coord (horizontal)
+# $aArray[1] = Y coord (vertical)
+# $aArray[2] = Primary down (1 if pressed, 0 if not pressed)
+# $aArray[3] = Secondary down (1 if pressed, 0 if not pressed)
+# $aArray[4] = ID of the control that the mouse cursor is hovering over (or 0 if none)
+#ce
+Func GUIGetCursorInfo($winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Polls the GUI to see if any events have occurred.
+#
+# @param Int $advanced return extended information in an array.
+# $GUI_EVENT_SINGLE (0) = (default) Returns a single event.
+# $GUI_EVENT_ARRAY (1) = returns an array containing the event and extended information.
+# Constants are defined in GUIConstantsEx.au3.
+#
+# @return Int|Array Returns an event, or an array depending on the "advanced" parameter.
+#ce
+Func GUIGetMsg($advanced = 0)
+    #native code
+EndFunc
+
+#cs
+# Retrieves the styles of a GUI window.
+#
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return Array A two-element array that containing the styles information:
+# $aArray[0] = Style
+# $aArray[1] = ExStyle
+#ce
+Func GUIGetStyle($winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Register a user defined function for a known Windows Message ID (WM_MSG).
+#
+# @param Int $msgID A Windows Message ID (see Appendix: Windows Message Codes).
+# @param String $function The name of the user function to call when the message appears or an empty string "" to unregister a message.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUIRegisterMsg($msgID, $function)
+    #native code
+EndFunc
+
+#cs
+# Sets the accelerator table to be used in a GUI window.
+#
+# @param String $accelerators  	A 2 dimensional array holding the accelerator table (See remarks).
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetAccelerators($accelerators, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the background color of the GUI window.
+#
+# @param Int $background Background color of the dialog box, in RGB Hex format.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetBkColor($background, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets absolute coordinates for the next control.
+#
+# @param Int $left The left side of the control.
+# @param Int $top The top of the control.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetCoord($left, $top, $width = Default, $height = Default, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the mouse cursor icon for a GUI window.
+#
+# @param Int $cursorID Cursor Id (See Remarks).
+# @param Int $override Force the requested mouse cursor even when over controls (see below).
+# $GUI_CURSOR_NOOVERRIDE (0) = (default) Don't override a control's default mouse cursor.
+# $GUI_CURSOR_OVERRIDE (1) = override control's default mouse cursor.
+# Constants are defined in GUIConstantsEx.au3.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return Void
+#ce
+Func GUISetCursor($cursorID, $override = 0, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the default font for a GUI window.
+#
+# @param Int $size Fontsize (default is 8.5).
+# @param Int $weight The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used.
+The following values are defined for convenience.
+# $FW_DONTCARE = 0 (Use the default font weight)
+# $FW_THIN = 100
+# $FW_EXTRALIGHT = 200
+# $FW_LIGHT = 300
+# $FW_NORMAL = 400
+# $FW_MEDIUM = 500
+# $FW_SEMIBOLD = 600
+# $FW_BOLD = 700
+# $FW_EXTRABOLD = 800
+# $FW_HEAVY = 900
+# Constants are defined in FontConstants.au3.
+# @param Int $attribute Font attributes, which can be a combination of the following added together:
+# $GUI_FONTNORMAL (0) = Normal (Default)
+# $GUI_FONTITALIC (2) = Italic
+# $GUI_FONTUNDER (4) = Underlined
+# $GUI_FONTSTRIKE (8) = Strike
+# Constants are defined in GUIConstantsEx.au3.
+# @param String $fontname Font to use. (OS default GUI font is used if the font is "" or is not found).
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+# @param Int $quality Font quality to select. The following qualities are accepted:
+# $DEFAULT_QUALITY (0) = Appearance of the font does not matter (Default).
+# $DRAFT_QUALITY (1) = Appearance of the font is less important than when $PROOF_QUALITY is used. For GDI raster fonts, scaling is enabled, which means that more font sizes are available, but the quality may be lower. Bold, italic, underline, and strikeout fonts are synthesized if necessary.
+# $PROOF_QUALITY (2) = (default) Character quality of the font is more important than exact matching of the logical-font attributes. For GDI raster fonts, scaling is disabled and the font closest in size is chosen. Although the chosen font size may not be mapped exactly when $PROOF_QUALITY is used, the quality of the font is high and there is no distortion of appearance. Bold, italic, underline, and strikeout fonts are synthesized if necessary.
+# $NONANTIALIASED_QUALITY (3) = Font is never anti aliased.
+# $ANTIALIASED_QUALITY (4) = Font is always anti aliased if the font supports it and the size of the font is not too small or too large.
+# $CLEARTYPE_QUALITY (5) = If set, text is rendered (when possible) using ClearType anti aliasing method. See the remarks on the MSDN page for LOGFONT for details about when ClearType is not available.
+# If neither $ANTIALIASED_QUALITY nor $NONANTIALIASED_QUALITY is selected, the font is anti aliased only if the user chooses smooth screen fonts in Control Panel.
+# Constants are defined in FontConstants.au3
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetFont($size, $weight = Default, $attribute = Default, $fontname = Default, $winhandle = Default, $quality = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets an executable file that will be run when F1 is pressed.
+#
+# @param String $helpfile The file that will be run if F1 is pressed when the GUI is active.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetHelp($helpfile, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the icon used in a GUI window.
+#
+# @param String $iconfile Used to display the icon in the title area.
+# @param Int $iconID The ID of the icon in the iconfile.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetIcon($iconfile, $iconID = -1, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Defines a user function to be called when a system button is clicked.
+#
+# @param Int $specialID See the Special ID table.
+# @param String $function The name of the user function to call.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetOnEvent($specialID, $function, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Changes the state of a GUI window.
+#
+# @param Int $flag @SW_SHOW = Shows a previously hidden window (default)
+# @SW_HIDE = Hide window
+# @SW_MINIMIZE = Minimize window
+# @SW_MAXIMIZE = Maximize window
+# @SW_RESTORE = Undoes a window minimization
+# @SW_DISABLE = Disables the window
+# @SW_ENABLE = Enables the window
+# @SW_LOCK = Lock the window to avoid repainting.
+# @SW_UNLOCK = Unlock windows to allow painting.
+# @SW_SHOWDEFAULT - Sets the show state based on the SW_ flag specified in the STARTUPINFO structure
+# @SW_SHOWMAXIMIZED - Activates the window and displays it as a maximized window
+# @SW_SHOWMINIMIZED - Activates the window and displays it as a minimized window
+# @SW_SHOWMINNOACTIVE - Displays the window as a minimized window
+# @SW_SHOWNA - Displays the window in its current state
+# @SW_SHOWNOACTIVATE - Displays a window in its most recent size and position
+# @SW_SHOWNORMAL - Activates and displays a window
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetState($flag = @SW_SHOW, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Changes the styles of a GUI window.
+#
+# @param Int $Style Defines the style of the window. See GUI Control Styles Appendix.
+# Use -1 to leave it unchanged.
+# @param Int $ExStyle Defines the extended style of the window. See the Extended Style Table. -1 is the default.
+# Use -1 to leave it unchanged.
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUISetStyle($Style, $ExStyle = -1, $winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Defines that any subsequent controls that are created will be "grouped" together.
+#
+# @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUIStartGroup($winhandle = Default)
+    #native code
+EndFunc
+
+#cs
+# Switches the current window used for GUI functions.
+#
+# @param Int $winhandle The handle of the window to switch to.
+# @param Int $tabitemID ControlID of the tabitem control to be selected.
+#
+# @return Handle Handle of the previous GUI or a null handle on failure.
+#ce
+Func GUISwitch($winhandle = Default, $tabitemID = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns a string representation of an integer or of a binary type converted to hexadecimal.
+#
+# @param Int|Binary $expression The expression to convert.
+# @param Int $length Number of characters to be returned for integer.
+# Characters are truncated from the left-hand side if length is too small.
+# This parameter is ignored if the data is binary data.
+#
+# @return String a string of length (never more than 16) characters, zero-padded if necessary for integer. Returns the binary type converted or empty string if length is less than 1.
+#ce
+Func Hex($expression, $length = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets a hotkey that calls a user function.
+#
+# @param Int $key The key combination to use as the hotkey. Same format as Send(). See remarks.
+# @param String $function The name of the function to call when the key is pressed. Not specifying this parameter will unset a previous hotkey.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func HotKeySet($key, $function)
+    #native code
+EndFunc
+
+#cs
+# Sets the internet proxy to use for http access.
+#
+# @param 0|1|2 $mode The proxy mode to use:
+# $PROXY_IE (0) = (default) Use current Internet Explorer settings for proxy.
+# $PROXY_NONE (1) = Use no proxy (direct access)
+# $PROXY_SPECIFIED (2) = Use the proxy specified
+# Constants are deined in "AutoItConstants.au3".
+# @param String $address The address and port of the proxy to use. See remarks.
+# @param String $username If required, the username for the proxy
+# @param String $password If required, the password for the proxy
+#
+# @return Void
+#ce
+Func HttpSetProxy($mode, $address = "", $username = "", $password = "")
+    #native code
+EndFunc
+
+#cs
+# Sets the HTTP user-agent string which is sent with all Inet requests.
+#
+# @param String $useragent The string to set as the user-agent. The default user-agent is "AutoIt". Passing an empty string will reset the user-agent back to the default.
+#
+# @return String The previous user agent.
+#ce
+Func HttpSetUserAgent($useragent)
+    #native code
+EndFunc
+
+#cs
+# Converts an expression into an HWND handle.
+#
+# @param Any $expression An expression to convert into an HWND handle.
+#
+# @return Handle If the value can be converted to an HWND, the HWND representation will be returned. On failure, If the HWND does not denote a valid window, a 0 (NULL) HWND will be returned and sets the @error flag to 1.
+#ce
+Func HWnd($expression)
+    #native code
+EndFunc
+
+#cs
+# Closes a handle returned from InetGet().
+#
+# @param Handle $handle The handle to close.
+#
+# @return Boolean True if the handle was found and closed, False if not.
+#ce
+Func InetClose($handle)
+    #native code
+EndFunc
+
+#cs
+# Downloads a file from the internet using the HTTP, HTTPS or FTP protocol.
+#
+# @param String $URL The URL of the file to download.
+# @param String $filename Local filename to download to.
+# @param Int $options $INET_LOCALCACHE (0) = Get the file from local cache if available (default).
+# $INET_FORCERELOAD (1) = Forces a reload from the remote site.
+# $INET_IGNORESSL (2) = Ignore all SSL errors (with HTTPS connections).
+# $INET_ASCIITRANSFER (4) = Use ASCII when transferring files with the FTP protocol (Can not be combined with flag $INET_BINARYTRANSFER (8)).
+# $INET_BINARYTRANSFER (8) = Use BINARY when transferring files with the FTP protocol (Can not be combined with flag $INET_ASCIITRANSFER (4)). This is the default transfer mode if none are provided.
+# $INET_FORCEBYPASS (16) = By-pass forcing the connection online (See remarks).
+# Constants are defined in InetConstants.au3.
+# @param 0|1 $background $INET_DOWNLOADWAIT (0) = Wait until the download is complete before continuing (default).
+# $INET_DOWNLOADBACKGROUND (1) = return immediately and download in the background (see remarks).
+# Constants are defined in InetConstants.au3
+#
+# @return Handle|Int the return value changes depending on if the download is in the background:
+# Background: a handle is returned.
+# Wait: the number of bytes downloaded.
+#ce
+Func InetGet($URL, $filename, $options = 0, $background = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns detailed data for a handle returned from InetGet().
+#
+# @param Handle $handle A handle return from InetGet().
+# @param Int $index The index for the data to retrieve. If this value is -1 an array containing all of the below data will be returned.
+# $INET_DOWNLOADREAD (0) - Bytes read so far (this is updated while the download progresses).
+# $INET_DOWNLOADSIZE (1) - The size of the download in bytes (this may not always be present).
+# $INET_DOWNLOADCOMPLETE (2) - Set to True if the download is complete, False if the download is still ongoing.
+# $INET_DOWNLOADSUCCESS (3) - True if the download was successful. If this is False then the next data member will be non-zero.
+# $INET_DOWNLOADERROR (4) - The error value for the download. The value itself is arbitrary. Testing that the value is non-zero is sufficient for determining if an error occurred.
+# $INET_DOWNLOADEXTENDED (5) - The extended value for the download. The value is arbitrary and is primarily only useful to the AutoIt developers.
+# Constants are defined in InetConstants.au3.
+#
+# @return Array|Int|Boolean The request data.
+#ce
+Func InetGetInfo($handle = Default, $index = -1)
+    #native code
+EndFunc
+
+#cs
+# Returns the size (in bytes) of a file located on the internet.
+#
+# @param String $URL The URL of the file to get the size of.
+# @param Int $options $INET_LOCALCACHE (0) = Get the file from local cache if available (default).
+# $INET_FORCERELOAD (1) = Forces a reload from the remote site.
+# $INET_IGNORESSL (2) = Ignore all SSL errors (with HTTPS connections).
+# $INET_ASCIITRANSFER (4) = Use ASCII when transferring files with the FTP protocol (Can not be combined with flag $INET_BINARYTRANSFER (8)).
+# $INET_BINARYTRANSFER (8) = Use BINARY when transferring files with the FTP protocol (Can not be combined with flag $INET_ASCIITRANSFER (4)). This is the default transfer mode if none are provided.
+# Constants are defined in InetConstants.au3.
+#
+# @return Int The size of the file in bytes.
+#ce
+Func InetGetSize($URL, $options = 0)
+    #native code
+EndFunc
+
+#cs
+# Downloads a file from the internet using the HTTP, HTTPS or FTP protocol.
+#
+# @param String $URL The URL of the file to download.
+# @param Int $options $INET_LOCALCACHE (0) = Get the file from local cache if available (default).
+# $INET_FORCERELOAD (1) = Forces a reload from the remote site.
+# $INET_IGNORESSL (2) = Ignore all SSL errors (with HTTPS connections).
+# $INET_ASCIITRANSFER (4) = Use ASCII when transferring files with the FTP protocol (Can not be combined with flag $INET_BINARYTRANSFER (8)).
+# $INET_BINARYTRANSFER (8) = Use BINARY when transferring files with the FTP protocol (Can not be combined with flag $INET_ASCIITRANSFER (4)). This is the default transfer mode if none are provided.
+# $INET_FORCEBYPASS (16) = By-pass forcing the connection online (See remarks).
+# Constants are defined in InetConstants.au3.
+#
+# @return Binary|String A binary string and @extended set to the number of bytes downloaded or empty string and sets the @error flag to non-zero on failure.
+#ce
+Func InetRead($URL, $options = 0)
+    #native code
+EndFunc
+
+#cs
+# Deletes a value from a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+# @param String $section The section name in the .ini file.
+# @param String $key The key name in the .ini file to delete. If the key name is not given the entire section is deleted. The Default keyword may also be used which will cause the section to be deleted.
+#
+# @return 0|1 1 if successful, 0 if the INI file does not exist or if the file is read-only.
+#ce
+Func IniDelete($filename, $section, $key = Default)
+    #native code
+EndFunc
+
+#cs
+# Reads a value from a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+# @param String $section The section name in the .ini file.
+# @param String $key The key name in the .ini file.
+# @param String $default The default value to return if the key is not found.
+#
+# @return String The value of the key or the default value if the key is not found.
+#ce
+Func IniRead($filename, $section, $key, $default)
+    #native code
+EndFunc
+
+#cs
+# Reads all key/value pairs from a section in a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+# @param String $section The section name in the .ini file.
+#
+# @return Array A 2 dimensional array where element[n][0] is the key and element[n][1] is the value.
+#ce
+Func IniReadSection($filename, $section)
+    #native code
+EndFunc
+
+#cs
+# Reads all sections in a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+#
+# @return Array An array of section names.
+#ce
+Func IniReadSectionNames($filename)
+    #native code
+EndFunc
+
+#cs
+# Renames a section in a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+# @param String $oldSection The old section name in the .ini file.
+# @param String $newSection The new section name in the .ini file.
+# @param Int $flag $FC_NOOVERWRITE(0) = (default) Fail if "new section" already exists.
+# $FC_OVERWRITE(1) = Overwrite "new section". This will erase any existing keys in "new section".
+# Constants are defined in FileConstants.au3.
+#
+# @return Int Non-zero if successful or 0 and may sets the @error flag to non-zero, if renaming failed because the section already exists (only when flag = 0).
+#ce
+Func IniRenameSection($filename, $oldSection, $newSection, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Writes a value to a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+# @param String $section The section name in the .ini file.
+# @param String $key The key name in the .ini file.
+# @param String $value The value to write to the .ini file.
+#
+# @return 0|1 1 if successful, 0 if file is read-only.
+#ce
+Func IniWrite($filename, $section, $key, $value)
+    #native code
+EndFunc
+
+#cs
+# Writes a section to a standard format .ini file.
+#
+# @param String $filename The filename of the .ini file.
+# @param String $section The section name in the .ini file.
+# @param Array $data The data to write. The data can either be a string or an array. If the data is a string, then each key=value pair must be delimited by @LF. If the data is an array, the array must be 2-dimensional and the second dimension must be 2 elements.
+# @param Int $index If an array is passed as data, this specifies the index to start writing from. By default, this is 1 so that the return value of IniReadSection() can be used immediately. For manually created arrays, this value may need to be different depending on how the array was created. This parameter is ignored if a string is passed as data.
+#
+# @return 0|1 1 if successful or 0 and The function will sets the @error flag to 1 if the data format is invalid.
+#ce
+Func IniWriteSection($filename, $section, $data, $index = 1)
+    #native code
+EndFunc
+
+#cs
+# Displays an input box to ask the user to enter a string.
+#
+# @param String $title The title of the input box.
+# @param String $prompt The prompt to display to the user.
+# @param String $default The value that the input box starts with.
+# @param String $passwordChar The character to replace all typed characters with in the display. If you want the actual typed character to appear, define with an empty string ("") (default) or a space for the first character. If you provide a multi-character string, only the first character is used for character masking. There are special meanings for the second and subsequent characters.
+# @param Int $width The width of the window.
+# @param Int $height The height of the window.
+# @param Int $left The left side of the input box. By default, the box is centered.
+# @param Int $top The top of the input box. By default, the box is centered.
+# @param Int $timeout How many seconds to wait before automatically canceling the InputBox().
+# @param Hwnd $hwnd The window handle to use as the parent for this dialog.
+#
+# @return String The string that was entered.
+#ce
+Func InputBox($title, $prompt, $default = "", $passwordChar = "", $width = -1, $height = -1, $left = Default, $top = Default, $timeout = 0, $hwnd = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns the integer (whole number) representation of an expression.
+#
+# @param String $expression An expression to convert into an integer.
+# @param Int $flag Defines behavior.
+# Can be one of the following:
+# $NUMBER_AUTO (0) = (default) the result is auto-sized integer. See remarks.
+# $NUMBER_32BIT (1) = string is interpreted as a 32bit integer
+# $NUMBER_64BIT (2) = string is interpreted as a 64bit integer
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return Int
+#ce
+Func Int($expression, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Checks if the current user has full administrator privileges.
+#
+# @return 0|1 1 if the current user has administrator privileges or 0 if user lacks admin privileges.
+#ce
+Func IsAdmin()
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable is an array type.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsArray($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable or expression is a binary type.
+#
+# @param Mixed $variable The variable or expression to check.
+#
+# @return 0|1
+#ce
+Func IsBinary($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable's base type is boolean.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsBool($variable)
+    #native code
+EndFunc
+
+#cs
+# Check if a variable has been declared.
+#
+# @param String $expression The variable to check.
+#
+# @return 0|1 $DECLARED_GLOBAL (1) for Global variable or variable declared outside functions.
+# $DECLARED_LOCAL (-1) for Local variable.
+# $DECLARED_UNKNOWN (0) when no variable can be found.
+# Constants are defined in AutoItConstants.au3
+#ce
+Func IsDeclared($expression)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable is a DllStruct type.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsDllStruct($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if the value of a variable or expression has a fractional component.
+#
+# @param Mixed $variable The variable or expression to check.
+#
+# @return 0|1
+#ce
+Func IsFloat($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable or expression is a function type.
+#
+# @param Mixed $variable The variable or expression to check.
+#
+# @return 0|1|2 1 if the variable is a User-defined function, 2 if the variable is a native function. 0 if expression is not function type.
+#ce
+Func IsFunc($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable's base type is a pointer and window handle.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1 1 if the expression is a pointer type AND a valid window handle. 0 if expression is not a pointer OR not a valid window handle.
+#ce
+Func IsHWnd($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if the value of a variable or expression has no fractional component.
+#
+# @param Mixed $variable The variable or expression to check.
+#
+# @return 0|1
+#ce
+Func IsInt($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable is a keyword (for example, Default).
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1|2 $KEYWORD_DEFAULT (1) the Default keyword.
+# $KEYWORD_NULL (2) the Null keyword.
+# 0 if not a keyword.
+# Constants are defined in AutoItConstants.au3
+#ce
+Func IsKeyword($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable is a Map type.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsMap($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable's base type is numeric.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsNumber($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable or expression is an object type.
+#
+# @param Mixed $variable The variable or expression to check.
+#
+# @return 0|1
+#ce
+Func IsObj($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable's base type is a pointer.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsPtr($variable)
+    #native code
+EndFunc
+
+#cs
+# Checks if a variable is a string type.
+#
+# @param Mixed $variable The variable to check.
+#
+# @return 0|1
+#ce
+Func IsString($variable)
+    #native code
+EndFunc
+
+#cs
+# Calculates the natural logarithm of a number.
+#
+# @param Number $expression Any positive number.
+#
+# @return Double The parameter's natural logarithm. Tends to return -1.#IND for non-positive parameters.
+#ce
+Func Log($expression)
+    #native code
+EndFunc
+
 ; FIXME: a au3doc type for flags?
 ; FIXME: a au3doc type for variables (both existing, non exesting and varaibles taht will be defined by the function)
 ; FIXME: a au3doc tag for setting @error and @extended macro's
