@@ -1715,6 +1715,834 @@ Func FileGetVersion($filename, $stringname = Default)
     #native code
 EndFunc
 
+#cs
+# Include and install a file with the compiled script.
+#
+# @param String $source The source path of the file to compile. This must be a literal string; it cannot be a variable or the result of a function call. It can be a relative path (using .\ or ..\ in the path) to the source file (.au3).
+# @param String $dest The destination path of the file with trailing backslash if only the directory is defined. This can be a variable.
+# @param 0|1 $flag Determines whether to overwrite files if they already exist:
+# $FC_NOOVERWRITE (0) = (default) do not overwrite existing files
+# $FC_OVERWRITE (1) = overwrite existing files
+# Constants are defined in FileConstants.au3.
+#
+# @return 0|1 1 if successful, 0 on failure.
+#ce
+Func FileInstall($source, $dest, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Moves one or more files.
+#
+# @param String $source The source path and filename of the file to move. (* wildcards accepted - See Remarks)
+# @param String $dest The destination path and filename of the moved file. (* wildcards accepted - See Remarks)
+# @param 0|1 $flag Determines whether to overwrite files if they already exist:
+# $FC_NOOVERWRITE (0) = (default) do not overwrite existing files
+# $FC_OVERWRITE (1) = overwrite existing files
+# $FC_CREATEPATH (8) = Create destination directory structure if it doesn't exist (See Remarks).
+# Constants are defined in FileConstants.au3.
+#
+# @return 0|1 1 if successful, 0 if source cannot be moved or if dest already exists and flag=0.
+#ce
+Func FileMove($source, $dest, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Opens a file for reading or writing.
+#
+# @param String $filename The path and filename.
+# @param 0|1|2 $mode Flag to indicate which mode
+# $FO_READ (0) = Read mode (default)
+# $FO_APPEND (1) = Write mode (append to end of file)
+# $FO_OVERWRITE (2) = Write mode (erase previous contents)
+# $FO_CREATEPATH (8) = Create directory structure if it doesn't exist (See Remarks).
+# $FO_BINARY (16) = Force binary mode (See Remarks).
+# $FO_UNICODE or $FO_UTF16_LE (32) = Use Unicode UTF16 Little Endian reading and writing mode.
+# $FO_UTF16_BE (64) = Use Unicode UTF16 Big Endian reading and writing mode.
+# $FO_UTF8 (128) = Use Unicode UTF8 (with BOM) reading and writing mode.
+# $FO_UTF8_NOBOM (256) = Use Unicode UTF8 (without BOM) reading and writing mode.
+# $FO_ANSI (512) = Use ANSI reading and writing mode.
+# $FO_UTF16_LE_NOBOM (1024) = Use Unicode UTF16 Little Endian (without BOM) reading and writing mode.
+# $FO_UTF16_BE_NOBOM (2048) = Use Unicode UTF16 Big Endian (without BOM) reading and writing mode.
+# $FO_FULLFILE_DETECT (16384) = When opening for reading and no BOM is present, use the entire file to determine if it is UTF8 or UTF16. If this is not used then only the initial part of the file (up to 64KB) is checked for performance reasons.
+# The folder path must already exist (except using $FO_CREATEPATH mode - See Remarks)
+# Constants are defined in FileConstants.au3.
+#
+# @return Handle File "handle" for use with subsequent file functions or -1 if an error occurs.
+#ce
+Func FileOpen($filename, $mode = 0)
+    #native code
+EndFunc
+
+#cs
+# Initiates a Open File Dialog.
+#
+# @param String $title Title text of the Dialog GUI.
+# @param String $init_dir Initial directory selected in the GUI file tree.
+# @param String $filter File type single filter such as "All (*.*)" or "Text files (*.txt)" or multiple filter groups such as "All (*.*)|Text files (*.txt)" (See Remarks).
+# @param Int $options Dialog Options: To use more than one option, BitOR the required values together.
+# $FD_FILEMUSTEXIST (1) = File Must Exist (if user types a filename)
+# $FD_PATHMUSTEXIST (2) = Path Must Exist (if user types a path, ending with a backslash)
+# $FD_MULTISELECT (4) = Allow MultiSelect
+# $FD_PROMPTCREATENEW (8) = Prompt to Create New File (if does not exist)
+# Constants are defined in FileConstants.au3.
+# @param String $default_name Suggested file name for the user to open. Default is blank ("").
+# @param Hwnd $hwnd The window handle to use as the parent for this dialog.
+#
+# @return String The full path of the file(s) chosen. Results for multiple selections are "Directory|file1|file2|...".
+#ce
+Func FileOpenDialog($title, $init_dir, $filter, $options = 0, $default_name = "", $hwnd = 0)
+    #native code
+EndFunc
+
+#cs
+# Read in a number of characters from a previously opened file.
+#
+# @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively you may use a string filename as the first parameter.
+# @param Int $count The number of characters to read.
+#
+# @return String|Binary The binary/string read. @extended is set to the number of bytes/characters returned.
+#ce
+Func FileRead($file, $count = -1)
+    #native code
+EndFunc
+
+#cs
+# Read in a line of text from a previously opened text file.
+#
+# @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively you may use a string filename as the first parameter.
+# @param Int $line The line number to read. The first line of a text file is line 1 (not zero); the last line is -1.
+#
+# @return String|Binary The binary/string read. @extended is set to the number of bytes/characters returned.
+#ce
+Func FileReadLine($file, $line = 1)
+    #native code
+EndFunc
+
+#cs
+# Reads the specified file into an array.
+#
+# @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively you may use a string filename as the first parameter.
+#
+# @return Array A 1 dimension array containing one line of text per element and @extended set to the number of lines read.
+#ce
+Func FileReadToArray($file)
+    #native code
+EndFunc
+
+#cs
+# Sends a file or directory to the recycle bin.
+#
+# @param String $source The source path of the file(s) or directory to Recycle. (* and ? wildcards accepted - See Remarks)
+#
+# @return 0|1 1 if successful, 0 (typically meaning the file is in use or does not exist).
+#ce
+Func FileRecycle($source)
+    #native code
+EndFunc
+
+#cs
+# Empties the recycle bin.
+#
+# @param String $source The rootpath to empty - if omitted the recycle bin for all drives is emptied.
+#
+# @return 0|1 1 if successful, 0 (the recycle bin cannot be emptied).
+#ce
+Func FileRecycleEmpty($source = Default)
+    #native code
+EndFunc
+
+#cs
+# Initiates a Save File Dialog.
+#
+# @param String $title Title text of the Dialog GUI.
+# @param String $init_dir Initial directory selected in the GUI file tree.
+# @param String $filter File type single filter such as "All (*.*)" or "Text files (*.txt)" or multiple filter groups such as "All (*.*)|Text files (*.txt)" (See Remarks).
+# @param Int $options Dialog Options: To use more than one option, BitOR the required values together.
+# $FD_PATHMUSTEXIST (2) = Path Must Exist (if user types a path, ending with a backslash)
+# $FD_PROMPTOVERWRITE (16) = Prompt to OverWrite File
+# Constants are defined in FileConstants.au3.
+# @param String $default_name Suggested file name for the user to save.
+# @param Hwnd $hwnd The window handle to use as the parent for this dialog.
+#
+# @return String The full path of the file chosen. Results for multiple selections are "Directory|file1|file2|...".
+#ce
+Func FileSaveDialog($title, $init_dir, $filter, $options = 0, $default_name = "", $hwnd = 0)
+    #native code
+EndFunc
+
+#cs
+# Initiates a Browse For Folder dialog.
+#
+# @param String $dialog_text Title text of the Dialog GUI.
+# @param String $root_dir Root directory of GUI file tree - use to limit user choice. Setting "" uses Desktop - see remarks below.
+# @param Int $flag
+# $FSF_CREATEBUTTON (1) = Show Create Folder Button (XP only)
+# $FSF_NEWDIALOG (2) = Use New Dialog Style (XP only)
+# $FSF_EDITCONTROL (4) = Show Edit Control (XP only)
+# Constants are defined in FileConstants.au3.
+# @param String $initial_dir The full path of the folder you selected/highlighted when displaying dialogue (if it exists in the root folder).
+# @param Hwnd $hwnd The window handle to use as the parent for this dialog.
+#
+# @return String The full path of the folder chosen.
+#ce
+Func FileSelectFolder($dialog_text, $root_dir, $flag = 0, $initial_dir = "", $hwnd = 0)
+    #native code
+EndFunc
+
+#cs
+# Sets the attributes of one or more files/directories.
+#
+# @param String $file_pattern The path of the file(s) to set, e.g. C:\*.au3, C:\Dir. (* and ? wildcards accepted - See Remarks)
+# @param Int $attributes Attribute(s) to set/clear. e.g. "+A", "+RA-SH"
+# @param 0|1 $recurse
+# $FT_NONRECURSIVE (0) - no recursion (Default)
+# $FT_RECURSIVE (1) - directories are recursed into.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func FileSetAttrib($file_pattern, $attributes, $recurse = 0)
+    #native code
+EndFunc
+
+#cs
+# Sets the end of the file at the current file position.
+#
+# @param Handle $filehandle The handle of a file, as returned by a previous call to FileOpen().
+#
+# @return Boolean True if successful, False if not.
+#ce
+Func FileSetEnd($filehandle)
+    #native code
+EndFunc
+
+#cs
+# Sets the current file position.
+#
+# @param Handle $filehandle The handle of a file, as returned by a previous call to FileOpen().
+# @param Int $offset The offset to move from the origin. This value may be positive or negative. Negative values move backwards from the origin.
+# @param Int $origin
+# $FILE_BEGIN (0) = Beginning of the file.
+# $FILE_CURRENT (1) = Current position.
+# $FILE_END (2) = End of the file.
+# Constants are defined in FileConstants.au3.
+#
+# @return Boolean True if successful, False if not.
+#ce
+Func FileSetPos($filehandle, $offset, $origin)
+    #native code
+EndFunc
+
+#cs
+# Sets the timestamp of one of more files.
+#
+# @param String $file_pattern The path of the file(s) to set, e.g. C:\*.au3, C:\Dir. (* and ? wildcards accepted - See Remarks)
+# @param Int $time The new time to set in the format "YYYYMMDDHHMMSS" (Year, month, day, hours (24hr clock), seconds). If the time is blank "" then the current time is used.
+# @param 0|1 $type The timestamp to change:
+# $FT_MODIFIED (0) = Last modified (default)
+# $FT_CREATED (1) = Created
+# $FT_ACCESSED (2) = Last accessed
+# Constants are defined in FileConstants.au3
+# @param 0|1 $recurse
+# $FT_NONRECURSIVE (0) - no recursion (Default).
+# $FT_RECURSIVE (1) - directories are recursed into.
+# Constants are defined in FileConstants.au3
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func FileSetTime($file_pattern, $time, $type = 0, $recurse = 0)
+    #native code
+EndFunc
+
+#cs
+# Write text/data to the end of a previously opened file.
+#
+# @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively, you may use a string filename as the first parameter.
+# @param String|Binary $data The text/data to write to the file. The text is written as is - no @CR or @LF characters are added. See remark for data type.
+#
+# @return 0|1 1 if successful, 0 if file not opened in writemode, file is read only, or file cannot otherwise be written to.
+#ce
+Func FileWrite($file, $data)
+    #native code
+EndFunc
+
+#cs
+# Append a line of text to the end of a previously opened text file.
+#
+# @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively, you may use a string filename as the first parameter.
+# @param String $line  	The line of text to write to the text file. If the line does NOT end in @CR or @LF then a DOS linefeed (@CRLF) will be automatically added.
+#
+# @return 0|1 1 if successful, 0 if file not opened in writemode, file is read only, or file cannot otherwise be written to.
+#ce
+Func FileWriteLine($file, $line)
+    #native code
+EndFunc
+
+#cs
+# Returns a number rounded down to the closest integer.
+#
+# @param Number $expression Any valid numeric expression.
+#
+# @return Int Returns the rounded number.
+#ce
+Func Floor($expression)
+    #native code
+EndFunc
+
+#cs
+# Sets the internet proxy to use for ftp access.
+#
+# @param 0|1|2 $mode The proxy mode to use:
+# $PROXY_IE (0) = (default) Use current Internet Explorer settings for proxy.
+# $PROXY_NONE (1) = Use no proxy (direct access)
+# $PROXY_SPECIFIED (2) = Use the proxy specified
+# Constants are deined in "AutoItConstants.au3".
+# @param String $address The address and port of the proxy to use. See remarks below.
+# @param String $username If required, the username for the proxy
+# @param String $password If required, the password for the proxy
+#
+# @return Void
+#ce
+Func FtpSetProxy($mode = 0, $address = Default, $username = Default, $password = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns the name of a function stored in a variable.
+#
+# @param String|Function $Functionvariable A variable containing a Function whose name you want to retrieve.
+#
+# @return String The name of the function
+#ce
+Func FuncName($Functionvariable)
+    #native code
+EndFunc
+
+#cs
+# Create a GUI window.
+#
+# @param String $title The title of the dialog box.
+# @param Int $width The width of the client area of the window.
+# @param Int $height The height of the client area of the window.
+# @param Int $left The left side of the dialog box. By default (-1), the window is centered. If defined, top must also be defined.
+# @param Int $top The top of the dialog box. Default (-1) is centered
+# @param Int $style defines the style of the window. See GUI Control Styles Appendix.
+# Use -1 for the default style which includes a combination of $WS_MINIMIZEBOX, $WS_CAPTION, $WS_POPUP, $WS_SYSMENU styles.
+# Some styles are always included: $WS_CLIPSIBLINGS, and $WS_SYSMENU if $WS_MAXIMIZEBOX or $WS_SIZEBOX is specified.
+# @param Int $exStyle defines the extended style of the window. See the Extended Style Table below.
+# Use -1 for the default, which is no extended styles.
+# Forced styles: $WS_EX_WINDOWEDGE
+# @param Int $parent The handle of another previously created window - this new window then becomes a child of that window.
+#
+# @return Handle a windows handle or 0 if the window cannot be created and sets the @error flag to 1.
+#ce
+Func GUICreate($title, $width = Default, $height = Default, $left = -1, $top = -1, $style = -1, $exStyle = -1, $parent = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates an AVI video control for the GUI.
+#
+# @param String $filename The filename of the video. Only .avi files are supported.
+# @param Int $subfileid id of the subfile to be used. If the file only contains one video then use 0.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $ACS_TRANSPARENT
+# $ACS_TRANSPARENT is always used unless $ACS_NONTRANSPARENT is specified.
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateAvi($filename, $subfileid, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Button control for the GUI.
+#
+# @param String $text The text of the button control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : none.
+# forced styles : $WS_TABSTOP
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default ( -1) : WS_EX_WINDOWEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateButton($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Checkbox control for the GUI.
+#
+# @param String $text The text of the checkbox control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : $BS_AUTOCHECKBOX.
+# forced styles : $WS_TABSTOP, and $BS_AUTOCHECKBOX if no checkbox style defined.
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateCheckbox($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a ComboBox control for the GUI.
+#
+# @param String $text The text of the combobox control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $CBS_DROPDOWN, $CBS_AUTOHSCROLL, $WS_VSCROLL
+# forced style : $WS_TABSTOP
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default ( -1) : $WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateCombo($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a context menu for a control or entire GUI window.
+#
+# @param Int $controlID Control identifier as returned by a GUICtrlCreate...() function.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateContextMenu($controlID)
+    #native code
+EndFunc
+
+#cs
+# Creates a date control for the GUI.
+#
+# @param String $text The preselected date (always as "yyyy/mm/dd").
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $DTS_LONGDATEFORMAT
+# forced style : $WS_TABSTOP
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default (-1) : WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateDate($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Dummy control for the GUI.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateDummy()
+    #native code
+EndFunc
+
+#cs
+# Creates an Edit control for the GUI.
+#
+# @param String $text The text of the edit control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : $ES_WANTRETURN, $WS_VSCROLL, $WS_HSCROLL, $ES_AUTOVSCROLL, $ES_AUTOHSCROLL
+# forced styles : $ES_MULTILINE, $WS_TABSTOP only if not $ES_READONLY
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default (-1) : $WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateEdit($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Graphic control for the GUI.
+#
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : $SS_NOTIFY.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateGraphic($left, $top, $width = Default, $height = Default, $style = Default)
+    #native code
+EndFunc
+
+#cs
+# Creates a Group control for the GUI.
+#
+# @param String $text The text of the group control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : none.
+# forced styles : $WS_GROUP, $BS_GROUPBOX.
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateGroup($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates an Icon control for the GUI.
+#
+# @param String $filename The filename of the icon to be loaded.
+# @param String $iconName Icon name if the file contains multiple icons. Can be an ordinal name if negative number. Otherwise -1.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is 32).
+# @param Int $height The width of the control (default is 32).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : $SS_NOTIFY
+# forced styles : $WS_TABSTOP, $SS_ICON
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateIcon($filename, $iconName, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates an Input control for the GUI.
+#
+# @param String $text The text of the input control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : $ES_LEFT, $ES_AUTOHSCROLL
+# forced styles : $WS_TABSTOP only if no $ES_READONLY. $ES_MULTILINE is always reset.
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default ( -1) : $WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateInput($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a static Label control for the GUI.
+#
+# @param String $text The text of the label control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : none.
+# forced styles : $SS_NOTIFY, $SS_LEFT
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateLabel($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a List control for the GUI.
+#
+# @param String $text The text of the list control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : $LBS_SORT, $WS_BORDER, $WS_VSCROLL
+# forced styles : $WS_TABSTOP, $LBS_NOTIFY
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default ( -1) : $WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateList($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a ListView control for the GUI.
+#
+# @param String $text The text of the list control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $LVS_SHOWSELALWAYS, $LVS_SINGLESEL
+# forced style : $LVS_REPORT
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table or ListView Extended Style Table.
+# default (-1) : $LVS_EX_FULLROWSELECT, $WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateListView($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a ListView item.
+#
+# @param String $text subitemtext separated with Opt("GUIDataSeparatorChar").
+# @param Int $listviewID The controlID of the ListView control holding the item.
+#
+# @return Int The identifier (itemID) of the new item or 0 on failure.
+#ce
+Func GUICtrlCreateListViewItem($text, $listviewID)
+    #native code
+EndFunc
+
+#cs
+# Creates a Menu control for the GUI.
+#
+# @param String $submenutext The submenu text.
+# @param Int $menuID If defined, allows you to create a submenu in the referenced menu. If equal -1 it refers to first level menu.
+# @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateMenu($submenutext, $menuID = -1, $menuentry = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a MenuItem control for the GUI.
+#
+# @param String $text The text of the menu item.
+# @param Int $menuID Allows you to create a submenu in the referenced menu. If equal -1 it refers to the first level menu.
+# @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0.
+# @param Int $menuradioitem 0 (default) = create a normal menuitem, 1 = create a menuradioitem
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateMenuItem($text, $menuID, $menuentry = -1, $menuradioitem = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates a month calendar control for the GUI.
+#
+# @param String $text The preselected date (always as "yyyy/mm/dd").
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : none.
+# forced style : $WS_TABSTOP
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+# default (-1) : $WS_EX_CLIENTEDGE
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateMonthCal($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates an ActiveX control in the GUI.
+#
+# @param String $ObjectVar A variable pointing to a previously opened object
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateObj($ObjectVar, $left, $top, $width = Default, $height = Default)
+    #native code
+EndFunc
+
+#cs
+# Creates a Picture control for the GUI.
+#
+# @param String $filename The  	filename of the picture to be loaded : supported types BMP, JPG, GIF(but not animated).
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $SS_NOTIFY
+# forced style : $SS_BITMAP | $SS_CENTERIMAGE
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreatePic($filename, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Progress control for the GUI.
+#
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateProgress($left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Radio button control for the GUI.
+#
+# @param String $text The text of the button control.
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default text autofit in width).
+# @param Int $height The height of the control (default text autofit in height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : none.
+# forced styles : $BS_AUTORADIOBUTTON and $WS_TABSTOP if first radio in the group.
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateRadio($text, $left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Slider control for the GUI.
+#
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $TBS_AUTOTICKS
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateSlider($left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a Tab control for the GUI.
+#
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default ( -1) : none.
+# forced styles : $TCS_TOOLTIPS, $WS_TABSTOP, $WS_CLIPSIBLINGS
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateTab($left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a TabItem control within an existing tab control in the GUI.
+#
+# @param String $text The text of the TabItem control.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateTabItem($text)
+    #native code
+EndFunc
+
+#cs
+# Creates a TreeView control for the GUI.
+#
+# @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
+# @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
+# @param Int $width The width of the control (default is the previously used width).
+# @param Int $height The height of the control (default is the previously used height).
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $TVS_HASBUTTONS, $TVS_HASLINES, $TVS_LINESATROOT, $TVS_DISABLEDRAGDROP, $TVS_SHOWSELALWAYS
+# forced style : $WS_TABSTOP
+# @param Int $exStyle Defines the extended style of the control. See Extended Style Table.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateTreeView($left, $top, $width = Default, $height = Default, $style = -1, $exStyle = -1)
+    #native code
+EndFunc
+
+#cs
+# Creates a TreeViewItem control for the GUI.
+#
+# @param String $text The text of the TreeViewItem control.
+# @param Int $treeviewID The treeview identifier as return by treeview or treeviewitem creation if subtree is created.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateTreeViewItem($text, $treeviewID)
+    #native code
+EndFunc
+
+#cs
+# Creates an UpDown control for the GUI.
+#
+# @param Int $inputcontrolID The controlID of the input control in which the updown control will be created, or -1 for the last created control.
+# @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
+# default (-1) : $GUI_SS_DEFAULT_UPDOWN.
+# forced style : $UDS_SETBUDDYINT and $UDS_ALIGNRIGHT if no align defined.
+#
+# @return Int The identifier (controlID) of the new control or 0 on failure.
+#ce
+Func GUICtrlCreateUpDown($inputcontrolID, $style = -1)
+    #native code
+EndFunc
+
+#cs
+# Deletes a control.
+#
+# @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
+#
+# @return 0|1 1 if successful, 0 if not.
+#ce
+Func GUICtrlDestroy($controlID)
+    #native code
+EndFunc
+
 ; FIXME: a au3doc type for flags?
 ; FIXME: a au3doc type for variables (both existing, non exesting and varaibles taht will be defined by the function)
 ; FIXME: a au3doc tag for setting @error and @extended macro's
