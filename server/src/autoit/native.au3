@@ -3629,6 +3629,755 @@ Func Log($expression)
     #native code
 EndFunc
 
+#cs
+# Add an element to a Map variable.
+#
+# The value will be added using the next available integer key
+#
+# @param Map $map An existing Map
+# @param Mixed $value The value to add to the Map.
+#
+# @return Int The integer key used to add the value or 0 and sets the @error flag to non-zero
+#ce
+Func MapAppend($map, $value)
+    #native code
+EndFunc
+
+#cs
+# Determine whether a key exists within a Map.
+#
+# @param Map $map An existing Map
+# @param String $key The key to check
+#
+# @return Boolean
+#ce
+Func MapExists($map, $key)
+    #native code
+EndFunc
+
+#cs
+# Returns an array holding the keys within a Map.
+#
+# @param Map $map An existing Map
+#
+# @return Array
+#ce
+Func MapKeys($map)
+    #native code
+EndFunc
+
+#cs
+# Remove a key and its associated value from a Map.
+#
+# @param Map $map An existing Map
+# @param String $key The key to remove
+#
+# @return 0|1
+#ce
+Func MapRemove($map, $key)
+    #native code
+EndFunc
+
+#cs
+# Retrieves memory related information.
+#
+# @return Array A seven-element array containing the memory information:
+# $aArray[$MEM_LOAD] = Memory Load (Percentage of memory in use)
+# $aArray[$MEM_TOTALPHYSRAM] = Total physical RAM
+# $aArray[$MEM_AVAILPHYSRAM] = Available physical RAM
+# $aArray[$MEM_TOTALPAGEFILE] = Total Pagefile
+# $aArray[$MEM_AVAILPAGEFILE] = Available Pagefile
+# $aArray[$MEM_TOTALVIRTUAL] = Total virtual
+# $aArray[$MEM_AVAILVIRTUAL] = Available virtual
+#ce
+Func MemGetStats()
+    #native code
+EndFunc
+
+#cs
+# Performs the modulus operation.
+#
+# @param Int $value1 The dividend.
+# @param Int $value2 The divisor.
+#
+# @return Number The remainder when value1 is divided by value2 or -1.#IND if the divisor is zero.
+#ce
+Func Mod($value1, $value2)
+    #native code
+EndFunc
+
+#cs
+# Perform a mouse click operation.
+#
+# @param String $button The button to click:
+# $MOUSE_CLICK_LEFT ("left")
+# $MOUSE_CLICK_RIGHT ("right")
+# $MOUSE_CLICK_MIDDLE ("middle")
+# $MOUSE_CLICK_MAIN ("main")
+# $MOUSE_CLICK_MENU ("menu")
+# $MOUSE_CLICK_PRIMARY ("primary")
+# $MOUSE_CLICK_SECONDARY ("secondary")
+# Constants are defined in "AutoItConstants.au3".
+# @param Number $x The x coordinates to move the mouse to. If no x coords are given, the current position is used
+# @param Number $y The y coordinates to move the mouse to. If no y coords are given, the current position is used
+# @param Int $clicks The number of clicks to perform. Default is 1.
+# @param Int $speed The speed to move the mouse in the range 1 (fastest) to 100 (slowest). A speed of 0 will move the mouse instantly.
+#
+# @return 0|1
+#ce
+Func MouseClick($button, $x = Default, $y = Default, $clicks = 1, $speed = 10)
+    #native code
+EndFunc
+
+#cs
+# Perform a mouse click and drag operation.
+#
+# @param String $button The button to click:
+# $MOUSE_CLICK_LEFT ("left")
+# $MOUSE_CLICK_RIGHT ("right")
+# $MOUSE_CLICK_MIDDLE ("middle")
+# $MOUSE_CLICK_MAIN ("main")
+# $MOUSE_CLICK_MENU ("menu")
+# $MOUSE_CLICK_PRIMARY ("primary")
+# $MOUSE_CLICK_SECONDARY ("secondary")
+# Constants are defined in "AutoItConstants.au3".
+# @param Number $x1 The x coord to start the drag operation from.
+# @param Number $y1 The y coord to start the drag operation from.
+# @param Number $x2 The x coords to end the drag operation at.
+# @param Number $y2 The y coords to end the drag operation at.
+# @param Int $speed The speed to move the mouse in the range 1 (fastest) to 100 (slowest). A speed of 0 will move the mouse instantly.
+#
+# @return 0|1
+#ce
+Func MouseClickDrag($button, $x1, $y1, $x2, $y2, $speed = 10)
+    #native code
+EndFunc
+
+#cs
+# Perform a mouse down event at the current mouse position.
+#
+# @param String $button The button to click:
+# $MOUSE_CLICK_LEFT ("left")
+# $MOUSE_CLICK_RIGHT ("right")
+# $MOUSE_CLICK_MIDDLE ("middle")
+# $MOUSE_CLICK_MAIN ("main")
+# $MOUSE_CLICK_MENU ("menu")
+# $MOUSE_CLICK_PRIMARY ("primary")
+# $MOUSE_CLICK_SECONDARY ("secondary")
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return 0|1
+#ce
+Func MouseDown($button)
+    #native code
+EndFunc
+
+#cs
+# Returns the cursor ID Number for the current Mouse Cursor.
+#
+# @return Int Returns a cursor ID Number:
+# $MCID_UNKNOWN (-1) : (@error can be set if the handle to the cursor cannot be found)
+# $MCID_HAND (0)
+# $MCID_APPSTARTING (1)
+# $MCID_ARROW (2)
+# $MCID_CROSS (3)
+# $MCID_HELP (4)
+# $MCID_IBEAM (5)
+# $MCID_ICON (6) (Obsolete for applications marked version 4.0 or later)
+# $MCID_NO (7)
+# $MCID_SIZE (8) (Obsolete for applications marked version 4.0 or later)
+# $MCID_SIZEALL (9)
+# $MCID_SIZENESW (10)
+# $MCID_SIZENS (11)
+# $MCID_SIZENWSE (12)
+# MCID_SIZEWE (13)
+# $MCID_UPARROW (14)
+# $MCID_WAIT (15)
+# $MCID_NONE (16)
+# Constants are defined in "AutoItConstants.au3".
+#ce
+Func MouseGetCursor()
+    #native code
+EndFunc
+
+#cs
+# Retrieves the current position of the mouse cursor.
+#
+# @param 0|1 $dimension 0 = X, 1 = Y
+#
+# @return Array|Int [X, Y] or Int if no dimension is specified
+#ce
+Func MouseGetPos($dimension = Default)
+    #native code
+EndFunc
+
+#cs
+# Moves the mouse pointer.
+#
+# @param Number $x The screen x coordinate to move the mouse to.
+# @param Number $y The screen y coordinate to move the mouse to.
+# @param Int $speed The speed to move the mouse in the range 1 (fastest) to 100 (slowest). A speed of 0 will move the mouse instantly.
+#
+# @return Void
+#ce
+Func MouseMove($x, $y, $speed = 10)
+    #native code
+EndFunc
+
+#cs
+# Perform a mouse up event at the current mouse position.
+#
+# @param String $button The button to click:
+# $MOUSE_CLICK_LEFT ("left")
+# $MOUSE_CLICK_RIGHT ("right")
+# $MOUSE_CLICK_MIDDLE ("middle")
+# $MOUSE_CLICK_MAIN ("main")
+# $MOUSE_CLICK_MENU ("menu")
+# $MOUSE_CLICK_PRIMARY ("primary")
+# $MOUSE_CLICK_SECONDARY ("secondary")
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return 0|1
+#ce
+Func MouseUp($button)
+    #native code
+EndFunc
+
+#cs
+# Moves the mouse wheel up or down.
+#
+# @param String $direction The direction to move the mouse wheel:
+# $MOUSE_WHEEL_UP ("up")
+# $MOUSE_WHEEL_DOWN ("down")
+# Constants are defined in "AutoItConstants.au3".
+# @param Int $clicks The number of times to move the mouse wheel.
+#
+# @return 0|1
+#ce
+Func MouseWheel($direction, $clicks = 1)
+    #native code
+EndFunc
+
+#cs
+# Displays a simple message box with optional timeout.
+#
+# @param String $flag The flag indicates the type of message box and the possible button combinations.
+# @param String $title The title of the message box.
+# @param String $text The text of the message box.
+# @param Int $timeout Timeout in seconds. After the timeout has elapsed the message box will close automatically. If 0, no timeout is set.
+# @param Int $hwnd The window handle to use as the parent for this dialog.
+#
+# @return Int the ID of the button pressed or $IDTIMEOUT (-1) if the message box timed out.
+#ce
+Func MsgBox($flag, $title, $text, $timeout = 0, $hwnd = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns the numeric representation of an expression.
+#
+# @param String $expression The expression to convert into a number.
+# @param Int $flag Can be one of the following:
+# $NUMBER_AUTO (0) = (default) the result is auto-sized integer. See remarks.
+# $NUMBER_32BIT (1) = the result is 32bit integer.
+# $NUMBER_64BIT (2) = the result is 64bit integer.
+# $NUMBER_DOUBLE (3) = the result is double.
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return Number
+#ce
+Func Number($expression, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates a reference to a COM object from the given classname.
+#
+# @param String $classname The class of the object in the following format: "appname.objectype"
+# It can also be a string representation of the CLSID.
+# @param String $servername The name of a remote computer from which the object must be obtained.
+# @param String $username The name of a usercode on the remote computer.
+# You have to enter this in the format "computer\usercode" or "domain\usercode".
+# @param String $password The password for the usercode on the remote computer.
+#
+# @return Object
+#ce
+Func ObjCreate($classname, $servername = Default, $username = Default, $password = Default)
+    #native code
+EndFunc
+
+#cs
+# Creates a reference to an object from the given classname/object pointer, interface identifier and description string.
+#
+# @param String|Ptr $CLSID Class identifier or object pointer. If this is a class identifier it can be in either ProgID or the string representation of the CLSID.
+# @param String $IID String representation of interface identifier.
+# @param String $interface_description String describing v-table of the object. Use keyword Default to access IDispatch for dual interfaces.
+# @param Boolean $flag Default value is True meaning the object interface inherits from IUnknown.
+#
+# @return Object
+#ce
+Func ObjCreateInterface($CLSID, $IID, $interface_description, $flag = True)
+    #native code
+EndFunc
+
+#cs
+# Handles incoming events from the given Object.
+#
+# @param Object|String $ObjectVar A variable containing an Object from which you want to receive events or "AutoIt.Error"
+# @param String $functionprefix The prefix of the functions you define to handle receiving events.
+# The prefix is appended by the Objects method name.
+# @param String $interface_name The name of an Event interface to use.
+# Note: It must be a supported as outgoing for the Object AND it must be of type DISPATCH.
+#
+# @return Object|String An object or a function name.
+#ce
+Func ObjEvent($ObjectVar, $functionprefix = Default, $interface_name = Default);WARNING: AutoIt.Error and normal object event conflicting function parameter signatures!
+    #native code
+EndFunc
+
+#cs
+# Retrieves a reference to a COM object from an existing process or filename.
+#
+# @param String $filename The full path and name to the file containing the object (See remarks).
+# @param String $classname Class identifier. Can be in either ProgID or the string representation of the CLSID.
+# @param Unknown $instance Instance of the object for ROT objects of the same (co)class.
+#
+# @return Object
+#ce
+Func ObjGet($filename, $classname = Default, $instance = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns the name or interface description of an Object.
+#
+# @param Object $Objectvariable A variable containing an Object.
+# @param Int $Flag $OBJ_NAME (1) = (default) The name of the Object
+# $OBJ_STRING (2) = Description string of the Object
+# $OBJ_PROGID (3) = The ProgID of the Object
+# $OBJ_FILE (4) = The file that is associated with the object in the Registry
+# $OBJ_MODULE (5) = Module name in which the object runs (WIN XP And above). Marshaller for non-inproc objects.
+# $OBJ_CLSID (6) = CLSID of the object's coclass
+# $OBJ_IID (7) = IID of the object's interface
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return String
+#ce
+Func ObjName($Objectvariable, $Flag = 1)
+    #native code
+EndFunc
+
+#cs
+# Registers a function to be called when AutoIt exits.
+#
+# @param String $function The name of the function to be called when AutoIt exits.
+#
+# @return 0|1 @extended can be set if already registered.
+#ce
+Func OnAutoItExitRegister($function)
+    #native code
+EndFunc
+
+#cs
+# UnRegisters a function that was called when AutoIt exits.
+#
+# @param String $function The name of the function to be unregistered.
+#
+# @return 0|1
+#ce
+Func OnAutoItExitUnRegister($function)
+    #native code
+EndFunc
+
+#cs
+# Pings a host and returns the roundtrip-time.
+#
+# @param String $address The address or hostname to ping.
+# @param Int $timeout The timeout in milliseconds.
+#
+# @return Int The roundtrip-time in milliseconds ( greater than 0 ).
+#ce
+Func Ping($address, $timeout = 4000)
+    #native code
+EndFunc
+
+#cs
+# Generates a checksum for a region of pixels.
+#
+# @param Int $left The left coordinate of rectangle.
+# @param Int $top The top coordinate of rectangle.
+# @param Int $right The right coordinate of rectangle.
+# @param Int $bottom The bottom coordinate of rectangle.
+# @param Int $step The step in pixels between each pixel in the region. It is not recommended to use a step value greater than 1.
+# @param Int $hwnd Window handle to be used. Default is the desktop window. See remark.
+# @param Int $mode 0 = ADLER checksum, 1 = CRC32 checksum
+#
+# @return Int The checksum value of the region.
+#ce
+Func PixelChecksum($left, $top, $right, $bottom, $step = 1, $hwnd = Default, $mode = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns a pixel color according to x,y pixel coordinates.
+#
+# @param Int $x The x coordinate of the pixel.
+# @param Int $y The y coordinate of the pixel.
+# @param Int $hwnd Window handle to be used. Default is the desktop window. See remark.
+#
+# @return Int A decimal value of pixel's color.
+#ce
+Func PixelGetColor($x, $y, $hwnd = Default)
+    #native code
+EndFunc
+
+#cs
+# Searches a rectangle of pixels for the pixel color provided.
+#
+# @param Int $left The left coordinate of rectangle.
+# @param Int $top The top coordinate of rectangle.
+# @param Int $right The right coordinate of rectangle.
+# @param Int $bottom The bottom coordinate of rectangle.
+# @param Int $color The color to search for.
+# @param Int $shade_variation A number between 0 and 255 to indicate the allowed number of shades of variation of the red, green, and blue components of the color. 0 is exact match.
+# @param Int $step The step in pixels between each pixel in the region. It is not recommended to use a step value greater than 1.
+# @param Int $hwnd Window handle to be used. Default is the desktop window. See remark.
+#
+# @return Array A two-element array of pixel's coordinates. (Array[0] = x, Array[1] = y).
+#ce
+Func PixelSearch($left, $top, $right, $bottom, $color, $shade_variation = 0, $step = 1, $hwnd = Default)
+    #native code
+EndFunc
+
+#cs
+# Terminates a named process.
+#
+# @param String|Int $process The name or PID of the process to terminate.
+#
+# @return 0|1
+#ce
+Func ProcessClose($process)
+    #native code
+EndFunc
+
+#cs
+# Checks to see if a specified process exists.
+#
+# @param String|Int $process The name or PID of the process to check.
+#
+# @return Int The PID of the process or 0 if process does not exist.
+#ce
+Func ProcessExists($process)
+    #native code
+EndFunc
+
+#cs
+# Returns an array about Memory or IO infos of a running process.
+#
+# @param String|Int $process The name or PID of the process to get info from. -1 is the current process.
+# @param 0|1 $PROCESS_STATS_MEMORY (0) = (default) memory infos.
+# $PROCESS_STATS_IO (1) = IO infos.
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return Array
+#ce
+Func ProcessGetStats($process = -1, $type = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns an array listing the currently running processes (names and PIDs).
+#
+# @param String $name If a name is given only processes of the same name will be returned.
+#
+# @return Array The array returned is two-dimensional and is made up as follows:
+# $aArray[0][0] = Number of processes
+# $aArray[1][0] = 1st Process name
+# $aArray[1][1] = 1st Process ID (PID)
+# $aArray[2][0] = 2nd Process name
+# $aArray[2][1] = 2nd Process ID (PID)
+# ...
+# $aArray[n][0] = nth Process name
+# $aArray[n][1] = nth Process ID (PID)
+# The list can be empty if $aArray[0][0] = 0. No @error set in this case.
+#ce
+Func ProcessList($name = Default)
+    #native code
+EndFunc
+
+#cs
+# Changes the priority of a process.
+#
+# @param String|Int $process The name or PID of the process to change.
+# @param Int $priority A flag which determines what priority to set
+# $PROCESS_LOW (0) = Idle/Low
+# $PROCESS_BELOWNORMAL (1) = Below Normal
+# $PROCESS_NORMAL (2) = Normal
+# $PROCESS_ABOVENORMAL (3) = Above Normal
+# $PROCESS_HIGH (4) = High
+# $PROCESS_REALTIME (5) = Realtime (Use with caution, may make the system unstable)
+# Constants are define in "AutoItConstants.au3".
+#
+# @return 0|1
+#ce
+Func ProcessSetPriority($process, $priority)
+    #native code
+EndFunc
+
+#cs
+# Pauses script execution until a given process exists.
+#
+# @param String $process The name of the process to check.
+# @param Int $timeout The maximum number of seconds to wait for the process to exist. 0 means no timeout.
+#
+# @return Int The PID of the process or 0 if the wait timed out.
+#ce
+Func ProcessWait($process, $timeout = 0)
+    #native code
+EndFunc
+
+#cs
+# Pauses script execution until a given process does not exist.
+#
+# @param String $process The name of the process to check.
+# @param Int $timeout The maximum number of seconds to wait for the process to exist. 0 means no timeout.
+#
+# @return Int The PID of the process or 0 if the wait timed out.
+#ce
+Func ProcessWaitClose($process, $timeout = 0)
+    #native code
+EndFunc
+
+#cs
+# Turns Progress window off.
+#
+# @return Void
+#ce
+Func ProgressOff()
+    #native code
+EndFunc
+
+#cs
+# Creates a customizable progress bar window.
+#
+# @param String $title The title of the progress bar window.
+# @param String $maintext The main text of the progress bar window.
+# @param String $subtext The sub text of the progress bar window.
+# @param Int $x The X position of the progress bar window. Default is the center of the screen.
+# @param Int $y The Y position of the progress bar window. Default is the center of the screen.
+# @param Int $opt Default is 'always on top/with title/not moveable'
+# Add up the following options you want:
+# $DLG_NOTITLE (1) = borderless, titleless window
+# $DLG_NOTONTOP (2) = Without "always on top" attribute
+# $DLG_MOVEABLE (16) = Window can be moved
+# Constants are defined in AutoItConstants.au3
+#
+# @return Void
+#ce
+Func ProgressOn($title, $maintext, $subtext = "", $x = Default, $y = Default, $opt = 0)
+    #native code
+EndFunc
+
+#cs
+# Sets the position and/or text of a previously created Progress bar window.
+#
+# @param Int $percent The percentage of the progress bar window. (value between 0. and 100)
+# @param String $subtext The sub text of the progress bar window.
+# @param String $maintext The main text of the progress bar window.
+#
+# @return Void
+#ce
+Func ProgressSet($percent, $subtext = Default, $maintext = Default)
+    #native code
+EndFunc
+
+#cs
+# Converts an expression into a pointer variant.
+#
+# @param Any $expression An expression to convert into a pointer variant.
+#
+# @return Ptr
+#ce
+Func Ptr($expression)
+    #native code
+EndFunc
+
+#cs
+# Generates a pseudo-random float-type number.
+#
+# @param Int $min The minimum value of the random number.
+# @param Int $max The maximum value of the random number.
+# @param Int $flag 0 = Float, 1 = Int
+#
+# @return Float|Int
+#ce
+Func Random($Min = 0, $Max = 1, $Flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Deletes a key or value from the registry.
+#
+# @param String $keyname The name of the key to delete.
+# @param String $valuename The name of the value to delete.
+#
+# @return 0|1|2 1 if successful, 0 if the key does not exist, 2 if there was and error.
+#ce
+Func RegDelete($keyname, $valuename = Default)
+    #native code
+EndFunc
+
+#cs
+# Reads the name of a subkey according to its instance.
+#
+# @param String $keyname The name of the key to read.
+# @param Int $instance The 1-based key instance of the subkey to read.
+#
+# @return String
+#ce
+Func RegEnumKey($keyname, $instance)
+    #native code
+EndFunc
+
+#cs
+# Reads the name of a value according to its instance.
+#
+# @param String $keyname The name of the key to read.
+# @param Int $instance The 1-based value instance of the value to read.
+#
+# @return String
+#ce
+Func RegEnumVal($keyname, $instance)
+    #native code
+EndFunc
+
+#cs
+# Reads a value from the registry.
+#
+# @param String $keyname The name of the key to read.
+# @param String $valuename The name of the value to read.
+#
+# @return Mixed The value read from the registry.
+#ce
+Func RegRead($keyname, $valuename)
+    #native code
+EndFunc
+
+#cs
+# Creates a key or value in the registry.
+#
+# @param String $keyname The name of the key to create. If no other parameters are specified this key will simply be created.
+# @param String $valuename The name of the value to create.
+# @param String $type The type of the value to create.
+# @param String $value The value to create.
+#
+# @return 0|1
+#ce
+Func RegWrite($keyname, $valuename = Default, $type = Default, $value = Default)
+    #native code
+EndFunc
+
+#cs
+# Returns a number rounded to a specified number of decimal places.
+#
+# @param Number $expression The number to round.
+# @param Int $decimalplaces The number of decimal places to round to.
+#
+# @return Float|Int
+#ce
+Func Round($expression, $decimalplaces = 0)
+    #native code
+EndFunc
+
+#cs
+# Runs an external program.
+#
+# @param String $program The name of the program to run.
+# @param String $workingdir The working directory of the program.
+# @param Int $show_flag The "show" flag of the program.
+# @param Int $opt_flag Controls various options related to how the parent and child process interact.
+# $STDIN_CHILD (0x1) = Provide a handle to the child's STDIN stream
+# $STDOUT_CHILD (0x2) = Provide a handle to the child's STDOUT stream
+# $STDERR_CHILD (0x4) = Provide a handle to the child's STDERR stream
+# $STDERR_MERGED (0x8) = Provides the same handle for STDOUT and STDERR. Implies both $STDOUT_CHILD and $STDERR_CHILD.
+# $STDIO_INHERIT_PARENT (0x10) = Provide the child with the parent's STDIO streams. This flag can not be combined with any other STDIO flag. This flag is only useful when the parent is compiled as a Console application.
+# $RUN_CREATE_NEW_CONSOLE (0x10000) = The child console process should be created with it's own window instead of using the parent's window. This flag is only useful when the parent is compiled as a Console application.
+# Constants are defined in AutoItConstants.au3.
+#
+# @return Int The PID of the process that was launched or 0 if an error occurred.
+#ce
+Func Run($program, $workingdir = "", $show_flag = Default, $opt_flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Runs an external program under the context of a different user.
+#
+# @param String $username The username to use.
+# @param String $domain The domain to use.
+# @param String $password The password to use.
+# @param Int $logon_flag $RUN_LOGON_NOPROFILE (0) - Interactive logon with no profile.
+# $RUN_LOGON_PROFILE (1) - Interactive logon with profile.
+# $RUN_LOGON_NETWORK (2) - Network credentials only.
+# $RUN_LOGON_INHERIT (4) - Inherit the calling process's environment instead of the user's environment.
+# Constants are defined in "AutoItConstants.au3".
+# @param String $program The full path of the program (EXE, BAT, COM, or PIF) to run (see remarks).
+# @param String $workingdir The working directory of the program.
+# @param Int $show_flag The "show" flag of the program.
+# @param Int $opt_flag Controls various options related to how the parent and child process interact.
+# $STDIN_CHILD (0x1) = Provide a handle to the child's STDIN stream
+# $STDOUT_CHILD (0x2) = Provide a handle to the child's STDOUT stream
+# $STDERR_CHILD (0x4) = Provide a handle to the child's STDERR stream
+# $STDERR_MERGED (0x8) = Provides the same handle for STDOUT and STDERR. Implies both $STDOUT_CHILD and $STDERR_CHILD.
+# $STDIO_INHERIT_PARENT (0x10) = Provide the child with the parent's STDIO streams. This flag can not be combined with any other STDIO flag. This flag is only useful when the parent is compiled as a Console application.
+# $RUN_CREATE_NEW_CONSOLE (0x10000) = The child console process should be created with it's own window instead of using the parent's window. This flag is only useful when the parent is compiled as a Console application.
+# Constants are defined in AutoItConstants.au3
+#
+# @return Int The PID of the process that was launched or 0 if an error occurred.
+#ce
+Func RunAs($username, $domain, $password, $logon_flag, $program, $workingdir = @SystemDir, $show_flag = Default, $opt_flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Runs an external program under the context of a different user and pauses script execution until the program finishes.
+#
+# @param String $username The username to use.
+# @param String $domain The domain to use.
+# @param String $password The password to use.
+# @param Int $logon_flag$RUN_LOGON_NOPROFILE (0) - Interactive logon with no profile.
+# $RUN_LOGON_PROFILE (1) - Interactive logon with profile.
+# $RUN_LOGON_NETWORK (2) - Network credentials only.
+# $RUN_LOGON_INHERIT (4) - Inherit the calling process's environment instead of the user's environment.
+# Constants are defined in "AutoItConstants.au3".
+# @param String $program The full path of the program (EXE, BAT, COM, or PIF) to run (see remarks).
+# @param String $workingdir The working directory of the program.
+# @param Int $show_flag The "show" flag of the program.
+# @param Int $opt_flag Controls various options related to how the parent and child process interact.
+# $RUN_CREATE_NEW_CONSOLE (0x10000) = The child console process should be created with its own window instead of using the parent's window. This flag is only useful when the parent is compiled as a Console application.
+# Constant is defined in AutoItConstants.au3
+#
+# @return Int The exit code of the program that was run.
+#ce
+Func RunAsWait($username, $domain, $password, $logon_flag, $program, $workingdir = @SystemDir, $show_flag = Default, $opt_flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Runs an external program and pauses script execution until the program finishes.
+#
+# @param String $program The name of the program to run.
+# @param String $workingdir The working directory of the program.
+# @param Int $show_flag The "show" flag of the program.
+# @param Int $opt_flag Controls various options related to how the parent and child process interact.
+# 0x10000 ($RUN_CREATE_NEW_CONSOLE) = The child console process should be created with its own window instead of using the parents window. This flag is only useful when the parent is compiled as a Console application.
+#
+# @return Int The exit code of the program that was run.
+#ce
+Func RunWait($program, $workingdir = "", $show_flag = Default, $opt_flag = 0)
+    #native code
+EndFunc
+
 ; FIXME: a au3doc type for flags?
 ; FIXME: a au3doc type for variables (both existing, non exesting and varaibles taht will be defined by the function)
 ; FIXME: a au3doc tag for setting @error and @extended macro's
