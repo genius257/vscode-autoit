@@ -4378,6 +4378,1630 @@ Func RunWait($program, $workingdir = "", $show_flag = Default, $opt_flag = 0)
     #native code
 EndFunc
 
+#cs
+# Sends simulated keystrokes to the active window.
+#
+# @param String $keys The sequence of keys to send.
+# @param Int $flag Changes how "keys" is processed:
+# $SEND_DEFAULT (0) = Text contains special characters like + and ! to indicate SHIFT and ALT key-presses (default).
+# $SEND_RAW (1) = keys are sent raw.
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return Void
+#ce
+Func Send($keys, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Attempts to keep a specified window active during Send().
+#
+# @param String $title The title/hWnd/class of the window to activate. See Title special definition. Use a blank title to disable the function.
+# @param String $text The text of the window to keep active.
+#
+# @return 0|1 0 if window is not found.
+#ce
+Func SendKeepActive($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Manually set the value of the @error macro (and optionally @extended, and "Return Value").
+#
+# @param Int $code The error code to set.
+# @param Int $extended The extended error code to set.
+# @param Mixed $return_value The value to be returned by the function.
+#
+# @return Mixed
+#ce
+Func SetError($code, $extended = 0, $return_value = 1)
+    #native code
+EndFunc
+
+#cs
+# Manually set the value of the @extended macro.
+#
+# @param Int $code The extended error code to set.
+# @param Mixed $return_value The value to be returned by the function.
+#
+# @return Mixed
+#ce
+Func SetExtended($code, $return_value = 1)
+    #native code
+EndFunc
+
+#cs
+# Runs an external program using the ShellExecute API.
+#
+# @param String $filename The name of the file to run (EXE, .txt, .lnk, etc).
+# @param String $parameters The parameters to pass to the program.
+# @param String $workingdir The working directory of the program. Blank ("") uses the current working directory.
+# @param Int $verb The "verb" to use, common verbs include:
+# $SHEX_OPEN ("open") = Opens the file specified. The file can be an executable file, a document file, or a folder
+# $SHEX_EDIT ("edit") = Launches an editor and opens the document for editing. If "filename" is not a document file, the function will fail
+# $SHEX_PRINT ("print") = Prints the document file specified. If "filename" is not a document file, the function will fail
+# $SHEX_PROPERTIES ("properties") = Displays the file or folder's properties
+# See remarks for more information on the default behavior when a verb is not specified.
+# Constants are defined in "AutoItConstants.au3".
+# @param Int $show_flag The "show" flag of the program.
+#
+# @return Int The exit code of the program that was run.
+#ce
+Func ShellExecute($filename, $parameters = "", $workingdir = "", $verb = Default, $showflag = Default)
+    #native code
+EndFunc
+
+#cs
+# Runs an external program using the ShellExecute API and pauses script execution until it finishes.
+#
+# @param String $filename The name of the file to run (EXE, .txt, .lnk, etc).
+# @param String $parameters The parameters to pass to the program.
+# @param String $workingdir The working directory of the program. Blank ("") uses the current working directory.
+# @param Int $verb The "verb" to use, common verbs include:
+# $SHEX_OPEN ("open") = Opens the file specified. The file can be an executable file, a document file, or a folder
+# $SHEX_EDIT ("edit") = Launches an editor and opens the document for editing. If "filename" is not a document file, the function will fail
+# $SHEX_PRINT ("print") = Prints the document file specified. If "filename" is not a document file, the function will fail
+# $SHEX_PROPERTIES ("properties") = Displays the file or folder's properties
+# See remarks for more information on the default behavior when a verb is not specified.
+# Constants are defined in "AutoItConstants.au3".
+# @param Int $show_flag The "show" flag of the program.
+#
+# @return Int The exit code of the program that was run
+#ce
+Func ShellExecuteWait($filename, $parameters = "", $workingdir = "", $verb = Default, $showflag = Default)
+    #native code
+EndFunc
+
+#cs
+# Shuts down the system.
+#
+# @param Int $code A combination of shutdown codes. See "remarks".
+#
+# @return 0|1
+#ce
+Func Shutdown($code)
+    #native code
+EndFunc
+
+#cs
+# Calculates the sine of a number.
+#
+# @param Number $expression Value in radians.
+#
+# @return Float The trigonometric sine of the number.
+#ce
+Func Sin($expression)
+    #native code
+EndFunc
+
+#cs
+# Pause script execution.
+#
+# @param Int $delay The number of milliseconds to pause. Between 10 and 2147483647
+#
+# @return Void
+#ce
+Func Sleep($delay)
+    #native code
+EndFunc
+
+#cs
+# Play a sound file.
+#
+# @param String $filename The name of the file to play. (typically a WAV or MP3)
+# @param Int $wait This flag determines if the script should wait for the sound to finish before continuing:
+# $SOUND_WAIT(1) = wait until sound has finished
+# $SOUND_NOWAIT(0) = continue script while sound is playing (default)
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return 1
+#ce
+Func SoundPlay($filename, $wait = 0)
+    #native code
+EndFunc
+
+#cs
+# Sets the system wave volume by percent.
+#
+# @param Int $percent The volume to set. Between 0 and 100
+#
+# @return 0|1
+#ce
+Func SoundSetWaveVolume($percent)
+    #native code
+EndFunc
+
+#cs
+# Creates a customizable image popup window.
+#
+# @param String $title The title of the popup window.
+# @param String $file Full path\filename of image (BMP, GIF, or JPG)
+# @param Int $width The width of the popup window.
+# @param Int $height The height of the popup window.
+# @param Int $x The x position of the popup window. (default is centered)
+# @param Int $y The y position of the popup window. (default is centered)
+# @param Int $opt Default is 'always on top/with title'
+Add up the following options you want:
+# $DLG_NOTITLE (1) = borderless, titleless window
+# $DLG_NOTONTOP (2) = Without "always on top" attribute
+# $DLG_MOVEABLE (16) = Window can be moved
+# Constants are defined in AutoItConstants.au3.
+#
+# @return Void
+#ce
+Func SplashImageOn($title, $file, $width = 500, $height = 400, $x = Default, $y = Default, $opt = 0)
+    #native code
+EndFunc
+
+#cs
+# Turns SplashText or SplashImage off.
+#
+# @return Void
+#ce
+Func SplashOff()
+    #native code
+EndFunc
+
+#cs
+# Creates a customizable text popup window.
+#
+# @param String $title The title of the popup window.
+# @param String $text The text of the popup window.
+# @param Int $width The width of the popup window.
+# @param Int $height The height of the popup window.
+# @param Int $x The x position of the popup window. (default is centered)
+# @param Int $y The y position of the popup window. (default is centered)
+# @param Int $opt Add them up - default is 'center justified/always on top/with title'
+# $DLG_CENTERONTOP (0) = Center justified/always on top/with title (default)
+# $DLG_NOTITLE (1) = Thin bordered titleless window
+# $DLG_NOTONTOP (2) = Without "always on top" attribute
+# $DLG_TEXTLEFT (4) = Left justified text
+# $DLG_TEXTRIGHT (8) = Right justified text
+# $DLG_MOVEABLE (16) = Windows can be moved
+# $DLG_TEXTVCENTER (32) = Center text vertically
+# Constants are defined in AutoItConstants.au3.
+# @param String $fontname Name of the font to use. (OS default GUI font is used if the font is "" or is not found)
+# @param Int $fontsz ont size. (standard sizes are 6 8 9 10 11 12 14 16 18 20 22 24 26 28 36 48 72)
+# @param Int $fontwt The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used.
+# The following values are defined for convenience.
+# $FW_DONTCARE (0) (Use the default font weight)
+# $FW_THIN (100)
+# $FW_EXTRALIGHT (200)
+# $FW_LIGHT (300)
+# $FW_NORMAL (400)
+# $FW_MEDIUM (500)
+# $FW_SEMIBOLD (600)
+# $FW_BOLD (700)
+# $FW_EXTRABOLD (800)
+# $FW_HEAVY (900)
+# Constants are defined in FontConstants.au3.
+#
+# @return Handle The Handle of the splash window that can be used in ControlSetText().
+#ce
+Func SplashTextOn($title, $text, $width = 500, $height = 400, $x = Default, $y = Default, $opt = 0, $fontname = "", $fontsz = 12, $fontwt = 0)
+    #native code
+EndFunc
+
+#cs
+# Calculates the square-root of a number.
+#
+# @param Float $expression The number to calculate the square-root of.
+#
+# @return Float -1.#IND if parameter is negative.
+#ce
+Func Sqrt($expression)
+    #native code
+EndFunc
+
+#cs
+# Set Seed for random number generation.
+#
+# @param Int $seed Seed value for random number generation. Number between -2^31 and 2^31-1
+#
+# @return Void
+#ce
+Func SRandom($seed)
+    #native code
+EndFunc
+
+#cs
+# Retrieves the text from a standard status bar control.
+#
+# @param String|Hwnd $title The title/hWnd/class of the window to check.
+# @param String $text The text of the window to check.
+# @param Int $part The part of the status bar control to retrieve.
+#
+# @return String
+#ce
+Func StatusbarGetText($title, $text = "", $part = 1)
+    #native code
+EndFunc
+
+#cs
+# Reads from the STDERR stream of a previously run child process.
+#
+# @param Int $process_id The process ID of the child process.
+# @param Bool $peek If true, return the next character without removing it from the buffer.
+# @param Bool $binary If true, read the data as binary instead of text.
+#
+# @return String|Binary @extended contains the number of bytes read.
+#ce
+Func StderrRead($process_id, $peek = False, $binary = False)
+    #native code
+EndFunc
+
+#cs
+# Writes a number of characters to the STDIN stream of a previously run child process.
+#
+# @param Int $process_id The process ID of the child process.
+# @param String|Binary $data The data to write.
+#
+# @return Int The number of characters written.
+#ce
+Func StdinWrite($process_id, $data = Default)
+    #native code
+EndFunc
+
+#cs
+# Closes all resources associated with a process previously run with STDIO redirection.
+#
+# @param Int $process_id The process ID of the child process.
+#
+# @return Int 0 if the process did not have STDIO redirection or was already closed.
+#ce
+Func StdioClose($process_id)
+    #native code
+EndFunc
+
+#cs
+# Reads from the STDOUT stream of a previously run child process.
+#
+# @param Int $process_id The process ID of the child process.
+# @param Bool $peek If true, return the next character without removing it from the buffer.
+# @param Bool $binary If true, read the data as binary instead of text.
+#
+# @return String|Binary @extended contains the number of bytes read.
+#ce
+Func StdoutRead($process_id, $peek = False, $binary = False)
+    #native code
+EndFunc
+
+#cs
+# Returns the string representation of an expression.
+#
+# @param String $expression The expression to convert into a string.
+#
+# @return String
+#ce
+Func String($expression)
+    #native code
+EndFunc
+
+#cs
+# Takes a string and prefixes all linefeed characters ( Chr(10) ) with a carriage return character ( Chr(13) ).
+#
+# @param String $string The string to process.
+#
+# @return String
+#ce
+Func StringAddCR($string)
+    #native code
+EndFunc
+
+#cs
+# Compares two strings with options.
+#
+# @param String $string1 The first string to compare.
+# @param String $string2 The second string to compare.
+# @param Bool $casesense Flag to indicate if the operations should be case sensitive.
+# $STR_NOCASESENSE (0) = not case sensitive, using the user's locale (default)
+# $STR_CASESENSE (1) = case sensitive
+# $STR_NOCASESENSEBASIC (2) = not case sensitive, using a basic/faster comparison
+# Constants are defined in StringConstants.au3.
+#
+# @return Int 0 = equal, >0 = string1 > string2, <0 = string1 < string2
+#ce
+Func StringCompare($string1, $string2, $casesense = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns a formatted string (similar to the C sprintf() function).
+#
+# @param String $format The format string.
+# @param Mixed $var1 The first variable to format.
+# @param Mixed $var2 The second variable to format.
+# @param Mixed $var3 The third variable to format.
+# @param Mixed $var4 The fourth variable to format.
+# @param Mixed $var5 The fifth variable to format.
+# @param Mixed $var6 The sixth variable to format.
+# @param Mixed $var7 The seventh variable to format.
+# @param Mixed $var8 The eighth variable to format.
+# @param Mixed $var9 The ninth variable to format.
+# @param Mixed $var10 The tenth variable to format.
+# @param Mixed $var11 The eleventh variable to format.
+# @param Mixed $var12 The twelfth variable to format.
+# @param Mixed $var13 The thirteenth variable to format.
+# @param Mixed $var14 The fourteenth variable to format.
+# @param Mixed $var15 The fifteenth variable to format.
+# @param Mixed $var16 The sixteenth variable to format.
+# @param Mixed $var17 The seventeenth variable to format.
+# @param Mixed $var18 The eighteenth variable to format.
+# @param Mixed $var19 The nineteenth variable to format.
+# @param Mixed $var20 The twentieth variable to format.
+# @param Mixed $var21 The twenty-first variable to format.
+# @param Mixed $var22 The twenty-second variable to format.
+# @param Mixed $var23 The twenty-third variable to format.
+# @param Mixed $var24 The twenty-fourth variable to format.
+# @param Mixed $var25 The twenty-fifth variable to format.
+# @param Mixed $var26 The twenty-sixth variable to format.
+# @param Mixed $var27 The twenty-seventh variable to format.
+# @param Mixed $var28 The twenty-eighth variable to format.
+# @param Mixed $var29 The twenty-ninth variable to format.
+# @param Mixed $var30 The thirtieth variable to format.
+# @param Mixed $var31 The thirty-first variable to format.
+# @param Mixed $var32 The thirty-second variable to format.
+#
+# @return String
+#ce
+Func StringFormat($format, $var1, $var2, $var3, $var4, $var5, $var6, $var7, $var8, $var9, $var10, $var11, $var12, $var13, $var14, $var15, $var16, $var17, $var18, $var19, $var20, $var21, $var22, $var23, $var24, $var25, $var26, $var27, $var28, $var29, $var30, $var31, $var32)
+    #native code
+EndFunc
+
+#cs
+# Converts an array of ASCII codes to a string.
+#
+# @param Array $array An array of ASCII codes.
+# @param Int $start The zero-based start index.
+# @param Int $end The zero-based end index. Note that the character at this index is NOT included in the output.
+# @param Int $encoding The array contains values in the specified character set:
+# $SE_UTF16 (0) = UTF-16 (Default)
+# $SE_ANSI (1) = ANSI
+# $SE_UTF8 (2) = UTF-8
+# Constants are defined in StringConstants.au3.
+#
+# @return String String with character representations of the ASCII codes.
+#ce
+Func StringFromASCIIArray($array, $start = 0, $end = -1, $encoding = 0)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains a given substring.
+#
+# @param String $string The string to check.
+# @param String $substring The substring to check for.
+# @param Int $casesense Flag to indicate if the operations should be case sensitive.
+# $STR_NOCASESENSE (0) = not case sensitive, using the user's locale (default)
+# $STR_CASESENSE (1) = case sensitive
+# $STR_NOCASESENSEBASIC (2) = not case sensitive, using a basic/faster comparison
+# Constants are defined in StringConstants.au3.
+# @param Int $occurrence Which occurrence of the substring to find in the string. Use a negative occurrence to search from the right side. The default value is 1
+# @param Int $start The 1-based start index of the search.
+# @param Int $count The number of characters to search.
+#
+# @return Int The 1-based position of the substring or 0 if substring is not found.
+#ce
+Func StringInStr($string, $substring, $casesense = 0, $occurrence = 1, $start = 1, $count = Default)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only alphanumeric characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsAlNum($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only alphabetic characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsAlpha($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only ASCII characters in the range 0x00 - 0x7f (0 - 127).
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsASCII($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only digit (0-9) characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsDigit($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string is a floating point number.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsFloat($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string is an integer.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsInt($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only lowercase characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsLower($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only whitespace characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsSpace($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only uppercase characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsUpper($string)
+    #native code
+EndFunc
+
+#cs
+# Checks if a string contains only hexadecimal digit (0-9, A-F) characters.
+#
+# @param String $string The string to check.
+#
+# @return 0|1
+#ce
+Func StringIsXDigit($string)
+    #native code
+EndFunc
+
+#cs
+# Returns a number of characters from the left-hand side of a string.
+#
+# @param String $string The string to process.
+# @param Int $count The number of characters to return.
+#
+# @return String
+#ce
+Func StringLeft($string, $count)
+    #native code
+EndFunc
+
+#cs
+# Returns the number of characters in a string.
+#
+# @param String $string The string to process.
+#
+# @return Int
+#ce
+Func StringLen($string)
+    #native code
+EndFunc
+
+#cs
+# Converts a string to lowercase.
+#
+# @param String $string The string to convert.
+#
+# @return String
+#ce
+Func StringLower($string)
+    #native code
+EndFunc
+
+#cs
+# Extracts a number of characters from a string.
+#
+# @param String $string The string to process.
+# @param Int $start The 1-based start index of the extraction.
+# @param Int $count The number of characters to extract. By default the entire remainder of the string.
+#
+# @return String
+#ce
+Func StringMid($string, $start, $count = -1)
+    #native code
+EndFunc
+
+#cs
+# Check if a string fits a given regular expression pattern.
+#
+# @param String $string The string to check.
+# @param String $pattern The pattern to match against.
+# @param Int $flag Value to determine the output format.
+# @param Int $offset The 1-based start index of the search.
+#
+# @return 0|1|Array
+#ce
+Func StringRegExp($string, $pattern, $flag = 0, $offset = 1)
+    #native code
+EndFunc
+
+#cs
+# Replace text in a string based on regular expressions.
+#
+# @param String $string The string to process.
+# @param String $pattern The pattern to match against.
+# @param String $replace The replacement string. To insert matched group text, \0 - \9 (or $0 - $9) can be used as back-references. (See remarks).
+# @param Int $count The maximum number of replacements. Use 0 for global replacement.
+#
+# @return String @extended contains the number of replacements performed.
+#ce
+Func StringRegExpReplace($string, $pattern, $replace, $count = 0)
+    #native code
+EndFunc
+
+#cs
+# Replaces substrings in a string.
+#
+# @param String $string The string to process.
+# @param String|Int $find The substring to search for or the character position to start the replacement.
+# @param String $replace The replacement string.
+# @param Int $occurrence The number of occurrences to replace. Use 0 for all occurrences.
+# @param Int $casesense Flag to indicate if the operations should be case sensitive.
+# $STR_NOCASESENSE (0) = not case sensitive, using the user's locale (default)
+# $STR_CASESENSE (1) = case sensitive
+# $STR_NOCASESENSEBASIC (2) = not case sensitive, using a basic/faster comparison
+# Constants are defined in StringConstants.au3.
+#
+# @return String @extended contains the number of replacements performed.
+#ce
+Func StringReplace($string, $find, $replace, $occurrence = 0, $casesense = 0)
+    #native code
+EndFunc
+
+#cs
+# Reverses the contents of the specified string.
+#
+# @param String $string The string to process.
+# @param Int $flag Changes the way the string is reversed
+# $STR_UTF16 (0) = reversed in full UTF-16 mode.
+# $STR_UCS2 (1) = a much faster method - only use if using UCS-2 text.
+# Constants are defined in "StringConstants.au3".
+#
+# @return String
+#ce
+Func StringReverse($string, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns a number of characters from the right-hand side of a string.
+#
+# @param String $string The string to process.
+# @param Int $count The number of characters to return.
+#
+# @return String
+#ce
+Func StringRight($string, $count)
+    #native code
+EndFunc
+
+#cs
+# Splits up a string into substrings depending on the given delimiters.
+#
+# @param String $string The string to process.
+# @param String $delimiters The delimiters to use.
+# @param Int $flag Changes how the string split works, add multiple flag values together if required:
+# $STR_CHRSPLIT (0) = each character in the delimiter string will mark where to split the string (default)
+# $STR_ENTIRESPLIT (1) = entire delimiter string is needed to mark the split
+# $STR_NOCOUNT (2) = disable the return count in the first element - effectively makes the array 0-based (must use UBound() to get the size of the array in this case).
+# Constants are defined in StringConstants.au3.
+#
+# @return Array
+#ce
+Func StringSplit($string, $delimiters, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Removes all carriage return values ( Chr(13) ) from a string.
+#
+# @param String $string The string to process.
+#
+# @return String
+#ce
+Func StringStripCR($string)
+    #native code
+EndFunc
+
+#cs
+# Strips the white space in a string.
+#
+# @param String $string The string to process.
+# @param Int $flag Flag to indicate the type of stripping that should be performed (add the flags together for multiple operations):
+# $STR_STRIPLEADING (1) = strip leading white space
+# $STR_STRIPTRAILING (2) = strip trailing white space
+# $STR_STRIPSPACES (4) = strip double (or more) white spaces between words
+# $STR_STRIPALL (8) = strip all spaces (over-rides all other flags)
+# Constants are defined in StringConstants.au3.
+#
+# @return String
+#ce
+Func StringStripWS($string, $flag)
+    #native code
+EndFunc
+
+#cs
+# Converts a string to an array containing the ASCII code of each character.
+#
+# @param String $string The string to process.
+# @param Int $start The zero-based start index.
+# @param Int $end The zero-based end index. Note that the character at this index is NOT included in the output.
+# @param Int $encoding The string contains values in the specified character set:
+# $SE_UTF16 (0) = UTF-16 (Default)
+# $SE_ANSI (1) = ANSI
+# $SE_UTF8 (2) = UTF-8
+# Constants are defined in StringConstants.au3.
+#
+# @return Array
+#ce
+Func StringToASCIIArray($string, $start = 0, $end = -1, $encoding = 0)
+    #native code
+EndFunc
+
+#cs
+# Converts a string into binary data.
+#
+# @param String $string The string to process.
+# @param Int $flag Changes how the string is stored as binary:
+# $SB_ANSI (1) = string data is ANSI (default)
+# $SB_UTF16LE (2) = string data is UTF16 Little Endian
+# $SB_UTF16BE (3) = string data is UTF16 Big Endian
+# $SB_UTF8 (4) = string data is UTF8
+# Constants are defined in StringConstants.au3.
+#
+# @return Binary
+#ce
+Func StringToBinary($string, $flag = 1)
+    #native code
+EndFunc
+
+#cs
+# Trims a number of characters from the left hand side of a string.
+#
+# @param String $string The string to process.
+# @param Int $count The number of characters to trim.
+#
+# @return String
+#ce
+Func StringTrimLeft($string, $count)
+    #native code
+EndFunc
+
+#cs
+# Trims a number of characters from the right hand side of a string.
+#
+# @param String $string The string to process.
+# @param Int $count The number of characters to trim.
+#
+# @return String
+#ce
+Func StringTrimRight($string, $count)
+    #native code
+EndFunc
+
+#cs
+# Converts a string to uppercase.
+#
+# @param String $string The string to convert.
+#
+# @return String
+#ce
+Func StringUpper($string)
+    #native code
+EndFunc
+
+#cs
+# Calculates the tangent of a number.
+#
+# 1° = pi / 180 radians.
+#
+# @param Number $number Value in radians.
+#
+# @return Number
+#ce
+Func Tan($radians)
+    #native code
+EndFunc
+
+#cs
+# Permits an incoming connection attempt on a socket.
+#
+# @param Int $socket The main socket identifier (SocketID) as returned by a TCPListen() function.
+#
+# @return Int The connected socket identifier or -1 if an error occurred.
+#ce
+Func TCPAccept($socket)
+    #native code
+EndFunc
+
+#cs
+# Closes a TCP socket.
+#
+# @param Int $socket The socket identifier (SocketID) as returned by a TCPListen(),TCPConnect() or TCPAccept() functions.
+#
+# @return 0|1
+#ce
+Func TCPCloseSocket($socket)
+    #native code
+EndFunc
+
+#cs
+# Create a socket connected to an existing server.
+#
+# @param String $host The IPv4 address to connect to.
+# @param Int $port The port number to connect to.
+#
+# @return Int The socket identifier (SocketID) or 0/-1 if an error occurred.
+#ce
+Func TCPConnect($host, $port)
+    #native code
+EndFunc
+
+#cs
+# Creates a socket listening for an incoming connection.
+#
+# @param String $host The IPv4 address to listen on.
+# @param Int $port The port number to listen on.
+# @param Int $maxPendingConnections The maximum number of connections that can be pending (queued) at a time.
+#
+# @return Int The socket identifier (SocketID) or 0/-1 if an error occurred.
+#ce
+Func TCPListen($host, $port, $maxPendingConnections = Default)
+    #native code
+EndFunc
+
+#cs
+# Converts an Internet name to IP address.
+#
+# @param String $host The Internet name to convert.
+#
+# @return String
+#ce
+Func TCPNameToIP($host)
+    #native code
+EndFunc
+
+#cs
+# Receives data from a connected socket.
+#
+# @param Int $socket The connected socket identifier (SocketID) as returned by a TCPAccept() or a TCPConnect() function.
+# @param Int $maxlen The maximum number of characters to receive.
+# @param Int $flag Forces the function to return binary data if set to 1 (default is 0, and will auto detect between binary/string).
+# $TCP_DATA_DEFAULT (0) - (Default) will auto detect between binary/string
+# $TCP_DATA_BINARY (1) - return binary data
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return String|Binary
+#ce
+Func TCPRecv($socket, $maxlen, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Sends data on a connected socket.
+#
+# @param Int $socket The connected socket identifier (SocketID) as returned by a TCPConnect() function.
+# @param String|Binary $data The data to send.
+#
+# @return Int The number of bytes sent to the connected socket.
+#ce
+Func TCPSend($socket, $data)
+    #native code
+EndFunc
+
+#cs
+# Stops TCP services.
+#
+# @return 0|1
+#ce
+Func TCPShutdown()
+    #native code
+EndFunc
+
+#cs
+# Stops UDP services.
+#
+# @return 0|1
+#ce
+Func UDPShutdown()
+    #native code
+EndFunc
+
+#cs
+# Starts TCP services.
+#
+# @return 0|1
+#ce
+Func TCPStartup()
+    #native code
+EndFunc
+
+#cs
+# Starts UDP services.
+#
+# @return 0|1
+#ce
+Func UDPStartup()
+    #native code
+EndFunc
+
+#cs
+# Returns the difference in time from a previous call to TimerInit().
+#
+# @param Handle $handle The handle of a timer, as returned by a previous call to TimerInit().
+#
+# @return Int The time difference (in milliseconds) from a previous call to TimerInit().
+#ce
+Func TimerDiff($handle)
+    #native code
+EndFunc
+
+#cs
+# Returns a handle that can be passed to TimerDiff() to calculate the difference in milliseconds.
+#
+# @return Handle A handle that can be passed to TimerDiff() to calculate the difference in milliseconds.
+#ce
+Func TimerInit()
+    #native code
+EndFunc
+
+#cs
+# Creates a tooltip anywhere on the screen.
+#
+# @param String $text The text to show in the tooltip. (An empty string clears a displaying tooltip)
+# @param Int $x The horizontal position of the tooltip, in pixels.
+# @param Int $y The vertical position of the tooltip, in pixels.
+# @param String $title The title of the tooltip.
+# @param Int $icon Pre-defined icon to show next to the title: Requires a title.
+# $TIP_NOICON (0) = No icon
+# $TIP_INFOICON (1) = Info icon
+# $TIP_WARNINGICON (2) = Warning icon
+# $TIP_ERRORICON (3) = Error Icon
+# Constants are defined in "AutoItConstants.au3".
+# @param Int $options Sets different options for how the tooltip will be displayed (Can be added together):
+# $TIP_BALLOON (1) = Display as Balloon Tip
+# $TIP_CENTER (2) = Center the tip at the x,y coordinates instead of using them for the upper left corner.
+# $TIP_FORCEVISIBLE (4) = Force the tooltip to always be visible confining it to monitor borders if necessary. If multiple monitors are used, then the tooltip will "snap-to" the nearest monitor.
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return 0|1
+#ce
+Func ToolTip($text, $x = Default, $y = Default, $title = "", $icon = 0, $options = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates a menuitem control for the tray.
+#
+# @param String $text The text to show in the menuitem.
+# @param Int $menuID Allows you to create a submenu in the referenced menu. If equal -1 it will be added 'behind' the last created item.
+# @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0. If equal -1 it will be added 'behind' the last created entry.
+# @param Int $menuradioitem $TRAY_ITEM_NORMAL (0) = (default) create a normal menuitem.
+# $TRAY_ITEM_RADIO (1) = create a menuradioitem.
+# Constants are defined in TrayConstants.au3.
+#
+# @return Int The identifier (controlID) of the new tray menuitem or 0 on failure.
+#ce
+Func TrayCreateItem($text, $menuID = -1, $menuentry = -1, $menuradioitem = 0)
+    #native code
+EndFunc
+
+#cs
+# Creates a menu control for the tray menu.
+#
+# @param String $text The text to show in the menu.
+# @param Int $menuID If defined, allows you to create a submenu in the referenced menu. -1 refers to first level menu.
+# @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0. -1 at the bottom.
+#
+# @return Int The identifier (controlID) of the new tray menu or 0 on failure.
+#ce
+Func TrayCreateMenu($text, $menuID = -1, $menuentry = -1)
+    #native code
+EndFunc
+
+#cs
+# Polls the tray to see if any events have occurred.
+#
+# @return Int
+#ce
+Func TrayGetMsg()
+    #native code
+EndFunc
+
+#cs
+# Deletes a menu/item control from the tray menu.
+#
+# @param Int $controlID The identifier (controlID) of the tray menuitem to delete.
+#
+# @return 0|1
+#ce
+Func TrayItemDelete($controlID)
+    #native code
+EndFunc
+
+#cs
+# Returns the handle for a tray menu(item).
+#
+# @param Int $controlID The identifier (controlID) of the tray menuitem.
+#
+# @return Int The handle of the given control ID or 0 on failure.
+#ce
+Func TrayItemGetHandle($controlID)
+    #native code
+EndFunc
+
+#cs
+# Gets the current state of a control.
+#
+# @param Int $controlID The identifier (controlID) of the tray menuitem.
+#
+# @return Int
+#ce
+Func TrayItemGetState($controlID = Default)
+    #native code
+EndFunc
+
+#cs
+# Gets the itemtext of a tray menu/item control.
+#
+# @param Int $controlID The identifier (controlID) of the tray menuitem.
+#
+# @return String
+#ce
+Func TrayItemGetText($controlID)
+    #native code
+EndFunc
+
+#cs
+# Defines a user-defined function to be called when a tray item is clicked.
+#
+# @param Int $itemID The identifier (controlID) of the tray menuitem.
+# @param String $function The name of the user function to call when the tray item is clicked.
+#
+# @return 0|1
+#ce
+Func TrayItemSetOnEvent($itemID, $function)
+    #native code
+EndFunc
+
+#cs
+# Sets the state of a tray menu/item control.
+#
+# @param Int $controlID The identifier (controlID) of the tray menuitem.
+# @param Int $state The state to set.
+#
+# @return 0|1
+#ce
+Func TrayItemSetState($controlID, $state)
+    #native code
+EndFunc
+
+#cs
+# Sets the itemtext of a tray menu/item control.
+#
+# @param Int $controlID The identifier (controlID) of the tray menuitem.
+# @param String $text The text to set.
+#
+# @return 0|1
+#ce
+Func TrayItemSetText($controlID, $text)
+    #native code
+EndFunc
+
+#cs
+# Sets the clickmode of the tray icon - what mouseclicks will display the tray menu.
+#
+# @param Int $flag $TRAY_CLICK_SHOW (0) = Tray menu will never be shown through a mouseclick
+# $TRAY_CLICK_PRIMARYDOWN (1) = Pressing primary mouse button
+# $TRAY_CLICK_PRIMARYUP (2) = Releasing primary mouse button
+# $TRAY_DBLCLICK_PRIMARY (4) = Double-click primary mouse button
+# $TRAY_CLICK_SECONDARYDOWN (8) = Pressing secondary mouse button
+# $TRAY_CLICK_SECONDARYUP (16) = Releasing secondary mouse button
+# $TRAY_DBLCLICK_SECONDARY (32) = Double-click secondary mouse button
+# $TRAY_CLICK_HOVERING (64) = Hovering over the tray icon
+#Constants are defined in "TrayConstants.au3"
+#
+# @return Void
+#ce
+Func TraySetClick($flag)
+    #native code
+EndFunc
+
+#cs
+# Loads/Sets a specified tray icon.
+#
+# @param String $filename The filename of the icon to load.
+# @param Int $iconID The identifier if the file contains multiple icons.
+#
+# @return Void
+#ce
+Func TraySetIcon($filename = Default, $iconID = Default)
+    #native code
+EndFunc
+
+#cs
+# Defines a user function to be called when a special tray action happens.
+#
+# @param Int $specialID The special tray event identifier.
+# @param String $function The name of the user function to call when the event occurs.
+#
+# @return 0|1
+#ce
+Func TraySetOnEvent($specialID, $function)
+    #native code
+EndFunc
+
+#cs
+# Loads/Sets a specified tray pause icon.
+#
+# @param String $filename The filename of the icon to load.
+# @param Int $iconID The identifier if the file contains multiple icons.
+#
+# @return Void
+#ce
+Func TraySetPauseIcon($filename = Default, $iconID = Default)
+    #native code
+EndFunc
+
+#cs
+# Sets the state of the tray icon.
+#
+# @param Int $flag A combination of the following:
+# $TRAY_ICONSTATE_SHOW (1) = Shows the tray icon (default)
+# $TRAY_ICONSTATE_HIDE (2) = Destroys/Hides the tray icon
+# $TRAY_ICONSTATE_FLASH (4) = Flashes the tray icon
+# $TRAY_ICONSTATE_STOPFLASH (8) = Stops tray icon flashing
+# $TRAY_ICONSTATE_RESET (16) = Resets the icon to the defaults (no flashing, default tip text)
+# Constants are defined in TrayConstants.au3.
+#
+# @return Void
+#ce
+Func TraySetState($flag = 1)
+    #native code
+EndFunc
+
+#cs
+# (Re)Sets the tooltip text for the tray icon.
+#
+# @param String $text The new text to be displayed as tooltip. The length is limited - see Remarks.
+#
+# @return 0|1
+#ce
+Func TraySetToolTip($text = Default)
+    #native code
+EndFunc
+
+#cs
+# Displays a balloon tip from the AutoIt Icon.
+#
+# @param String $title The title of the tooltip. (63 characters maximum)
+# @param String $text The text to show in the tooltip. (255 characters maximum)
+# @param Int $timeout The time in seconds to show the tooltip. (Windows has a min and max of about 10-30 seconds but does not always honor a time in that range)
+# @param Int $option  $TIP_ICONNONE (0) = No icon (default)
+# $TIP_ICONASTERISK (1) = Info icon
+# $TIP_ICONEXCLAMATION (2) = Warning icon
+# $TIP_ICONHAND (3) = Error icon
+# $TIP_NOSOUND (16) = Disable sound
+# Constants are defined in TrayConstants.au3.
+#
+# @return Void
+#ce
+Func TrayTip($title, $text, $timeout, $option = 0)
+    #native code
+EndFunc
+
+#cs
+# Returns the size of array dimensions or the number of keys in a map.
+#
+# @param Array|Map $array The array to check.
+# @param Int $dimension For an array - Which dimension size to return:
+# $UBOUND_DIMENSIONS (0) = Number of subscripts in the array
+# $UBOUND_ROWS (1) = Number of rows in the array (default)
+# $UBOUND_COLUMNS (2) = Number of columns in the array
+# For arrays with more than 2 dimensions, just use the corresponding integer
+# For a map - this parameter is ignored and the number of keys is returned
+# Constants are defined in AutoItConstants.au3.
+#
+# @return Int The size of the array dimension or the number of keys within a map.
+#ce
+Func UBound($array, $dimension = 1)
+    #native code
+EndFunc
+
+#cs
+# Create a socket bound to an incoming connection.
+#
+# @param String $host The IPv4 address to bind to.
+# @param Int $port The port to bind to.
+#
+# @return Array $aArray[1] contains the real socket, $aArray[2] contains the specified IP address and $aArray[3] contains the port. We need this information in subsequent calls to UDPRecv(), where we pass this socket structure/array.
+#ce
+Func UDPBind($host, $port)
+    #native code
+EndFunc
+
+#cs
+# Close a UDP socket.
+#
+# @param Array $socketarray The socket/array as returned by a UDPBind() or UDPOpen() functions.
+#
+# @return 0|1
+#ce
+Func UDPCloseSocket($socketarray)
+    #native code
+EndFunc
+
+#cs
+# Open a socket connected to an existing server .
+#
+# @param String $host The IPv4 address to connect to.
+# @param Int $port The port to connect to.
+# @param Int $flag $UDP_OPEN_DEFAULT (0) - (Default) - No additional options are set.
+# $UDP_OPEN_BROADCAST (1) - Allow the broadcasting on the address "255.255.255.255".
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return Array $aArray[1] contains the real socket, $aArray[2] contains the specified IP address and $aArray[3] contains the port. We need this information in subsequent calls to UDPSend(), where we pass this socket structure/array.
+#ce
+Func UDPOpen($host, $port, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Receives data from an opened socket.
+#
+# @param Array $socketarray The socket/array as returned by a UDPBind() function.
+# @param Int $maxlen The maximum number of characters to receive.
+# @param Int $flag UDP_DATA_DEFAULT (0) - will auto detect between binary/string.
+# UDP_DATA_BINARY (1) - return binary data
+# $UDP_DATA_ARRAY (2) - returned in an Array : [0] data, [1] from IP, [2] from Port.
+# If you want both just use 3.
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return String|Binary|Array The received data.
+#ce
+Func UDPRecv($socketarray, $maxlen, $flag = 0)
+    #native code
+EndFunc
+
+#cs
+# Sends data on an opened socket.
+#
+# @param Array $socketarray The socket/array as returned by a UDPOpen() function.
+# @param String|Binary $data The data to send.
+#
+# @return Int The number of bytes sent to the connected socket.
+#ce
+Func UDPSend($socketarray, $data)
+    #native code
+EndFunc
+
+#cs
+# Returns the internal type representation of a variant.
+#
+# @param Mixed $variant The variant to get the type of.
+#
+# @return String A string representing the type of the expression.
+#ce
+Func VarGetType($variant)
+    #native code
+EndFunc
+
+#cs
+# Activates (gives focus to) a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Handle 0 if window is not found or cannot be activated.
+#ce
+Func WinActivate($title, $title = "")
+    #native code
+EndFunc
+
+#cs
+# Checks to see if a specified window exists and is currently active.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Handle 0 if the window is not active or cannot be found.
+#ce
+Func WinActive($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Closes a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return 0|1
+#ce
+Func WinClose($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Checks to see if a specified window exists.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return 0|1
+#ce
+Func WinExists($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Flashes a window in the taskbar.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param Int $flashes The number of times to flash the window.
+# @param Int $delay The delay between flashes in milliseconds.
+#
+# @return Void
+#ce
+Func WinFlash($title, $text = "", $flashes = 4, $delay = 500)
+    #native code
+EndFunc
+
+#cs
+# Returns the coordinates of the caret in the foreground window.
+#
+# @return Array $aArray[0] contains the X coordinate and $aArray[1] contains the Y coordinate.
+#ce
+Func WinGetCaretPos()
+    #native code
+EndFunc
+
+#cs
+# Retrieves the classes from a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return String The classes of the window.
+#ce
+Func WinGetClassList($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the size of a given window's client area.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Array $aArray[0] contains the width and $aArray[1] contains the height.
+#ce
+Func WinGetClientSize($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the internal handle of a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Handle
+#ce
+Func WinGetHandle($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the position and size of a given window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Array $aArray[0] contains the X position, $aArray[1] contains the Y position, $aArray[2] contains the width and $aArray[3] contains the height.
+#ce
+Func WinGetPos($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the Process ID (PID) associated with a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Int
+#ce
+Func WinGetProcess($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the state of a given window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return Int
+#ce
+Func WinGetState($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the text from a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return String
+#ce
+Func WinGetText($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves the full title from a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return String
+#ce
+Func WinGetTitle($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Forces a window to close.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return 1
+#ce
+Func WinKill($title, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Retrieves a list of windows.
+#
+# If no title and text is given then all top-level windows are returned.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+#
+# @return String
+#ce
+Func WinList($title = Default, $text = "")
+    #native code
+EndFunc
+
+#cs
+# Invokes a menu item of a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param String $item1 Text of first menu item.
+# @param String $item2 Text of second menu item.
+# @param String $item3 Text of third menu item.
+# @param String $item4 Text of fourth menu item.
+# @param String $item5 Text of fifth menu item.
+# @param String $item6 Text of sixth menu item.
+# @param String $item7 Text of seventh menu item.
+#
+# @return 1|0
+#ce
+Func WinMenuSelectItem($title, $text, $item1, $item2 = "", $item3 = "", $item4 = "", $item5 = "", $item6 = "", $item7 = "")
+    #native code
+EndFunc
+
+#cs
+# Minimizes all windows.
+#
+# @return Void
+#ce
+Func WinMinimizeAll()
+    #native code
+EndFunc
+
+#cs
+# Undoes a previous WinMinimizeAll function.
+#
+# @return Void
+#ce
+Func WinMinimizeAllUndo()
+    #native code
+EndFunc
+
+#cs
+# Moves and/or resizes a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param Int $x The x coordinate of the new position.
+# @param Int $y The y coordinate of the new position.
+# @param Int $width The new width of the window.
+# @param Int $height The new height of the window.
+# @param Int $speed The speed to move the windows in the range 1 (fastest) to 100 (slowest). If not defined the move is instantaneous.
+#
+# @return Handle 0 if the window was not found.
+#ce
+Func WinMove($title, $text, $x, $y, $width = Default, $height = Default, $speed = 0)
+    #native code
+EndFunc
+
+#cs
+# Change a window's "Always On Top" attribute.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param Int $flag Determines whether the window should have the "TOPMOST" flag set.
+# $WINDOWS_NOONTOP (0) = remove on top flag
+# $WINDOWS_ONTOP (1) = set on top flag
+# Constants are defined in "AutoItConstants.au3".
+#
+# @return 0|1
+#ce
+Func WinSetOnTop($title, $text, $flag)
+    #native code
+EndFunc
+
+#cs
+# Shows, hides, minimizes, maximizes, or restores a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param Int $state The "show" flag of the executed program.
+#
+# @return 0|1
+#ce
+Func WinSetState($title, $text, $state)
+    #native code
+EndFunc
+
+#cs
+# Changes the title of a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param String $newtitle The new title of the window.
+#
+# @return 0|1
+#ce
+Func WinSetTitle($title, $text, $newtitle)
+    #native code
+EndFunc
+
+#cs
+# Sets the transparency of a window.
+#
+# @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
+# @param String $text The text of the window to access. See Text special definition.
+# @param Int $transparency The new transparency of the window in the range 0 - 255.  255 = Solid, 0 = Invisible.
+#
+# @return Int 0 on failure.
+#ce
+Func WinSetTrans($title, $text, $transparency)
+    #native code
+EndFunc
+
+#cs
+# Pauses execution of the script until the requested window exists.
+#
+# @param String $title The title of the window to wait for.
+# @param String $text The text of the window to wait for.
+# @param Int $timeout The maximum time to wait in seconds. 0 = infinite.
+#
+# @return Handle Window handle or 0 if timeout was reached.
+#ce
+Func WinWait($title, $text = "", $timeout = 0)
+    #native code
+EndFunc
+
+#cs
+# Pauses execution of the script until the requested window is active.
+#
+# @param String $title The title of the window to wait for.
+# @param String $text The text of the window to wait for.
+# @param Int $timeout The maximum time to wait in seconds. 0 = infinite.
+#
+# @return Handle Window handle or 0 if timeout was reached.
+#ce
+Func WinWaitActive($title, $text = "", $timeout = 0)
+    #native code
+EndFunc
+
+#cs
+# Pauses execution of the script until the requested window does not exist.
+#
+# @param String $title The title of the window to wait for.
+# @param String $text The text of the window to wait for.
+# @param Int $timeout The maximum time to wait in seconds. 0 = infinite.
+#
+# @return Handle Window handle or 0 if timeout was reached.
+#ce
+Func WinWaitNotActive($title, $text = "", $timeout = 0)
+    #native code
+EndFunc
+
+#cs
+# Pauses execution of the script until the requested window is not active.
+#
+# @param String $title The title of the window to wait for.
+# @param String $text The text of the window to wait for.
+# @param Int $timeout The maximum time to wait in seconds. 0 = infinite.
+#
+# @return Handle Window handle or 0 if timeout was reached.
+#ce
+Func WinWaitNotActive($title, $text = "", $timeout = 0)
+    #native code
+EndFunc
+
 ; FIXME: a au3doc type for flags?
 ; FIXME: a au3doc type for variables (both existing, non exesting and varaibles taht will be defined by the function)
 ; FIXME: a au3doc tag for setting @error and @extended macro's
