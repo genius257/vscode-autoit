@@ -876,4 +876,82 @@ export default {
         documentation: 'Current four-digit year',
         kind: CompletionItemKind.Constant
     },
+    '#include-once': {
+        title: '#include-once',
+        detail: '#include-once',
+        documentation: 'Specifies that the current file should only be included once.',
+        kind: CompletionItemKind.Constant
+    },
+    '#include': {
+        title: '#include',
+        detail: '#include',
+        documentation: 'Includes a file in the current script.',
+        kind: CompletionItemKind.Constant
+    },
+    '#cs': {
+        title: '#cs',
+        detail: '#cs',
+        documentation: 'Specify that an entire section of script should be commented out.',
+        kind: CompletionItemKind.Constant
+    },
+    '#comments-start': {
+        title: '#comments-start',
+        detail: '#comments-start',
+        documentation: 'Specify that an entire section of script should be commented out.',
+        kind: CompletionItemKind.Constant
+    },
+    '#ce': {
+        title: '#ce',
+        detail: '#ce',
+        documentation: 'End of a comment section.',
+        kind: CompletionItemKind.Constant
+    },
+    '#comments-end': {
+        title: '#comments-end',
+        detail: '#comments-end',
+        documentation: 'End of a comment section.',
+        kind: CompletionItemKind.Constant
+    },
+    '#NoTrayIcon': {
+        title: '#NoTrayIcon',
+        detail: '#NoTrayIcon',
+        documentation: 'Indicates that the AutoIt tray icon will not be shown when the script starts.',
+        kind: CompletionItemKind.Constant
+    },
+    '#OnAutoItStartRegister': {
+        title: '#OnAutoItStartRegister',
+        detail: '#OnAutoItStartRegister',
+        documentation: 'Registers a function to be called when AutoIt starts.',
+        kind: CompletionItemKind.Constant
+    },
+    '#pragma': {
+        title: '#pragma',
+        detail: '#pragma',
+        documentation: 'A special directive for controlling aspects of how the script is compiled.',
+        kind: CompletionItemKind.Constant
+    },
+    '#RequireAdmin': {
+        title: '#RequireAdmin',
+        detail: '#RequireAdmin',
+        documentation: 'Specifies that the current script requires full administrator rights to run.',
+        kind: CompletionItemKind.Constant
+    },
+    '#ignorefunc': {
+        title: '#ignorefunc',
+        detail: '#ignorefunc',
+        documentation: 'Specifies that the current function should be ignored by Au3Check.',
+        kind: CompletionItemKind.Constant
+    },
+    '#forceref': {
+        title: '#forceref',
+        detail: '#forceref',
+        documentation: 'Specifies that a variable should be seen as referenced by Au3Check.',
+        kind: CompletionItemKind.Constant
+    },
+    '#forcedef': {
+        title: '#forcedef',
+        detail: '#forcedef',
+        documentation: 'Specifies that a variable should be seen as defined by Au3Check.',
+        kind: CompletionItemKind.Constant
+    }
 } as documentationCollection;
