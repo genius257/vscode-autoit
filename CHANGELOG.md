@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2024-02-28
+
+### Added
+
+- Completion suggestions for PreProc options, like: `#cs` and `#NoTrayIcon` (issue #36).
+- Added support for function DocBlock summary and description on hover, completion suggestions and function signature help (issue #41).
+- Added support for function UDF header description and remarks on hover and completion suggestions (pull-request #42).
+- Added status bar item, for showing current target for the AutoIt3 parser.
+- Added color formatting to function hover, for the function signature text.
+
+### Changed
+
+- Improved information for built-in functions on hover, completion suggestions and function dignature help (issue #21).
+
+### Fixed
+
+- Problems with variable declaration lookup within function.
+- Lines with variables not being declared or modified was being parsed as a variable declaration instead of a normal variable identifier.
+- AutoIt3 parser did not parse keyword combinations in regards to variable declarations correctly (`Global`, `Local`, `Dim`, `Const`, `Static`).
+- Function signature help did not track parameter position based on text cursor position.
+- Missing equals sign for hover information on variable, when showing declaration value.
+- Hover information for Enums resulted in error messages.
+- Hover information for variables using the `Default` or `Null` keywords resulted in error messages.
+- leading `#` sign on text was ignored when showing completion suggestions.
+
 ## [1.3.0] - 2024-01-09
 
 ### Added
@@ -102,7 +127,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/genius257/vscode-autoit/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/genius257/vscode-autoit/compare/1.2.5...1.3.0
 [1.2.5]: https://github.com/genius257/vscode-autoit/compare/1.2.4...1.2.5
 [1.2.4]: https://github.com/genius257/vscode-autoit/compare/1.2.3...1.2.4
