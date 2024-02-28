@@ -126,7 +126,7 @@
         ]
     },
     "dependencies": {
-        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.5"
+        "autoit3-pegjs": "github:genius257/autoit3-pegjs#1.1.6"
     },
     "devDependencies": {
         "@types/jest": "^29.4.0",
