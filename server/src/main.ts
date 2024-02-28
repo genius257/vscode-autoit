@@ -112,7 +112,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 		const statementToRange = (statement: IncludeStatement): Range => ({
 			start: {
 				line: statement.location.start.line - 1,
-				character: statement.location.end.column - statement.file.length - 3
+				character: Math.max(0, statement.location.end.column - statement.file.length - 3)
 			},
 			end: {
 				line: statement.location.end.line - 1,
