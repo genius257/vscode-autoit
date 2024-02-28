@@ -159,7 +159,7 @@ export default class Script {
 
         // Adding native include at the top of the list, to make sure it is always processed first.
         this.includes.unshift({
-            statement: {type: "IncludeStatement", file: '', library: true, location: {source: '',start: {line: 0, column: 0, offset: 0}, end: {line: 0, column: 0, offset: 0}}},
+            statement: {type: "IncludeStatement", file: '', library: true, location: {source: '',start: {line: 1, column: 1, offset: 0}, end: {line: 1, column: 1, offset: 0}}},
             uri,
             promise: Promise.resolve(uri),
         });
