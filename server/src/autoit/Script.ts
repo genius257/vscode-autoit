@@ -785,7 +785,7 @@ export default class Script {
                         if (node.type === "IncludeStatement" && this.workspace !== undefined) {
                             let uri = this.includes.find((include) => include.statement.file === node.file && include.statement.library === node.library)?.uri;
                             if (typeof uri === "string") {
-                                declaration = this.workspace.get(uri)?.getIdentifierDeclarator(identifier, [], functions, depth + 1);
+                                declaration = this.workspace.get(uri)?.getIdentifierDeclarator(identifier, stack, functions, depth + 1);
                                 if ((declaration??null) !== null) {
                                     return NodeFilterAction.StopAndSkip;
                                 }
