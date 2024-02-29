@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improved information for built-in functions on hover, completion suggestions and function dignature help (issue #21).
+- Improved information for built-in functions on hover, completion suggestions and function signature help (issue #21).
 
 ### Fixed
 
