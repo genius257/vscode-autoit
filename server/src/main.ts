@@ -203,7 +203,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				});
 
 				const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
-				switch(previousIdentifierSibling.type) {
+				switch(previousIdentifierSibling?.type) {
 					case 'MultiLineComment':
 						const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
 						hoverContents.push({
