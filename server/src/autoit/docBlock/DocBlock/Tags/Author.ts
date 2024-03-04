@@ -22,7 +22,7 @@ export default class Author extends BaseTag {
     }
 
     static override create(body: string): Author|null {
-        const splitTagContent = body.match(/^([^<]*)(?:<([^>]*)>)?$/u);
+        const splitTagContent = body.match(/^([^<]*)(?:<([^>]*)>)?$/u) as null | (RegExpMatchArray & { 1: string });
 
         if (splitTagContent === null) {
             return null;
