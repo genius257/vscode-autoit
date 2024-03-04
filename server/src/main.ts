@@ -89,7 +89,13 @@ connection.onDidOpenTextDocument(params => {
 });
 
 connection.onDidChangeTextDocument(params => {
-    workspace.createOrUpdate(params.textDocument.uri, params.contentChanges[0].text);
+	const content = params.contentChanges[0];
+
+	if (content === undefined) {
+		return;
+	}
+
+    workspace.createOrUpdate(params.textDocument.uri, content.text);
 });
 
 connection.onDidCloseTextDocument(params => {
