@@ -17,9 +17,8 @@ export default class DescriptionFactory {
         const tags: Tag[] = [];
 
         for (let index = 1; index < count; index+=2) {
-            tags.push(this.tagFactory.create(tokens[index], context));
+            tags.push(this.tagFactory.create(tokens[index]!, context));
             tokens[index] = `%${++tagCount}$s`;
-            
         }
 
         //In order to allow "literal" inline tags, the otherwise invalid
@@ -27,7 +26,7 @@ export default class DescriptionFactory {
         //"%" is escaped to "%%" because of vsprintf.
         //See unit tests for examples.
         for (let index = 0; index < count; index+=2) {
-            tokens[index] = tokens[index].replace(/{@}/g, '@').replace(/{}/g, '}').replace(/%/g, '%%');
+            tokens[index] = tokens[index]!.replace(/{@}/g, '@').replace(/{}/g, '}').replace(/%/g, '%%');
         }
 
 
@@ -59,19 +58,19 @@ export default class DescriptionFactory {
         let startingSpaceCount = 9999999;
         for (let index = 1, iMax = lines.length; index < iMax; ++index) {
             // lines with a no length do not count as they are not indented at all
-            if (lines[index].trim() === '') {
+            if (lines[index]!.trim() === '') {
                 continue;
             }
 
             // determine the number of prefixing spaces by checking the difference in line length before and after
             // an ltrim
-            startingSpaceCount = Math.min(startingSpaceCount, lines[index].length - lines[index].trimStart().length);
+            startingSpaceCount = Math.min(startingSpaceCount, lines[index]!.length - lines[index]!.trimStart().length);
         }
 
         // strip the number of spaces from each line
         if (startingSpaceCount > 0) {
             for (let index = 1, iMax = lines.length; index < iMax; ++index) {
-                lines[index] = lines[index].substring(startingSpaceCount);
+                lines[index] = lines[index]!.substring(startingSpaceCount);
             }
         }
 

@@ -145,8 +145,8 @@ export default class Script {
         this.includes = currrentIncludes?.map((include) => {
             const cacheIndex = this.includeCache.findIndex(cacheItem => cacheItem.statement.file === include.file && cacheItem.statement.library === include.library);
             if (cacheIndex > -1) {
-                this.includeCache[cacheIndex].statement = include;
-                return this.includeCache[cacheIndex];
+                this.includeCache[cacheIndex]!.statement = include;
+                return this.includeCache[cacheIndex]!;
             }
 
             const newInclude = this.createInclude(include);

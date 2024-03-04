@@ -49,7 +49,7 @@ test('createFromMultilineComment', () => {
     expect(x.summary).toBe('Summary.');
     expect(x.description.toString()).toBe('Description');
     expect(x.tags).toHaveLength(1);
-    expect(x.tags[0].render()).toBe('@see something');
+    expect(x.tags[0]!.render()).toBe('@see something');
 });
 
 test('createFromLegacySingleLineComments', () => {

@@ -73,7 +73,7 @@ export default class DocBlockFactory {
         }
 
         const dockBlockdata: Record<string, string> = docBlockItems.reduce((result, item) => {
-            result[item[1].trim().toLowerCase()] = item[2].trim();
+            result[item[1]!.trim().toLowerCase()] = item[2]!.trim();
             return result;
         }, {});
 

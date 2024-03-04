@@ -25,7 +25,7 @@ export default class FqsenResolver {
 
         const namespaceAliases = context.getNamespaceAliases;
 
-        if (!(typeParts[0] in namespaceAliases)) {
+        if (!(typeParts[0]! in namespaceAliases)) {
             let namespace = context.getNamespace();
             if (namespace !== '') {
                 namespace += FqsenResolver.OPERATOR_NAMESPACE;
@@ -34,7 +34,7 @@ export default class FqsenResolver {
             return new Fqsen(`${FqsenResolver.OPERATOR_NAMESPACE}${namespace}${type}`);
         }
 
-        typeParts[0] = namespaceAliases[typeParts[0]];
+        typeParts[0] = namespaceAliases[typeParts[0]!];
 
         return new Fqsen(`${FqsenResolver.OPERATOR_NAMESPACE}${typeParts.join(FqsenResolver.OPERATOR_NAMESPACE)}`);
     }

@@ -68,7 +68,7 @@ export default class StandardTagFactory extends TagFactory {
 
         const [tagName, tagBody] = this.extractTagParts(tagLine);
 
-        return this.createTag(tagBody.trim(), tagName, context);
+        return this.createTag(tagBody!.trim(), tagName!, context);
     }
 
     public addParameter(name: string, value: unknown): void {
@@ -131,12 +131,12 @@ export default class StandardTagFactory extends TagFactory {
     private findHandlerClassName(tagName: string, context: TypeContext): TagLike|Factory {
         let handlerClassName: TagLike|Factory = Generic;
         if (tagName in this.tagHandlerMappings) {
-            handlerClassName = this.tagHandlerMappings[tagName];
+            handlerClassName = this.tagHandlerMappings[tagName]!;
         } else if (this.isAnnotation(tagName)) {
             // TODO: Annotation support is planned for a later stage and as such is disabled for now
             tagName = this.fqsenResolver.resolve(tagName, context).toString();
             if (tagName in this.annotationMappings) {
-                handlerClassName = this.annotationMappings[tagName];
+                handlerClassName = this.annotationMappings[tagName]!;
             }
         }
 

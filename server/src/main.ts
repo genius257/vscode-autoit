@@ -221,7 +221,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 						const comments: SingleLineComment[] = [previousIdentifierSibling];
 
 						for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
-							const element = precedingIdentifierSiblings[index];
+							const element = precedingIdentifierSiblings[index]!;
 							if (element.type !== "SingleLineComment") {
 								break;
 							}
@@ -312,7 +312,7 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 
 	// Loop though all unique included files and add completion items found in each.
 	for (let index = 0; index < includes.length; index++) {
-		let script = workspace.get(includes[index]);
+		let script = workspace.get(includes[index]!);
 		if (script !== undefined) {
 			let _completionItems = script.declarations.reduce<CompletionItem[]>((completionItems, declaration) => {
 				switch (declaration.type) {
@@ -359,11 +359,11 @@ function getCompletionItems(params: CompletionParams): CompletionItem[] {
 	completionItems = completionItems.filter((completionItem, index, array) => array.findIndex(x => x.label.toLowerCase() === completionItem.label.toLowerCase()) === index);
 
 	//Add all native suggestions
-	completionItems = completionItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({
-		label: nativeSuggestions[nativeSuggestion].title || "",
-		kind: nativeSuggestions[nativeSuggestion].kind,
-		documentation: nativeSuggestions[nativeSuggestion].documentation,
-		detail: nativeSuggestions[nativeSuggestion].detail,
+	completionItems = completionItems.concat(Object.keys(nativeSuggestions).map<CompletionItem>(nativeSuggestion => ({ //FIXME: Map Object.entries instead
+		label: nativeSuggestions[nativeSuggestion]!.title || "",
+		kind: nativeSuggestions[nativeSuggestion]!.kind,
+		documentation: nativeSuggestions[nativeSuggestion]!.documentation,
+		detail: nativeSuggestions[nativeSuggestion]!.detail,
 	})));
 
 	return completionItems;
@@ -396,22 +396,22 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 	if (callExpression.arguments.length > 0) {
 		// Make new array of deep cloned location ranges, to prevent modifying original AST location values.
 		const argumentLocations = callExpression.arguments.map<LocationRange>(argument => JSON.parse(JSON.stringify(argument.location)));
-		let textBetween = text.substring(callExpression.callee.location.end.offset, argumentLocations[0].start.offset);
+		let textBetween = text.substring(callExpression.callee.location.end.offset, argumentLocations[0]!.start.offset);
 		let parenthesisIndex = textBetween.indexOf('(');
-		argumentLocations[0].start = PositionHelper.offsetToLocation(argumentLocations[0].start.offset - Math.abs((textBetween.length - 1) - parenthesisIndex), text);
+		argumentLocations[0]!.start = PositionHelper.offsetToLocation(argumentLocations[0]!.start.offset - Math.abs((textBetween.length - 1) - parenthesisIndex), text);
 		if (argumentLocations.length > 1) {
 			for (let index = 0; index < argumentLocations.length - 1; index++) {
-				const argumentLeft = argumentLocations[index];
-				const argumentRight = argumentLocations[index + 1];
+				const argumentLeft = argumentLocations[index]!;
+				const argumentRight = argumentLocations[index + 1]!;
 				const textBetween = text.substring(argumentLeft.end.offset, argumentRight.start.offset);
 				const commaIndex = textBetween.indexOf(',');
 				argumentLeft.end = PositionHelper.offsetToLocation(argumentLeft.end.offset + commaIndex, text);
 				argumentRight.start = PositionHelper.offsetToLocation(argumentRight.start.offset - Math.abs((textBetween.length - 1) - commaIndex), text);
 			}
 		}
-		textBetween = text.substring(argumentLocations[argumentLocations.length - 1].end.offset, callExpression.location.end.offset);
+		textBetween = text.substring(argumentLocations[argumentLocations.length - 1]!.end.offset, callExpression.location.end.offset);
 		parenthesisIndex = textBetween.indexOf(')');
-		argumentLocations[argumentLocations.length - 1].end = PositionHelper.offsetToLocation(argumentLocations[argumentLocations.length - 1].end.offset + parenthesisIndex, text);
+		argumentLocations[argumentLocations.length - 1]!.end = PositionHelper.offsetToLocation(argumentLocations[argumentLocations.length - 1]!.end.offset + parenthesisIndex, text);
 
 		parameterIndex = argumentLocations.findIndex(location => PositionHelper.isPositonWithinLocationRange(params.position, location));
 	}
