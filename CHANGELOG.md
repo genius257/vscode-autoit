@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Variable declaration lookup would think the variable was witin a function scope of a included script, if it was within the same number of lines as the function declaration (issue #43)
+- Error message when hovering on a function declaration with no previous sibling elements.
 
 ## [1.4.0] - 2024-02-28
 
