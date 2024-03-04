@@ -34,7 +34,7 @@ export default class Description {
         return this.bodyTemplate
             .replace(
                 /{(\d+)}/g,
-                (match, number) => typeof tags[number] !== 'undefined' ? tags[number] : match
+                (match, number) => tags[number] ?? match
             ); // https://stackoverflow.com/a/4673436/3958400
     }
 
