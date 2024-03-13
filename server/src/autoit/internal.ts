@@ -180,6 +180,12 @@ export default {
         documentation: "",
         kind: CompletionItemKind.Keyword
     },
+    'Null': {
+        title: "Null",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword
+    },
     'Or': {
         title: "Or",
         detail: "",
