@@ -147,6 +147,21 @@ Func AutoItSetOption($option, $param = Default)
 EndFunc
 
 #cs
+# Changes the operation of various AutoIt functions/parameters.
+#
+# @option String $option The option to change.
+# @param Mixed $param The value to assign to the option.
+# The type and meaning vary by option.
+# If the param is not provided, then the function just returns the value already assigned to the option.
+# The keyword Default can be used for the parameter to reset the option to its default value.
+#
+# @return Mixed The value of the previous setting for the option.
+#ce
+Func Opt($option, $param = Default)
+    #native code
+EndFunc
+
+#cs
 # Retrieves the title of the AutoIt window.
 #
 # @return String The title of the AutoIt window.
