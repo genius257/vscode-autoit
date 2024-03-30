@@ -3,6 +3,20 @@
 #ce
 
 #cs
+# The command line options passed to AutoIt.
+#
+# @var Array
+#ce
+Global $CmdLine[]
+
+#cs
+# The raw command line passed to AutoIt.
+#
+# @var String
+#ce
+Global $CmdLineRaw = ""
+
+#cs
 # Calculates the absolute value of a number.
 #
 # A string has a value of zero.
