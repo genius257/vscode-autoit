@@ -1,4 +1,4 @@
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, LocationRange, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
+import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, LocationRange, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
 import { Diagnostic, DiagnosticSeverity, Position } from "vscode-languageserver";
 import { URI } from 'vscode-uri';
 import Parser from "./Parser";
@@ -19,8 +19,8 @@ export type ScriptHint = Diagnostic & { severity: typeof DiagnosticSeverity.Hint
 
 export type ScriptDiagnostic = ScriptError | ScriptWarning | ScriptInformation | ScriptHint;
 
-export type Node = SourceElement | AssignmentExpression | FormalParameter | VariableDeclaration | ArrayDeclaration | DefaultClause | CaseClause | SelectCaseClause | SwitchCaseValue | Macro | IncludeStatement | ElseIfClause | ElseClause;
-export type NodeList = SourceElements | ArgumentList | VariableDeclarationList | FormalParameterList | (DefaultClause | CaseClause | SelectCaseClause)[] | ArrayDeclarationElementList | CaseValueList | ElseIfClauses | ElseClause[];
+export type Node = SourceElement | AssignmentExpression | FormalParameter | VariableDeclaration | EnumDeclaration | ArrayDeclaration | DefaultClause | CaseClause | SelectCaseClause | SwitchCaseValue | Macro | IncludeStatement | ElseIfClause | ElseClause;
+export type NodeList = SourceElements | ArgumentList | VariableDeclarationList | EnumDeclarationList | FormalParameterList | (DefaultClause | CaseClause | SelectCaseClause)[] | ArrayDeclarationElementList | CaseValueList | ElseIfClauses | ElseClause[];
 
 export enum NodeFilterAction {
     /** Adds the current node and continues down the branch */
@@ -716,7 +716,7 @@ export default class Script {
      * @param functions Function map for fallback lookups
      * @param depth Recursive depth tracking variable
      */
-    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = [], functions: FunctionDeclaration[] = [], depth: number = 0): FormalParameter | FunctionDeclaration | VariableDeclaration | null {
+    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = [], functions: FunctionDeclaration[] = [], depth: number = 0): FormalParameter | FunctionDeclaration | VariableDeclaration | EnumDeclaration | null {
         if (identifier === null || identifier.type === "Macro") {
             return null;
         }
@@ -731,7 +731,7 @@ export default class Script {
             stack.push(uri);
         }
 
-        let declaration: FormalParameter | FunctionDeclaration | VariableDeclaration | undefined | null;
+        let declaration: FormalParameter | FunctionDeclaration | VariableDeclaration | EnumDeclaration | undefined | null;
 
         switch (identifier.type) {
             case "Identifier":

@@ -10,7 +10,7 @@ import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult,
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, SingleLineComment, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, SingleLineComment, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
@@ -168,7 +168,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		}
 	}
 
-	let identifier: FormalParameter | FunctionDeclaration | VariableDeclaration | null | undefined = null;
+	let identifier: FormalParameter | FunctionDeclaration | VariableDeclaration | EnumDeclaration | null | undefined = null;
 
 	identifier = identifier ?? workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
 	if (!identifier) {
