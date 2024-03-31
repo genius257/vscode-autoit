@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0]
+
+### Added
+
+- Null keyword added to completion suggestions.
+- built-in function `Opt` information on hover, completion suggestion and function signature help.
+- `$CmdLine` to completion suggestions
+- `$CmdLineRaw` to completion suggestions
+
+### Fixed
+
+- Array dimention specification on constant variable declarations was not seen as valid by parser (issue #48).
+- Volatile keyword on function declarations in parsing is no longer case-sensitive.
+
 ## [1.4.1] - 2024-03-05
 
 ### Fixed
@@ -134,7 +148,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.4.1...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.5.0...HEAD
+[1.5.0]: https://github.com/genius257/vscode-autoit/compare/1.4.1...1.5.0
 [1.4.1]: https://github.com/genius257/vscode-autoit/compare/1.4.0...1.4.1
 [1.4.0]: https://github.com/genius257/vscode-autoit/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/genius257/vscode-autoit/compare/1.2.5...1.3.0
