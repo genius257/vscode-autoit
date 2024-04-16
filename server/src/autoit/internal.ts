@@ -132,6 +132,12 @@ export default {
         documentation: "",
         kind: CompletionItemKind.Keyword
     },
+    'False': {
+        title: "False",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword,
+    },
     'For': {
         title: "For",
         detail: "",
@@ -239,6 +245,12 @@ export default {
         detail: "",
         documentation: "",
         kind: CompletionItemKind.Keyword
+    },
+    'True': {
+        title: "True",
+        detail: "",
+        documentation: "",
+        kind: CompletionItemKind.Keyword,
     },
     'Until': {
         title: "Until",
