@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.6.0]
+## [1.6.0] - 2024-07-31
 
 ### Added
 
 - Snippets for UDF comments and structures like function, loops
 
-## [1.5.0]
+## [1.5.0] - 2024-03-31
 
 ### Added
 
