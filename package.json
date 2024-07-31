@@ -123,6 +123,12 @@
                 "scopeName": "source.aut",
                 "path": "./syntaxes/aut.tmLanguage.json"
             }
+        ],
+        "snippets": [
+            {
+                "language": "au3",
+                "path": "./snippets/au3.json"
+            }
         ]
     },
     "dependencies": {
