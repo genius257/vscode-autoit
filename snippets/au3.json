@@ -48,7 +48,7 @@
         "description": "For in loop"
     },
     "Function": {
-        "prefix": "fun",
+        "prefix": "func",
         "body": [
             "Func ${1:FunctionName}($2)",
             "\t$0",
