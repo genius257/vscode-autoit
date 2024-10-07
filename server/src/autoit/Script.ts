@@ -317,7 +317,6 @@ export default class Script {
                 this.getNestedNodesAtFromArray(node.body, line, column, matches);
                 break;
             case "ForStatement":
-                this.getNestedNodesAt(node.id, line, column, matches);
                 this.getNestedNodesAt(node.init, line, column, matches);
                 this.getNestedNodesAt(node.test, line, column, matches);
                 this.getNestedNodesAt(node.update, line, column, matches);
@@ -535,10 +534,6 @@ export default class Script {
                 status = this.filterNestedNodes(node.body, fn, matches);
                 return status;
             case "ForStatement":
-                status = this.filterNestedNode(node.id, fn, matches);
-                if (status === NodeFilterAction.Stop || status === NodeFilterAction.StopAndSkip) {
-                    return status;
-                }
                 status = this.filterNestedNode(node.init, fn, matches);
                 if (status === NodeFilterAction.Stop || status === NodeFilterAction.StopAndSkip) {
                     return status;

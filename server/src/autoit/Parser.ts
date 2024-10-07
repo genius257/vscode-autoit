@@ -66,7 +66,7 @@ export default class Parser {
             case "ForInStatement":
                 return "For "+this.AstToString(ast.left)+" In "+this.AstToString(ast.right)+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nNext";
             case "ForStatement":
-                return "For "+this.AstToString(ast.id)+" = "+this.AstToString(ast.init)+" To "+this.AstToString(ast.test)+(ast.update === null ? "" : " Step "+this.AstToString(ast.update))+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nNext";
+                return "For "+this.AstToString(ast.init)+" To "+this.AstToString(ast.test)+(ast.update === null ? "" : " Step "+this.AstToString(ast.update))+"\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nNext";
             case "FunctionDeclaration":
                 return "Func "+ast.id.name+"("+this.AstArrayToStringArray(ast.params).join(", ")+")\n"+this.AstArrayToStringArray(ast.body).join("\n")+"\nEndFunc";
             case "Identifier":
