@@ -127,7 +127,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 		});
 		return Promise
 			.all(includes.map(include => include.promise))
-			.then<DocumentLink[]>(() => includes.filter(include => !/^internal:/.test(include.uri??'')).map<DocumentLink>(include => ({
+			.then<DocumentLink[]>(() => includes.filter(include => !/^internal:/.test(include.uri??'') && include.uri !== null).map<DocumentLink>(include => ({
 				range: statementToRange(include.statement),
 				target: include.uri ?? undefined,
 				tooltip: include.uri === null ? undefined : URI.parse(include.uri).fsPath
