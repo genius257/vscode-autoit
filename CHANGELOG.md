@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2024-10-24
+
+### Changed
+
+- Function snippet prefix word from `fun` to `func` [AutoIt-forum-post](https://www.autoitscript.com/forum/topic/209759-another-autoit-extension-for-visual-studio-code/?do=findComment&comment=1535803)
+- Upgrade dependency: autoit3-pegjs
+
+### Fixed
+
+- Variable declarations in For loops was ignored (issue #50)
+
 ## [1.6.0] - 2024-07-31
 
 ### Added
@@ -154,7 +165,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.6.0...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.6.1...HEAD
+[1.6.1]: https://github.com/genius257/vscode-autoit/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/genius257/vscode-autoit/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/genius257/vscode-autoit/compare/1.4.1...1.5.0
 [1.4.1]: https://github.com/genius257/vscode-autoit/compare/1.4.0...1.4.1
