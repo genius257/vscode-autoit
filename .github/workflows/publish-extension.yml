@@ -1,0 +1,23 @@
+name: Publish
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+      - run: npx vsce package --no-git-tag-version -o extension.vsix ${{ github.event.release.tag_name }}
+      - run: npx vsce publish --packagePath extension.vsix
+        env:
+          VSCE_PAT: ${{secrets.vsce_token}}
+      - run: npx ovsx publish extension.vsix
+        env:
+          OVSX_PAT: ${{secrets.ovsx_token}}
