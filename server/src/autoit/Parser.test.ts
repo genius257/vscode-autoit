@@ -1,3 +1,4 @@
+import { assert, expect, test, describe } from 'vitest'
 import Parser from "./Parser";
 
 describe("Parser", function () {

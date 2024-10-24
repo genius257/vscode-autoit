@@ -1,3 +1,4 @@
+import { assert, expect, test } from 'vitest'
 import { Location } from "autoit3-pegjs";
 import PositionHelper from "./PositionHelper";
 
