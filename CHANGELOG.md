@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Variable declarations in For loops was ignored (issue #50)
+- Invalid document links was created on include statements that failed to resove
 
 ## [1.6.0] - 2024-07-31
 
