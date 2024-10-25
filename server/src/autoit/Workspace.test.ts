@@ -1,4 +1,4 @@
-import { assert, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import Script from "./Script";
 import { Workspace } from "./Workspace";
 import { URI } from 'vscode-uri';

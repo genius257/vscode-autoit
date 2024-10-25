@@ -1,4 +1,4 @@
-import { assert, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import parser, { MultiLineComment, SingleLineComment } from "autoit3-pegjs";
 import DocBlockFactory from "./DocBlockFactory";
 

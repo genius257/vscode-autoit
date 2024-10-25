@@ -1,4 +1,4 @@
-import { assert, expect, test, describe } from 'vitest'
+import { expect, test, describe } from 'vitest'
 import Script from "./Script";
 
 describe("Script", function () {
