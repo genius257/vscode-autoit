@@ -30,7 +30,7 @@ export class Workspace {
     constructor(connection: Connection|null = null) {
         this.connection = connection;
 
-        const script = new Script(native, URI.from({scheme: 'internal', 'path': 'native'}));
+        const script = new Script(native, URI.from({scheme: 'autoit3doc', 'path': 'native.au3'}));
         script.addReference();// we falsely increment the reference count here, to make sure it is never released.
         this.add(script);
     }

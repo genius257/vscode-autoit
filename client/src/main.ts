@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionContext, StatusBarAlignment, StatusBarItem, TextEditor, Uri, window, workspace } from 'vscode';
+import { CancellationToken, ExtensionContext, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
+import native from "../../server/src/autoit/native.au3?raw";
 
 import { LanguageClient } from 'vscode-languageclient/browser';
 
@@ -46,6 +47,14 @@ export function activate(context: ExtensionContext) {
 
 		console.log('autoit3-lsp-web-extension server is ready');
 	});
+
+	const myProvider = new class implements TextDocumentContentProvider {
+		provideTextDocumentContent(uri: Uri, token: CancellationToken): ProviderResult<string> {
+			return native;
+		}
+	};
+
+	context.subscriptions.push(workspace.registerTextDocumentContentProvider('autoit3doc', myProvider));
 
 	statusBarItem = window.createStatusBarItem("genius257.au3.version", StatusBarAlignment.Right, 99);
 	//statusBarItem.command = "";

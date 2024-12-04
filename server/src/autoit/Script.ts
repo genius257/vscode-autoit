@@ -155,7 +155,7 @@ export default class Script {
         }) ?? [];
 
         //TODO: This URI needs to only be declared once, and imported wherever needed.
-        const uri = URI.from({scheme: 'internal', 'path': 'native'}).toString();
+        const uri = URI.from({scheme: 'autoit3doc', 'path': 'native.au3'}).toString();
 
         // Adding native include at the top of the list, to make sure it is always processed first.
         this.includes.unshift({
