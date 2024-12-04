@@ -45,6 +45,10 @@ const clientConfig = {
 					},
 				],
 			},
+			{
+				resourceQuery: /raw/,
+				type: 'asset/source',
+			},
 		],
 	},
 	externals: {
