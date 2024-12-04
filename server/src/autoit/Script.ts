@@ -201,6 +201,19 @@ export default class Script {
                 this.assertCannotReach(severity, `Unsupported diagnostic severity: "${severity}"`);
         }
 
+        // <message>. <source>(<code>)
+        // If codeDescription href is set, code will be wrapped in a link with that href
+        // diagnostic.code = "code";
+        /*
+        diagnostic.codeDescription = {
+            href: "https://example.com",
+        };
+        */
+       //diagnostic.source = "source";
+       //diagnostic.tags = [DiagnosticTag.Unnecessary, DiagnosticTag.Deprecated];
+
+        diagnostic.source ??= "AutoIt";
+
         diagnosticArray.push(diagnostic);
         this.triggerDiagnostics();
     }
