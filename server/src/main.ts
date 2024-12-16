@@ -64,17 +64,6 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 // const documents = new TextDocuments(TextDocument);
 // documents.listen(connection);
 
-function debounce<F extends Function>(cb: F, delay = 250) {
-	let timeout
-  
-	return <F>(<any>((...args) => {
-	  clearTimeout(timeout)
-	  timeout = setTimeout(() => {
-		cb(...args)
-	  }, delay)
-	}));
-  }
-
 const workspace = new Workspace(connection);
 workspace.onDiagnostics(debounce(function (uri, diagnostics) {
     //connection.window.showWarningMessage("onDiagnostics");
