@@ -147,20 +147,60 @@ export default class Script {
         //const previousIncludes = this.includes;
         const currrentIncludes = this.program?.body.filter((node): node is IncludeStatement => node.type === "IncludeStatement");
 
+        // function for comparing include statements
+        const includeStatementComparator = (a: IncludeStatement, b: IncludeStatement): boolean => {
+            return a.file === b.file && a.library === b.library;
+        };
+
         //const detached = previousIncludes.filter(previous => currrentIncludes?.findIndex(current => previous.statement.file === current.file && previous.statement.library === current.library) === -1);
         //const added = currrentIncludes?.filter(current => previousIncludes?.findIndex(previous => previous.statement.file === current.file && previous.statement.library === current.library) === -1);
 
+        // Get the detached includes
+        const detached = this.includes.filter(
+          (include) =>
+            currrentIncludes?.findIndex((current) =>
+              includeStatementComparator(include.statement, current)
+            ) === -1
+        );
+
+        // release the detached includes
+        detached.forEach((include) => {
+            include.promise.then(value => {
+                if (value !== null) {
+                    this.workspace?.get(value)?.release();
+                }
+            });
+        });
+
+        // Update the list of includes
         this.includes = currrentIncludes?.map((include) => {
+            // Check if the include statement is already cached
             const cacheIndex = this.includeCache.findIndex(cacheItem => cacheItem.statement.file === include.file && cacheItem.statement.library === include.library);
+            // If it is, use the cached version
             if (cacheIndex > -1) {
                 this.includeCache[cacheIndex]!.statement = include;
+                this.includeCache[cacheIndex]!.promise.then(value => {if (value !== null) {this.workspace?.get(value)?.addReference()}});
                 return this.includeCache[cacheIndex]!;
             }
 
+            // If not, create a new include, and add it to the cache
             const newInclude = this.createInclude(include);
             this.includeCache.push(newInclude);
             return newInclude;
         }) ?? [];
+
+        // Report includes that could not be resolved to the user
+        this.includes.forEach(include => include.promise.then(value => {
+            if (value === null) {
+                this.addError({
+                    message: `Could not resolve include: '${include.statement.file}'`,
+                    range: PositionHelper.locationRangeToRange(include.statement.location),
+                });
+
+                //return;
+            }
+
+        }));
 
         //TODO: This URI needs to only be declared once, and imported wherever needed.
         const uri = URI.from({scheme: 'autoit3doc', 'path': 'native.au3'}).toString();
