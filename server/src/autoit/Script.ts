@@ -4,6 +4,7 @@ import { URI } from 'vscode-uri';
 import Parser from "./Parser";
 import { Workspace } from "./Workspace";
 import PositionHelper from "./PositionHelper";
+import debounce from "../utils/debounce";
 
 export type Include = {
     /** Resolved include statement URI path */
@@ -83,10 +84,17 @@ export default class Script {
         this.triggerDiagnostics();
     }
 
+    protected debouncedTriggerDiagnostics: (() => void) | null = null;
+
     public triggerDiagnostics(): void {
-        if (this.uri !== undefined) {
-            this.workspace?.triggerDiagnostics(this.uri.toString(), this.getDiagnostics());
-        }
+        
+        this.debouncedTriggerDiagnostics ??= debounce(() => {
+            if (this.uri !== undefined) {
+                this.workspace?.triggerDiagnostics(this.uri.toString(), this.getDiagnostics());
+            }
+        }, 100);
+
+        this.debouncedTriggerDiagnostics();
     }
 
     protected parseText(text: string) {

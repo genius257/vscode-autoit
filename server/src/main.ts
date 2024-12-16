@@ -65,13 +65,13 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 // documents.listen(connection);
 
 const workspace = new Workspace(connection);
-workspace.onDiagnostics(debounce(function (uri, diagnostics) {
+workspace.onDiagnostics(function (uri, diagnostics) {
     //connection.window.showWarningMessage("onDiagnostics");
     connection.sendDiagnostics({
         uri,
         diagnostics,
     });
-}, 100))
+})
 
 connection.onDidOpenTextDocument(params => {
 	workspace.createOrUpdate(params.textDocument.uri, params.textDocument.text);
