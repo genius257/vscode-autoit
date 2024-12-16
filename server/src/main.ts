@@ -422,11 +422,11 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 				return null;
 			}
 
-			if (params.context.activeSignatureHelp.activeParameter !== null && parameterIndex !== -1){
-				params.context.activeSignatureHelp.activeParameter = parameterIndex;
+			if (params.context.activeSignatureHelp.activeParameter !== undefined && parameterIndex !== -1){
+				params.context.activeSignatureHelp.activeParameter = parameterIndex ?? undefined;
 			}
 		} else {
-			params.context.activeSignatureHelp.activeParameter = null;
+			params.context.activeSignatureHelp.activeParameter = undefined;
 		}
 
 		return params.context.activeSignatureHelp;
@@ -458,7 +458,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 				})),
 			}
 		],
-		activeParameter: parameterIndex,
+		activeParameter: parameterIndex ?? undefined,
 		activeSignature: 0,
 	};
 }

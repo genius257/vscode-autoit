@@ -32,10 +32,7 @@ export function activate(context: ExtensionContext) {
 
 	const client = createWorkerLanguageClient(context, clientOptions);
 
-	const disposable = client.start();
-	context.subscriptions.push(disposable);
-
-	client.onReady().then(() => {
+	client.start().then(() => {
 		client.onRequest("openTextDocument", (uri: string) => {
 			const file = Uri.parse(uri);
 			return workspace.openTextDocument(file).then(textDocument => {
