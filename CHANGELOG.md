@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Error diagnostic message for include statements that fail to resolve.
+- AutoIt (extension reference) is now shown as the source to the right of diagnostic messages
+
+### Fixed
+
+- Peek/goto function declaration for build-in functions would fail
+- All script diagnostics were handled by the same global debounce, resulting in some script diagnostics could be omitted
+
 ## [1.6.1] - 2024-10-24
 
 ### Changed
