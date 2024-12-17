@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Peek/goto function declaration for build-in functions would fail
 - All script diagnostics were handled by the same global debounce, resulting in some script diagnostics could be omitted
+- Absolute path resolve for include statements
 
 ## [1.6.1] - 2024-10-24
 
