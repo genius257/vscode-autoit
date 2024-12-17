@@ -3,6 +3,7 @@ import { Connection, Diagnostic } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from "./Script";
 import native from "./native.au3?raw";
+import { isAbsolutePath } from './Path';
 
 export type scriptList = {
     [uri: string]: Script | undefined,
@@ -144,8 +145,11 @@ export class Workspace {
     }
 
     protected includeLocal(uri: string, documentUri: string, promise: IncludePromise): IncludePromise {
+        // If document uri starts with 'untitled:', it is not yet saved to disk
+        const isUntitled = documentUri.startsWith('untitled:');
+
         //HACK: currently i check if the documentUri startsWith 'untitled:' to detect files not yet saved to disk. I cannot find a better solution so far...
-        return promise.then(x => x === null && !documentUri.startsWith('untitled:') ? this.openTextDocument(Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
+        return promise.then(x => x === null && !isUntitled ? this.openTextDocument(isAbsolutePath(uri) ? URI.file(uri) : Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
     }
 
     protected openTextDocument(uri: URI): IncludePromise {
