@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2024-12-17
+
 ### Added
 
 - Error diagnostic message for include statements that fail to resolve.
@@ -177,7 +179,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.6.1...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.7.0...HEAD
+[1.7.0]: https://github.com/genius257/vscode-autoit/compare/1.6.1...1.7.0
 [1.6.1]: https://github.com/genius257/vscode-autoit/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/genius257/vscode-autoit/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/genius257/vscode-autoit/compare/1.4.1...1.5.0
