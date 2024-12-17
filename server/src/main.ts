@@ -13,7 +13,7 @@ import nativeSuggestions from "./autoit/internal";
 import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, SingleLineComment, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import PositionHelper from './autoit/PositionHelper';
-import { Workspace } from './autoit/Workspace';
+import { AutoIt3Configuration, Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
 import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
 
@@ -295,15 +295,21 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 	];
 }
 
-function getCompletionItems(params: CompletionParams): CompletionItem[] {
+async function getCompletionItems(params: CompletionParams): Promise<CompletionItem[]> {
 	let completionItems: CompletionItem[] = [];
 	const includes: string[] = [params.textDocument.uri];
+	const configuration: AutoIt3Configuration = await connection.workspace.getConfiguration("autoit3");
 
 	// Loop though all unique included files and add completion items found in each.
 	for (let index = 0; index < includes.length; index++) {
 		let script = workspace.get(includes[index]!);
 		if (script !== undefined) {
 			let _completionItems = script.declarations.reduce<CompletionItem[]>((completionItems, declaration) => {
+				if (configuration.ignoreInternalInIncludes && declaration.id.name.startsWith("__")) {
+					// If the declaration is an internal variable and the setting is true for ignoring those, we return early.
+					return completionItems;
+				}
+
 				switch (declaration.type) {
 					case "FunctionDeclaration":
 						completionItems.push({

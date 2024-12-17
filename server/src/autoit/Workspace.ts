@@ -17,9 +17,14 @@ export type IncludeResolve = {uri: URI, text: string};
 export type IncludePromise = Promise<IncludeResolve|null>;
 
 export type AutoIt3Configuration = {
+    /** The path to a AutoIt3 installation directory. */
     "installDir": string|null,
+    /** Directories that should be searched for files when intellisense are resolving #include's in addition to the standard locations */
     "userDefinedLibraries": string[],
+    /** The target AutoIt3 version for the intellisense. */
     "version": string,
+    /** Will ignore variables and function declarations in includes, prefixed with \"__\", indicating internal usage */
+    "ignoreInternalInIncludes": boolean,
 };
 
 export class Workspace {

@@ -77,6 +77,12 @@
                         "3.3.14.5"
                     ],
                     "description": "The target AutoIt3 version for the intellisense."
+                },
+                "autoit3.ignoreInternalInIncludes": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Will ignore variables and function declarations in includes, prefixed with \"__\", indicating internal usage"
                 }
             }
         },
