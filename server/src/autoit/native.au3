@@ -131,8 +131,6 @@ EndFunc
 #cs
 # Calculates the arctangent of a number.
 #
-# The result of 4 * ATan(1) is pi.
-#
 # @param Mixed $expression Any valid numeric expression.
 #
 # @return Double The trigonometric arctangent of the number. Result is in radians.
@@ -274,27 +272,24 @@ EndFunc
 #cs
 # Performs a bitwise AND operation.
 #
-# Remember hex notation can be used for numbers.
-# BitAND() returns 1 in each bit position where all input arguments have a 1 in the corresponding position and 0 in all others.
-#
 # Bit operations are performed as 32-bit integers.
 #
-# @param Int $value1 The first number
-# @param Int $value2 The second number
-# @param Int $value3 The third number
-# @param Int $value4 The fourth number
-# @param Int $value5 The fifth number
-# @param Int $value6 The sixth number
-# @param Int $value7 The seventh number
-# @param Int $value8 The eighth number
-# @param Int $value9 The ninth number
-# @param Int $value10 The tenth number
-# @param Int $value11 The eleventh number
-# @param Int $value12 The twelfth number
-# @param Int $value13 The thirteenth number
-# @param Int $value14 The fourteenth number
-# @param Int $value15 The fifteenth number
-# @param Int $value16 The sixteenth number
+# @param Int $value1
+# @param Int $value2
+# @param Int $value3
+# @param Int $value4
+# @param Int $value5
+# @param Int $value6
+# @param Int $value7
+# @param Int $value8
+# @param Int $value9
+# @param Int $value10
+# @param Int $value11
+# @param Int $value12
+# @param Int $value13
+# @param Int $value14
+# @param Int $value15
+# @param Int $value16
 #
 # @return Int32 The value of the parameters bitwise-AND'ed together.
 #ce
@@ -304,10 +299,6 @@ EndFunc
 
 #cs
 # Performs a bitwise NOT operation.
-#
-# Remember hex notation can be used for numbers.
-# Remember that in 2's-complement notation, BitNOT() is functionally equivalent to adding 1 and negating the result.
-# Also remember that NOT changes a 0 bit to 1 and vice-versa.
 #
 # Bit operations are performed as 32-bit integers.
 #
@@ -322,27 +313,24 @@ EndFunc
 #cs
 # Performs a bitwise OR operation.
 #
-# Remember hex notation can be used for numbers.
-# BitOR() returns 0 in each bit position where all input arguments have a 0 in the corresponding position and 1 wherever there is at least one 1-bit.
-#
 # Bit operations are performed as 32-bit integers.
 #
-# @param Int $value1 The first number
-# @param Int $value2 The second number
-# @param Int $value3 The third number
-# @param Int $value4 The fourth number
-# @param Int $value5 The fifth number
-# @param Int $value6 The sixth number
-# @param Int $value7 The seventh number
-# @param Int $value8 The eighth number
-# @param Int $value9 The ninth number
-# @param Int $value10 The tenth number
-# @param Int $value11 The eleventh number
-# @param Int $value12 The twelfth number
-# @param Int $value13 The thirteenth number
-# @param Int $value14 The fourteenth number
-# @param Int $value15 The fifteenth number
-# @param Int $value16 The sixteenth number
+# @param Int $value1
+# @param Int $value2
+# @param Int $value3
+# @param Int $value4
+# @param Int $value5
+# @param Int $value6
+# @param Int $value7
+# @param Int $value8
+# @param Int $value9
+# @param Int $value10
+# @param Int $value11
+# @param Int $value12
+# @param Int $value13
+# @param Int $value14
+# @param Int $value15
+# @param Int $value16
 #
 # @return Int32 The two parameters bitwise-OR'ed together.
 #ce
@@ -352,8 +340,6 @@ EndFunc
 
 #cs
 # Performs a bit shifting operation, with rotation.
-#
-# Remember hex notation can be used for numbers.
 #
 # @param Int $value The number to operate on
 # @param Int $shift Number of bits to rotate to the left (negative numbers rotate right).
@@ -371,9 +357,6 @@ EndFunc
 #cs
 # Performs a bit shifting operation.
 #
-# Remember hex notation can be used for numbers.
-# Right shifts are equivalent to halving; left shifts to doubling.
-#
 # Bit operations are performed as 32-bit integers.
 #
 # @param Int $value The number to be shifted.
@@ -388,27 +371,24 @@ EndFunc
 #cs
 # Performs a bitwise exclusive OR (XOR) operation.
 #
-# Remember hex notation can be used for numbers.
-# BitXOR() returns 1 in a bit position if there are an odd number of 1's in the corresponding bit position in all the input arguments, and 0 otherwise.
-#
 # Bit operations are performed as 32-bit integers.
 #
-# @param Int $value1 The first number
-# @param Int $value2 The second number
-# @param Int $value3 The third number
-# @param Int $value4 The fourth number
-# @param Int $value5 The fifth number
-# @param Int $value6 The sixth number
-# @param Int $value7 The seventh number
-# @param Int $value8 The eighth number
-# @param Int $value9 The ninth number
-# @param Int $value10 The tenth number
-# @param Int $value11 The eleventh number
-# @param Int $value12 The twelfth number
-# @param Int $value13 The thirteenth number
-# @param Int $value14 The fourteenth number
-# @param Int $value15 The fifteenth number
-# @param Int $value16 The sixteenth number
+# @param Int $value1 The
+# @param Int $value2 The
+# @param Int $value3 The
+# @param Int $value4 The
+# @param Int $value5 The
+# @param Int $value6 The
+# @param Int $value7 The
+# @param Int $value8 The
+# @param Int $value9 The
+# @param Int $value10 The
+# @param Int $value11 The
+# @param Int $value12 The
+# @param Int $value13 The
+# @param Int $value14 The
+# @param Int $value15 The
+# @param Int $value16 The
 #
 # @return Int32 The value of the parameters bitwise-XOR'ed together.
 #ce
@@ -517,8 +497,6 @@ EndFunc
 # Returns a character corresponding to an ASCII code.
 #
 # See the ASCII Character Code table for a complete list of available values.
-#
-# Chr(48) == "0", Chr(57) == "9", Chr(65) == "A", Chr(90) == "Z", Chr(97) == "a", Chr(122) == "z", etc.
 #
 # @param Int $ASCIIcode An ASCII code in the range 0-255
 #
@@ -926,8 +904,6 @@ EndFunc
 
 #cs
 # Calculates the cosine of a number.
-#
-# 1° = pi / 180 radians.
 #
 # @param Number $expression Value in radians.
 #
@@ -2702,11 +2678,11 @@ EndFunc
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Mixed $data Combo, List, ListView, ListViewItem: An Opt("GUIDataSeparatorChar",...) separated list of items.
-Progress: The percentage.
-Slider: The value.
-Button, Checkbox, Combo, Edit, Group, Input, Label, List, Menu, MenuItem, Radio, TabItem, TreeViewItem: Replaces the text.
-Date : The date or time depending the style of the control and the regional settings.
-Dummy: The value.
+# Progress: The percentage.
+# Slider: The value.
+# Button, Checkbox, Combo, Edit, Group, Input, Label, List, Menu, MenuItem, Radio, TabItem, TreeViewItem: Replaces the text.
+# Date : The date or time depending the style of the control and the regional settings.
+# Dummy: The value.
 # @param Mixed $default
 # Combo, List: The default value.
 # Edit, Input: If non-empty (""), the string is inserted at the current insertion point (caret).
@@ -2747,7 +2723,7 @@ EndFunc
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $size Fontsize (default is 8.5).
 # @param Int $weight The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used.
-The following values are defined for convenience.
+# The following values are defined for convenience.
 # $FW_DONTCARE = 0 (Use the default font weight)
 # $FW_THIN = 100
 # $FW_EXTRALIGHT = 200
@@ -3042,7 +3018,7 @@ EndFunc
 #
 # @param Int $size Fontsize (default is 8.5).
 # @param Int $weight The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used.
-The following values are defined for convenience.
+# The following values are defined for convenience.
 # $FW_DONTCARE = 0 (Use the default font weight)
 # $FW_THIN = 100
 # $FW_EXTRALIGHT = 200
@@ -4758,38 +4734,38 @@ EndFunc
 # Returns a formatted string (similar to the C sprintf() function).
 #
 # @param String $format The format string.
-# @param Mixed $var1 The first variable to format.
-# @param Mixed $var2 The second variable to format.
-# @param Mixed $var3 The third variable to format.
-# @param Mixed $var4 The fourth variable to format.
-# @param Mixed $var5 The fifth variable to format.
-# @param Mixed $var6 The sixth variable to format.
-# @param Mixed $var7 The seventh variable to format.
-# @param Mixed $var8 The eighth variable to format.
-# @param Mixed $var9 The ninth variable to format.
-# @param Mixed $var10 The tenth variable to format.
-# @param Mixed $var11 The eleventh variable to format.
-# @param Mixed $var12 The twelfth variable to format.
-# @param Mixed $var13 The thirteenth variable to format.
-# @param Mixed $var14 The fourteenth variable to format.
-# @param Mixed $var15 The fifteenth variable to format.
-# @param Mixed $var16 The sixteenth variable to format.
-# @param Mixed $var17 The seventeenth variable to format.
-# @param Mixed $var18 The eighteenth variable to format.
-# @param Mixed $var19 The nineteenth variable to format.
-# @param Mixed $var20 The twentieth variable to format.
-# @param Mixed $var21 The twenty-first variable to format.
-# @param Mixed $var22 The twenty-second variable to format.
-# @param Mixed $var23 The twenty-third variable to format.
-# @param Mixed $var24 The twenty-fourth variable to format.
-# @param Mixed $var25 The twenty-fifth variable to format.
-# @param Mixed $var26 The twenty-sixth variable to format.
-# @param Mixed $var27 The twenty-seventh variable to format.
-# @param Mixed $var28 The twenty-eighth variable to format.
-# @param Mixed $var29 The twenty-ninth variable to format.
-# @param Mixed $var30 The thirtieth variable to format.
-# @param Mixed $var31 The thirty-first variable to format.
-# @param Mixed $var32 The thirty-second variable to format.
+# @param Mixed $var1
+# @param Mixed $var2
+# @param Mixed $var3
+# @param Mixed $var4
+# @param Mixed $var5
+# @param Mixed $var6
+# @param Mixed $var7
+# @param Mixed $var8
+# @param Mixed $var9
+# @param Mixed $var10
+# @param Mixed $var11
+# @param Mixed $var12
+# @param Mixed $var13
+# @param Mixed $var14
+# @param Mixed $var15
+# @param Mixed $var16
+# @param Mixed $var17
+# @param Mixed $var18
+# @param Mixed $var19
+# @param Mixed $var20
+# @param Mixed $var21
+# @param Mixed $var22
+# @param Mixed $var23
+# @param Mixed $var24
+# @param Mixed $var25
+# @param Mixed $var26
+# @param Mixed $var27
+# @param Mixed $var28
+# @param Mixed $var29
+# @param Mixed $var30
+# @param Mixed $var31
+# @param Mixed $var32
 #
 # @return String
 #ce
@@ -5183,8 +5159,6 @@ EndFunc
 
 #cs
 # Calculates the tangent of a number.
-#
-# 1° = pi / 180 radians.
 #
 # @param Number $number Value in radians.
 #
