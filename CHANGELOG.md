@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- prepended syntax error text for related diagnostic messages
+
 ## [1.7.0] - 2024-12-17
 
 ### Added
 
 - Error diagnostic message for include statements that fail to resolve.
 - AutoIt (extension reference) is now shown as the source to the right of diagnostic messages
+- Setting for excluding internal declarations in included files from completion suggestions
 
 ### Fixed
 

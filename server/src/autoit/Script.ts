@@ -107,7 +107,7 @@ export default class Script {
             }
 
             this.addError({
-                message: e.message,
+                message: `Syntax error: ${e.message}`,
                 range: PositionHelper.locationRangeToRange(e.location),
             });
         }
