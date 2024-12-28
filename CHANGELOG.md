@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- all 255 parameters for all relevant build in functions
+
 ### Changed
 
 - prepended syntax error text for related diagnostic messages
