@@ -1,6 +1,9 @@
 import { expect, test } from 'vitest'
 import parser, { MultiLineComment, SingleLineComment } from "autoit3-pegjs";
 import DocBlockFactory from "./DocBlockFactory";
+import Author from './DocBlock/Tags/Author';
+import InvalidTag from './DocBlock/Tags/InvalidTag';
+import Generic from './DocBlock/Tags/Generic';
 
 test('stripDocComment', () => {
     const s = `
@@ -85,4 +88,52 @@ test('createFromLegacySingleLineComments', () => {
     expect(x?.summary).toBe('Returns the current mouse position');
     expect(x?.description.toString()).toBe('This function takes into account the current MouseCoordMode setting when  obtaining  the  mouse  position.\nIt will also convert screen to client coordinates based on the parameters passed.');
     expect(x?.tags).toHaveLength(0);
+});
+
+test('author tag', () => {
+    const s = `
+    #cs
+    # @author paul
+    #ce
+    `;
+
+    const ast = parser.parse(s);
+
+    const comment = ast.body.find(((element): element is MultiLineComment => element.type === "MultiLineComment"));
+
+    if (comment === undefined) {
+        throw new Error('Error generating MultiLineComment AST element');
+    }
+    
+    const factory = DocBlockFactory.createInstance();
+    const x = factory.createFromMultilineComment(comment);
+    expect(x.summary).toBe('');
+    expect(x.description.toString()).toBe('');
+    expect(x.tags).toHaveLength(1);
+    expect(x.tags[0]).instanceOf(Author);
+    expect(x.tags[0]!.render()).toBe('@author paul');
+});
+
+test('not supported tag', () => {
+    const s = `
+    #cs
+    # @foo paul
+    #ce
+    `;
+
+    const ast = parser.parse(s);
+
+    const comment = ast.body.find(((element): element is MultiLineComment => element.type === "MultiLineComment"));
+
+    if (comment === undefined) {
+        throw new Error('Error generating MultiLineComment AST element');
+    }
+    
+    const factory = DocBlockFactory.createInstance();
+    const x = factory.createFromMultilineComment(comment);
+    expect(x.summary).toBe('');
+    expect(x.description.toString()).toBe('');
+    expect(x.tags).toHaveLength(1);
+    expect(x.tags[0]).instanceOf(Generic);
+    expect(x.tags[0]?.getName()).toBe('foo');
 });
