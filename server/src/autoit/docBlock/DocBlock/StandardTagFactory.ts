@@ -2,7 +2,6 @@ import Tag, { TagLike } from "./Tag";
 import TagFactory from "./TagFactory";
 import Author from "./Tags/Author";
 import Factory from "./Tags/Factory/Factory";
-import {FormalParameter} from "autoit3-pegjs";
 import FqsenResolver from "../FqsenResolver";
 import TypeContext from "../Types/Context";
 import InvalidTag from "./Tags/InvalidTag";
@@ -37,11 +36,6 @@ export default class StandardTagFactory extends TagFactory {
     };
 
     private annotationMappings: Record<string, TagLike> = {};
-
-    /**
-     * A lazy-loading cache containing parameters for each tagHandler that has been used.
-     */
-    private tagHandlerParameterCache: FormalParameter[][] = [];
 
     private fqsenResolver: FqsenResolver; //FIXME
 
@@ -109,18 +103,9 @@ export default class StandardTagFactory extends TagFactory {
 
     private createTag(body: string, name: string, context: TypeContext): Tag {
         const handlerClassName = this.findHandlerClassName(name, context);
-        const _arguments = this.getArgumentsForParametersFromWiring(
-            this.fetchParametersForHandlerFactoryMethod(handlerClassName),
-            this.getServiceLocatorWithDynamicParameters(context, name, body),
-        );
-
-        if ('tagLine' in _arguments) {
-            _arguments['tagLine'] = `@${name} ${body}`;
-        }
 
         try {
-            // @ts-expect-error
-            const tag = handlerClassName.create(..._arguments);
+            const tag = handlerClassName === Generic ? (handlerClassName as typeof Generic).create(body, name) : handlerClassName.create(body);
 
             return tag ?? InvalidTag.create(body, name);
         } catch (e) {
@@ -143,46 +128,6 @@ export default class StandardTagFactory extends TagFactory {
         return handlerClassName;
     }
 
-    private getArgumentsForParametersFromWiring(parameters: FormalParameter[], locator: unknown[]): unknown[] {
-        const _arguments = [];
-
-        parameters.forEach(parameter => {
-            // const type = parameter.id.name;
-            let typeHint = null;
-            //if (type instanceof ReflectionNamedType) {} //FIXME:
-
-            const parameterName = parameter.id.name
-            if (typeHint !== null && typeHint in locator) {
-                _arguments[parameterName] = locator[typeHint];
-                return;
-            }
-
-            if (parameterName in locator) {
-                _arguments[parameterName] = locator[parameterName];
-                return;
-            }
-
-            _arguments[parameterName] = null;
-        });
-
-        return _arguments;
-    }
-
-    private fetchParametersForHandlerFactoryMethod(handler: {new (...args: any[]): {}}|Factory): FormalParameter[] {
-        const handlerClassName = handler instanceof Factory ? handler.constructor.name : handler.name;
-
-        if (!(handlerClassName in this.tagHandlerParameterCache)) {
-            const methodReflection = new ReflectionMethod(handlerClassName, 'create'); //FIXME: fetch function declaration from workspace or context(script)
-            this.tagHandlerParameterCache[handlerClassName] = methodReflection.getParameters();
-        }
-
-        return this.tagHandlerParameterCache[handlerClassName];
-    }
-
-    private getServiceLocatorWithDynamicParameters(context: TypeContext, tagName: string, tagBody: string): unknown[] {
-        return {...this.serviceLocator, ...{name: tagName, body: tagBody, [TypeContext.name]: context}};
-    }
-
     private isAnnotation(tegContext: string): boolean {
         // 1. Contains a namespace separator
         // 2. Contains parenthesis
@@ -190,14 +135,5 @@ export default class StandardTagFactory extends TagFactory {
         //    of the annotation class name matches the found tag name
 
         return false;
-    }
-}
-
-class ReflectionMethod {
-    //FIXME
-    public constructor(name: string, method: string) {}
-
-    public getParameters(): FormalParameter[] {
-        return [];
     }
 }
