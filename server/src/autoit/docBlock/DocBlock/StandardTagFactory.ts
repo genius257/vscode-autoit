@@ -6,6 +6,7 @@ import FqsenResolver from "../FqsenResolver";
 import TypeContext from "../Types/Context";
 import InvalidTag from "./Tags/InvalidTag";
 import Generic from "./Tags/Generic";
+import LinkTag from "./Tags/Link";
 
 // https://github.com/phpDocumentor/ReflectionDocBlock/blob/master/src/DocBlock/StandardTagFactory.php
 
@@ -18,7 +19,7 @@ export default class StandardTagFactory extends TagFactory {
         // 'covers': Covers,
         // 'deprecated': Deprecated,
         // 'example': Example,
-        // 'link': LinkTag,
+        'link': LinkTag,
         // 'method': Method,
         // 'param': Param,
         // 'property-:d' => PropertyRead,
