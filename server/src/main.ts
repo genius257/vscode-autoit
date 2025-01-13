@@ -16,6 +16,7 @@ import PositionHelper from './autoit/PositionHelper';
 import { AutoIt3Configuration, Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
 import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
+import InvalidTag from './autoit/docBlock/DocBlock/Tags/InvalidTag';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -200,11 +201,22 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				const previousIdentifierSibling = precedingIdentifierSiblings[precedingIdentifierSiblings.length - 1];
 				switch(previousIdentifierSibling?.type) {
 					case 'MultiLineComment':
-						const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
-						hoverContents.push({
-							language: 'plaintext',
-							value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
-						});
+						// FIXME: move docblock parsing to script analysis instead
+						try {
+							const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
+							hoverContents.push({
+								language: 'plaintext',
+								value: `${[docBlock.summary, docBlock.description.toString(), docBlock.tags.map(tag => {
+									if (tag instanceof InvalidTag) {
+										connection.console.error(`${tag.getException()}`);
+										return null;
+									}
+									return `${tag.render()}`
+								}).join("\n")].join("\n\n")}`,
+							});
+						} catch (e) {
+							connection.console.error(`${e}`);
+						}
 						break;
 					case 'SingleLineComment':
 						const comments: SingleLineComment[] = [previousIdentifierSibling];
