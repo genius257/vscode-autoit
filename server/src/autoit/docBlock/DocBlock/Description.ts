@@ -29,7 +29,7 @@ export default class Description {
             formatter = new PassthroughFormatter();
         }
 
-        const tags = this.tags.map(tag => `{${formatter!.format}}`);
+        const tags = this.tags.map(tag => `{${formatter.format}}`);
 
         return this.bodyTemplate
             .replace(
