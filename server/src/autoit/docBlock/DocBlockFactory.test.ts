@@ -2,7 +2,6 @@ import { expect, test } from 'vitest'
 import parser, { MultiLineComment, SingleLineComment } from "autoit3-pegjs";
 import DocBlockFactory from "./DocBlockFactory";
 import Author from './DocBlock/Tags/Author';
-import InvalidTag from './DocBlock/Tags/InvalidTag';
 import Generic from './DocBlock/Tags/Generic';
 
 test('stripDocComment', () => {
