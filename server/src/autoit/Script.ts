@@ -229,6 +229,9 @@ export default class Script {
         throw new Error("Not implemented");//FIXME: implement
     }
 
+    /**
+     * Adds diagnostic information to the current script and broadcast it to subscribers
+     */
     public addDiagnostic(diagnostic: ScriptDiagnostic) {
         const severity = diagnostic.severity;
         let diagnosticArray: Array<Diagnostic> | undefined;
