@@ -37,7 +37,7 @@ export default class Author extends BaseTag {
     public toString(): string {
         let authorEmail = '';
 
-        if (this.authorEmail) {//FIXME
+        if (this.authorEmail !== '') {
             authorEmail = `<${this.authorEmail}>`;
         }
 
