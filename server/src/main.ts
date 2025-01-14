@@ -177,12 +177,11 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 				range: PositionHelper.locationRangeToRange(identifierAtPos.location),
 			};
 		case "FunctionDeclaration":
-			const hoverContents: MarkedString[] = [
+			const hoverContents: MarkupContent =
 				{
-					language: 'au3',
-					value: "Func "+identifier.id.name+"("+Parser.AstArrayToStringArray(identifier.params).join(", ")+")",
-				},
-			];
+					kind: "markdown",
+					value: `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(", ")})\n\`\`\``,
+				};
 
 			const identifierScript = workspace.get(identifier.location.source);
 			if (identifierScript !== undefined) {
@@ -204,16 +203,12 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 						// FIXME: move docblock parsing to script analysis instead
 						try {
 							const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
-							hoverContents.push({
-								language: 'plaintext',
-								value: `${[docBlock.summary, docBlock.description.toString(), docBlock.tags.map(tag => {
+							hoverContents.value += `\n\n${[docBlock.summary, docBlock.description.toString(), docBlock.tags.map(tag => {
 									if (tag instanceof InvalidTag) {
 										connection.console.error(`${tag.getException()}`);
 										return null;
 									}
-									return `${tag.render()}`
-								}).join("\n")].join("\n\n")}`,
-							});
+								}).join("\n\n")].join("\n\n")}`;
 						} catch (e) {
 							connection.console.error(`${e}`);
 						}
@@ -234,10 +229,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 							const docBlock = DocBlockFactory.createInstance().createFromLegacyComments(comments);
 
 							if (docBlock !== null) {
-								hoverContents.push({
-									language: 'plaintext',
-									value: `${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`,
-								});
+								hoverContents.value += `\n\n${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`;
 							}
 						}
 						break;
