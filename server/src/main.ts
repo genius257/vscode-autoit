@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 
-import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /*TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, MarkedString } from 'vscode-languageserver';
+import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /*TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent } from 'vscode-languageserver';
 // import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI } from 'vscode-uri';
