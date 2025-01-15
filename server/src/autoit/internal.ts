@@ -680,7 +680,7 @@ export default {
     '@scriptfullpath': {
         title: '@ScriptFullPath',
         detail: '@ScriptFullPath',
-        documentation: 'Equivalent to @ScriptDir &amp; "\\" &amp; @ScriptName',
+        documentation: 'Equivalent to:\n```au3\n@ScriptDir & "\\" & @ScriptName\n```',
         kind: CompletionItemKind.Constant
     },
     '@scriptlinenumber': {
