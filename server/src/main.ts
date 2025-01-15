@@ -373,7 +373,8 @@ async function getCompletionItems(params: CompletionParams): Promise<CompletionI
 		label: nativeSuggestion.title,
 		kind: nativeSuggestion.kind,
 		documentation: nativeSuggestion.documentation !== undefined ? {kind: MarkupKind.Markdown, value: nativeSuggestion.documentation} : undefined,
-		detail: nativeSuggestion.detail,
+		// detail: nativeSuggestion.detail,
+		// labelDetails: {description: nativeSuggestion.detail},
 	})));
 
 	return completionItems;
