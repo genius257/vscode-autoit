@@ -361,7 +361,7 @@ async function getCompletionItems(params: CompletionParams): Promise<CompletionI
 	completionItems = completionItems.filter((completionItem, index, array) => array.findIndex(x => x.label.toLowerCase() === completionItem.label.toLowerCase()) === index);
 
 	//Add all native suggestions
-	completionItems.concat(Object.entries(nativeSuggestions).map<CompletionItem>(([key, nativeSuggestion]) => ({
+	completionItems = completionItems.concat(Object.entries(nativeSuggestions).map<CompletionItem>(([key, nativeSuggestion]) => ({
 		label: nativeSuggestion.title,
 		kind: nativeSuggestion.kind,
 		documentation: nativeSuggestion.documentation,
