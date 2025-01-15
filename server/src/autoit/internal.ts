@@ -122,8 +122,13 @@ export default {
     },
     'Exit': {
         title: "Exit",
-        detail: "Exit ( [return code] )",
-        documentation: "Terminates the script.",
+        detail: "Exit ( $return_code = 0 )",
+        documentation: [
+            "```au3",
+            "Exit ( $return_code = 0 )",
+            "```",
+            "Terminates the script.",
+        ].join("\n"),
         kind: CompletionItemKind.Function
     },
     'ExitLoop': {

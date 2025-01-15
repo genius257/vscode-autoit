@@ -139,7 +139,15 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 
 	if (nodesAt[0]?.type === "ExitStatement") {
 		return {
-			contents: "Exit ( [return code] )\n\nTerminates the script.",
+			contents: {
+				kind: MarkupKind.Markdown,
+				value: [
+					"```au3",
+					"Exit ( $return_code = 0 )",
+					"```",
+					"Terminates the script.",
+				].join("\n"),
+			},
 			range: PositionHelper.locationRangeToRange(nodesAt[0].location),
 		};
 	}
@@ -364,7 +372,7 @@ async function getCompletionItems(params: CompletionParams): Promise<CompletionI
 	completionItems = completionItems.concat(Object.entries(nativeSuggestions).map<CompletionItem>(([key, nativeSuggestion]) => ({
 		label: nativeSuggestion.title,
 		kind: nativeSuggestion.kind,
-		documentation: nativeSuggestion.documentation,
+		documentation: nativeSuggestion.documentation !== undefined ? {kind: MarkupKind.Markdown, value: nativeSuggestion.documentation} : undefined,
 		detail: nativeSuggestion.detail,
 	})));
 
