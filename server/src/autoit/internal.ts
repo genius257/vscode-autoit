@@ -7,8 +7,8 @@ import { CompletionItemKind } from "vscode-languageserver";
 /** A documentation object used for intellisense. */
 export type documentation = {
     title: string,
-    detail: string,
-    documentation: string,
+    detail?: string,
+    documentation?: string,
     kind: CompletionItemKind,
 }
 
