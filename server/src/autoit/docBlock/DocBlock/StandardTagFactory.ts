@@ -14,6 +14,7 @@ export default class StandardTagFactory extends TagFactory {
     /** PCRE regular expression matching a tag name. */
     public static readonly REGEX_TAGNAME = '[\\w\\-_\\\\:]+';
 
+    /** A object representing a mapping of tag names to Tag Handler Classes */
     private tagHandlerMappings: Record<string, TagLike|Factory> = {
         'author': Author,
         // 'covers': Covers,
@@ -36,6 +37,7 @@ export default class StandardTagFactory extends TagFactory {
         // 'version': Version,
     };
 
+    /** A object representing a mapping of annotation names to Tag Handler Classes */
     private annotationMappings: Record<string, TagLike> = {};
 
     private fqsenResolver: FqsenResolver; //FIXME
@@ -129,6 +131,7 @@ export default class StandardTagFactory extends TagFactory {
         return handlerClassName;
     }
 
+    //TODO: currently source have not implemented this, maybe remove from here?
     private isAnnotation(tegContext: string): boolean {
         // 1. Contains a namespace separator
         // 2. Contains parenthesis
