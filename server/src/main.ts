@@ -188,7 +188,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		case "FunctionDeclaration":
 			const hoverContents: MarkupContent =
 				{
-					kind: "markdown",
+					kind: MarkupKind.Markdown,
 					value: `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(", ")})\n\`\`\``,
 				};
 
