@@ -142,6 +142,7 @@
         "locutus": "^2.0.32"
     },
     "devDependencies": {
+        "@types/locutus": "^0.0.8",
         "@typescript-eslint/eslint-plugin": "^4.23.0",
         "@typescript-eslint/parser": "^4.23.0",
         "@vscode/test-web": "^0.0.22",
