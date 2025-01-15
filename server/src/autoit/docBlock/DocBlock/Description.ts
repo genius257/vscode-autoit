@@ -1,6 +1,7 @@
 import Tag from "./Tag";
 import Formatter from "./Tags/Formatter";
 import PassthroughFormatter from "./Tags/Formatter/PassthroughFormatter";
+import vsprintf from "locutus/php/strings/vsprintf";
 
 export default class Description {
     private bodyTemplate: string;
@@ -22,20 +23,16 @@ export default class Description {
 
     public render(formatter: Formatter|null = null): string {
         if (this.tags.length === 0) {
-            return this.bodyTemplate;
+            return vsprintf(this.bodyTemplate, []);
         }
 
         if (formatter === null) {
             formatter = new PassthroughFormatter();
         }
 
-        const tags = this.tags.map(tag => `{${formatter.format}}`);
+        const tags = this.tags.map(tag => `{${formatter.format(tag)}}`);
 
-        return this.bodyTemplate
-            .replace(
-                /{(\d+)}/g,
-                (match, number) => tags[number] ?? match
-            ); // https://stackoverflow.com/a/4673436/3958400
+        return vsprintf(this.bodyTemplate, tags);
     }
 
     public toString(): string {
