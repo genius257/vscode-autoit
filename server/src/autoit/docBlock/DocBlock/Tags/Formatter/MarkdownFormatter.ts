@@ -7,10 +7,13 @@ export default class MarkdownFormatter implements Formatter {
         let body = tag.toString();
         switch (true) {
             case tag instanceof Link:
-                const description = tag.getDescription()?.render() ?? "";
-                body = `[${
-                    description === "" ? tag.getLink() : description
-                }](${tag.getLink()})`;
+                const description = tag.getDescription()?.render(this) ?? "";
+
+                if (description === "") {
+                    body = `<${tag.getLink()}>`;
+                } else {
+                    body = `[${description}](${tag.getLink()})`;
+                }
                 break;
         }
 
