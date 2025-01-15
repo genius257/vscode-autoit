@@ -41,8 +41,38 @@ export default class DescriptionFactory {
             return [contents];
         }
 
-        //FIXME: implement: https://github.com/phpDocumentor/ReflectionDocBlock/blob/master/src/DocBlock/DescriptionFactory.php#L102
-        return [contents];
+        // https://www.dormant.ninja/multiline-regex-in-javascript-with-comments/
+        // prettier-ignore
+        const regexParts: Array<RegExp | string> = [
+            /\{/,
+                // "{@}" is not a valid inline tag. This ensures that we do not treat it as one, but treat it literally.
+                /(?!@\})/,
+                // We want to capture the whole tag line, but without the inline tag delimiters.
+                "(@",
+                    // Match everything up to the next delimiter.
+                    /[^{}]*/,
+                    /* // BUG: the JS RegEx engine does not support numbered subpattern references, like (?1), so for now we are limited to one level of inline tags.
+                    // Nested inline tag content should not be captured, or it will appear in the result separately.
+                    "(?:",
+                        // Match nested inline tags.
+                        "(?:",
+                            // Because we did not catch the tag delimiters earlier, we must be explicit with them here.
+                            // Notice that this also matches "{}", as a way to later introduce it as an escape sequence.
+                            '\\{(?1)?\\}',
+                            "|",
+                            // Make sure we match hanging "{".
+                            /\{/,
+                        ")",
+                        // Match content after the nested inline tag.
+                        /[^{}]/,
+                    ")*", // If there are more inline tags, match them as well. We use "*" since there may not be any
+                        // nested inline tags.
+                    */
+                ")",
+            /\}/,
+        ];
+
+        return contents.split(new RegExp(regexParts.map(part => typeof part === "string" ? part : part.source).join(""), "u"));
     }
 
     private removeSuperfluousStartingWhitespace(contents: string): string {
