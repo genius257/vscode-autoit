@@ -108,7 +108,7 @@ export default class DocBlockFactory {
         const [summary, description, tags] = this.splitDocBlock(this.stripDocComment(docblock));
 
         return new DocBlock(
-            summary,
+            this.descriptionFactory.create(summary),
             description ? this.descriptionFactory.create(description, context) : null,
             this.parseTagBlock(tags, context),
             null, //context,

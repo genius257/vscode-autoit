@@ -5,14 +5,14 @@ import Tag from "./DocBlock/Tag";
 type Context = symbol; //FIXME: currently not implemented
 
 export default class DocBlock {
-    public readonly summary: string;
+    public readonly summary: Description;
     public readonly description: Description;
     public readonly tags: Tag[] = [];
     public readonly context: Context|null;
     public readonly location: Location|null;
 
     public constructor(
-        summary: string,
+        summary: Description,
         description: Description|null = null,
         tags: Tag[] = [],
         context: Context|null = null,

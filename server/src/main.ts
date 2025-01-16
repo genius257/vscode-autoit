@@ -213,7 +213,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 						try {
 							const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
 							const markdownFormatter = new MarkdownFormatter();
-							hoverContents.value += `\n\n${[docBlock.summary, docBlock.description.toString(), docBlock.tags.map(tag => {
+							hoverContents.value += `\n\n${[docBlock.summary.toString(), docBlock.description.toString(), docBlock.tags.map(tag => {
 									if (tag instanceof InvalidTag) {
 										connection.console.error(`${tag.getException()}`);
 										return null;
@@ -240,7 +240,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 							const docBlock = DocBlockFactory.createInstance().createFromLegacyComments(comments);
 
 							if (docBlock !== null) {
-								hoverContents.value += `\n\n${[docBlock.summary, docBlock.description.toString()].join("\n\n")}`;
+								hoverContents.value += `\n\n${[docBlock.summary.toString(), docBlock.description.toString()].join("\n\n")}`;
 							}
 						}
 						break;
