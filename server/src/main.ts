@@ -18,6 +18,9 @@ import { NodeFilterAction } from './autoit/Script';
 import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
 import InvalidTag from './autoit/docBlock/DocBlock/Tags/InvalidTag';
 import MarkdownFormatter from './autoit/docBlock/DocBlock/Tags/Formatter/MarkdownFormatter';
+import FqsenResolver from './autoit/docBlock/FqsenResolver';
+import StandardTagFactory from './autoit/docBlock/DocBlock/StandardTagFactory';
+import MarkdownDescriptionFactory from './autoit/docBlock/DocBlock/MarkdownDescriptionFactory';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -211,7 +214,12 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 					case 'MultiLineComment':
 						// FIXME: move docblock parsing to script analysis instead
 						try {
-							const docBlock = DocBlockFactory.createInstance().createFromMultilineComment(previousIdentifierSibling);
+							const fqsenResolver = new FqsenResolver();
+							const tagFactory = new StandardTagFactory(fqsenResolver);
+							const descriptionFactory = new MarkdownDescriptionFactory(tagFactory);
+							const docBlockFactory = new DocBlockFactory(descriptionFactory, tagFactory);
+							const docBlock = docBlockFactory.createFromMultilineComment(previousIdentifierSibling);
+
 							const markdownFormatter = new MarkdownFormatter();
 							hoverContents.value += `\n\n${[docBlock.summary.toString(), docBlock.description.toString(), docBlock.tags.map(tag => {
 									if (tag instanceof InvalidTag) {
