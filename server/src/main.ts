@@ -229,7 +229,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 									return `${tag.render(markdownFormatter)}`;
 								}).join("\n\n")].join("\n\n")}`;
 						} catch (e) {
-							connection.console.error(`${e}`);
+							connection.console.error(`${e}`);// FIXME: depending on the error, it should be added as a diagnostic instead.
 						}
 						break;
 					case 'SingleLineComment':
