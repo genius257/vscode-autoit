@@ -326,6 +326,7 @@ export default class Script {
             throw new Error("location is undefined on node type: " + node.type);
         }
 
+        // FIXME: add inline documentation for the "MemberExpression" case
         // FIXME: "CallExpression" case exists because nested call expressions have a bug with the wrapping expression position only covering the trailing parentheses. The fix need to be implemented in the parser.
         if (node.type !== "MemberExpression" && node.type !== "CallExpression" && !Parser.isPositionWithinLocation(line, column, node.location)) {
             return matches;
