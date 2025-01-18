@@ -405,6 +405,16 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 		return null;
 	}
 
+	/**
+	 * FIXME: currently due to the issue with nested call expressions, call expressions deeper than what is expected is returned,
+	 * resulting in wrong function signature matching.
+	 * Not much to do about that at the moment.
+	 * So InetGet()() would give the signature for InetGet(), which is not what we want.
+	 * The position issue at the parser level need to be fixed first, and then to provide signature help for the second part,
+	 * we need functionality to resolve the result of the first call expression.
+	 * And for that we need support type analysis.
+	 */
+
 	const text = script.getText();
 	if (text === undefined) {
 		return null;
