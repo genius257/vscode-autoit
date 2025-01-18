@@ -49,6 +49,13 @@ export class Workspace {
         this.diagnosticsListners.push(fn);
     }
 
+    /**
+     * function for removing a diagnostics listner
+     */
+    public offDiagnostics(fn: diagnosticsListner): void {
+        this.diagnosticsListners = this.diagnosticsListners.filter(x => x !== fn);
+    }
+
     public triggerDiagnostics(uri: string, diagnostics: Array<Diagnostic>): void {
         for (const fn of this.diagnosticsListners) {
             fn.call(this, uri, diagnostics);
