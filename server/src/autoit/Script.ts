@@ -1,5 +1,5 @@
 import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, LocationRange, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
-import { Diagnostic, DiagnosticSeverity, Position } from "vscode-languageserver";
+import { Diagnostic, DiagnosticSeverity, /*DiagnosticTag,*/ Position } from "vscode-languageserver";
 import { URI } from 'vscode-uri';
 import Parser from "./Parser";
 import { Workspace } from "./Workspace";
@@ -200,6 +200,42 @@ export default class Script {
                 //return;
             }
 
+            /*
+            //FIXME: currently this will not trigger when opening a file with includes that have errors, since the included file is not yet parsed.
+            // To fix this we need to subscribe to the included file's diagnostics.
+            // This should not be implemented yet, before the parser is fully compatible with AutoIt, as it currently reports false positives for some edge cases and have not implemented the with statement yet.
+
+            //@ts-expect-error
+            const severity = this.workspace?.get(value)?.getDiagnostics().reduce((acc, diagnostic) => {
+                return acc === undefined || diagnostic.severity === undefined || diagnostic.severity < acc ? diagnostic.severity : acc;
+            }, undefined);
+
+            let highestSeverity: undefined | DiagnosticSeverity = undefined;
+            const relatedDiagnostics = this.workspace?.get(value)?.getDiagnostics().filter(diagnostic => {
+                if (diagnostic.severity === undefined || diagnostic.severity > DiagnosticSeverity.Warning) {
+                    return false;
+                }
+                highestSeverity = highestSeverity === undefined || diagnostic.severity < highestSeverity ? diagnostic.severity : highestSeverity;
+                return diagnostic.severity === highestSeverity;
+            }) ?? [];
+
+            if (highestSeverity !== undefined) {
+                const errorCount = relatedDiagnostics.filter(diagnostic => diagnostic.severity === DiagnosticSeverity.Error).length;
+                const warningCount = relatedDiagnostics.filter(diagnostic => diagnostic.severity === DiagnosticSeverity.Warning).length;
+                const diagnosticStrings = [errorCount > 0 ? `${errorCount} error${errorCount > 1 ? 's' : ''}` : null, warningCount > 0 ?`${warningCount} warning${warningCount > 1 ? 's' : ''}` : null].filter(value => value !== null);
+                this.addDiagnostic({
+                    severity: highestSeverity,
+                    message: `${diagnosticStrings.join(' and ')} were found in '${include.statement.file}'`,
+                    range: PositionHelper.locationRangeToRange(include.statement.location),
+                    relatedInformation: relatedDiagnostics.map(diagnostic => {
+                        return {
+                            location: {uri: value, range: diagnostic.range},
+                            message: diagnostic.message,
+                        };
+                    })
+                });
+            }
+            */
         }));
 
         //TODO: This URI needs to only be declared once, and imported wherever needed.
