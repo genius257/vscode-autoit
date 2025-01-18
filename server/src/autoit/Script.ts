@@ -312,6 +312,7 @@ export default class Script {
         return this.getNestedNodesAtFromArray(this.program?.body ?? null, line, column, []);
     }
 
+    //FIXME: move this to a helper file
     protected assertCannotReach(x: never, message: string = "Unexpected unreachable code reached."): never {
         throw new Error(message);
     }
