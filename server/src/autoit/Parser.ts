@@ -1,7 +1,7 @@
-import parser, { ArgumentList, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, Initialiser, LocationRange, Program, RedimIdentifierExpression, SelectCaseClause, SourceElement, Statement, StatementList, SwitchCaseValue, SyntaxError, VariableDeclaration, VariableDeclarationList } from "autoit3-pegjs";
+import parser, { type AutoIt3, type LocationRange, type SyntaxError } from "autoit3-pegjs";
 
 export default class Parser {
-    public static parse(input: string, grammarSource: string|undefined): Program {
+    public static parse(input: string, grammarSource: string|undefined): AutoIt3.Program {
         return parser.parse(input, {grammarSource: grammarSource});
     }
 
@@ -29,7 +29,7 @@ export default class Parser {
         return true;
     }
 
-    public static AstToString(ast:null|Program|SourceElement|AssignmentExpression|FormalParameter|Statement|RedimIdentifierExpression|DefaultClause|SelectCaseClause|CaseClause|VariableDeclaration|EnumDeclaration|Initialiser|SwitchCaseValue): string {
+    public static AstToString(ast:null|AutoIt3.Program|AutoIt3.SourceElement|AutoIt3.AssignmentExpression|AutoIt3.FormalParameter|AutoIt3.Statement|AutoIt3.RedimIdentifierExpression|AutoIt3.DefaultClause|AutoIt3.SelectCaseClause|AutoIt3.CaseClause|AutoIt3.VariableDeclaration|AutoIt3.EnumDeclaration|AutoIt3.Initialiser|AutoIt3.SwitchCaseValue|AutoIt3.Macro): string {
         if (ast === null) {
             return "";
         }
@@ -97,6 +97,8 @@ export default class Parser {
                 return "Not " + this.AstToString(ast.value);
             case "Parameter":
                 return (ast.const ? "Const " : "" ) + (ast.byref ? "ByRef " : "") + this.AstToString(ast.id) + (ast.init === null ? "" : " = " + this.AstToString(ast.init));
+            case "ParenthesizedExpression":
+                return this.AstToString(ast.expression);
             case "PreProcStatement":
                 return "#"+ast.body;
             case "RedimExpression":
@@ -136,7 +138,7 @@ export default class Parser {
         }
     }
 
-    public static AstArrayToStringArray(astArray: StatementList|FormalParameterList|RedimIdentifierExpression[]|(DefaultClause | SelectCaseClause)[]|(DefaultClause | CaseClause)[]|VariableDeclarationList|EnumDeclarationList|ArgumentList|CaseValueList|ArrayDeclarationElementList|null): string[] {
+    public static AstArrayToStringArray(astArray: AutoIt3.StatementList|AutoIt3.FormalParameterList|AutoIt3.RedimIdentifierExpression[]|(AutoIt3.DefaultClause | AutoIt3.SelectCaseClause)[]|(AutoIt3.DefaultClause | AutoIt3.CaseClause)[]|AutoIt3.VariableDeclarationList|AutoIt3.EnumDeclarationList|AutoIt3.ArgumentList|AutoIt3.CaseValueList|AutoIt3.ArrayDeclarationElementList|null): string[] {
         const result: string[] = [];
         if (astArray === null) {
             return [];

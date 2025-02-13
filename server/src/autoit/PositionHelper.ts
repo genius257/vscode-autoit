@@ -1,4 +1,4 @@
-import { LocationRange, Location } from "autoit3-pegjs";
+import { type LocationRange, type Location, type GrammarSource } from "autoit3-pegjs";
 import { Range, Position } from "vscode-languageserver";
 
 export default class PositionHelper {
@@ -10,11 +10,11 @@ export default class PositionHelper {
         };
     }
 
-    public static rangeToLocationRange(range: Range, text?: string, source?: string): LocationRange {
+    public static rangeToLocationRange(range: Range, text?: string, source?: GrammarSource): LocationRange {
         return {
             start: this.positionToLocation(range.start, text),
             end: this.positionToLocation(range.end, text),
-            source: source,
+            source: source ?? "",
         }
     }
 

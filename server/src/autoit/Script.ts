@@ -1,4 +1,4 @@
-import parser, { ArgumentList, ArrayDeclaration, ArrayDeclarationElementList, AssignmentExpression, CaseClause, CaseValueList, DefaultClause, ElseClause, ElseIfClause, ElseIfClauses, EnumDeclaration, EnumDeclarationList, FormalParameter, FormalParameterList, FunctionDeclaration, IdentifierName, IncludeStatement, LocationRange, Macro, Program, SelectCaseClause, SourceElement, SourceElements, SwitchCaseValue, VariableDeclaration, VariableDeclarationList, VariableIdentifier } from "autoit3-pegjs";
+import parser, { type AutoIt3, type LocationRange } from "autoit3-pegjs";
 import { Diagnostic, DiagnosticSeverity, /*DiagnosticTag,*/ Position } from "vscode-languageserver";
 import { URI } from 'vscode-uri';
 import Parser from "./Parser";
@@ -10,7 +10,7 @@ export type Include = {
     /** Resolved include statement URI path */
     promise: Promise<string | null>;
     uri: string|null;
-    statement: IncludeStatement;
+    statement: AutoIt3.IncludeStatement;
 }
 
 export type ScriptError = Diagnostic & { severity: typeof DiagnosticSeverity.Error };
@@ -20,8 +20,8 @@ export type ScriptHint = Diagnostic & { severity: typeof DiagnosticSeverity.Hint
 
 export type ScriptDiagnostic = ScriptError | ScriptWarning | ScriptInformation | ScriptHint;
 
-export type Node = SourceElement | AssignmentExpression | FormalParameter | VariableDeclaration | EnumDeclaration | ArrayDeclaration | DefaultClause | CaseClause | SelectCaseClause | SwitchCaseValue | Macro | IncludeStatement | ElseIfClause | ElseClause;
-export type NodeList = SourceElements | ArgumentList | VariableDeclarationList | EnumDeclarationList | FormalParameterList | (DefaultClause | CaseClause | SelectCaseClause)[] | ArrayDeclarationElementList | CaseValueList | ElseIfClauses | ElseClause[];
+export type Node = AutoIt3.SourceElement | AutoIt3.AssignmentExpression | AutoIt3.FormalParameter | AutoIt3.VariableDeclaration | AutoIt3.EnumDeclaration | AutoIt3.ArrayDeclaration | AutoIt3.DefaultClause | AutoIt3.CaseClause | AutoIt3.SelectCaseClause | AutoIt3.SwitchCaseValue | AutoIt3.Macro | AutoIt3.IncludeStatement | AutoIt3.ElseIfClause | AutoIt3.ElseClause;
+export type NodeList = AutoIt3.SourceElements | AutoIt3.ArgumentList | AutoIt3.VariableDeclarationList | AutoIt3.EnumDeclarationList | AutoIt3.FormalParameterList | (AutoIt3.DefaultClause | AutoIt3.CaseClause | AutoIt3.SelectCaseClause)[] | AutoIt3.ArrayDeclarationElementList | AutoIt3.CaseValueList | AutoIt3.ElseIfClauses | AutoIt3.ElseClause[] | (AutoIt3.ElseClause | AutoIt3.ElseIfClause)[] | AutoIt3.FunctionDeclaration[];
 
 export enum NodeFilterAction {
     /** Adds the current node and continues down the branch */
@@ -55,9 +55,9 @@ export default class Script {
     /** Reference count */
     protected refCount: number = 1;
 
-    protected program: Program | undefined;
+    protected program: AutoIt3.Program | undefined;
 
-    public declarations: Array<FunctionDeclaration | VariableDeclaration> = [];//FIXME: varaible declarations with the global scope should be added here aswell.
+    public declarations: Array<AutoIt3.FunctionDeclaration | AutoIt3.VariableDeclaration> = [];//FIXME: varaible declarations with the global scope should be added here aswell.
 
     constructor(text: string, uri?: URI, workspace: Workspace | undefined = undefined) {
         this.uri = uri;
@@ -139,16 +139,16 @@ export default class Script {
     }
 
     public analyze() {
-        this.declarations = <Array<FunctionDeclaration | VariableDeclaration>><unknown>this.filterNodes((node) => {
+        this.declarations = <Array<AutoIt3.FunctionDeclaration | AutoIt3.VariableDeclaration>><unknown>this.filterNodes((node) => {
             const isDeclerator = node.type === "FunctionDeclaration" || node.type === "VariableDeclarator";
             return isDeclerator ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip;
         });
 
         //const previousIncludes = this.includes;
-        const currrentIncludes = this.program?.body.filter((node): node is IncludeStatement => node.type === "IncludeStatement");
+        const currrentIncludes: AutoIt3.IncludeStatement[]|undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === "IncludeStatement") as AutoIt3.IncludeStatement[] | undefined;
 
         // function for comparing include statements
-        const includeStatementComparator = (a: IncludeStatement, b: IncludeStatement): boolean => {
+        const includeStatementComparator = (a: AutoIt3.IncludeStatement, b: AutoIt3.IncludeStatement): boolean => {
             return a.file === b.file && a.library === b.library;
         };
 
@@ -249,7 +249,7 @@ export default class Script {
         });
     }
 
-    public createInclude(include: IncludeStatement): Include {
+    public createInclude(include: AutoIt3.IncludeStatement): Include {
         const _include: Include = {
             statement: include,
             uri: null,
@@ -464,6 +464,9 @@ export default class Script {
             case "Parameter":
                 this.getNestedNodesAt(node.id, line, column, matches);
                 this.getNestedNodesAt(node.init, line, column, matches);
+                break;
+            case "ParenthesizedExpression":
+                this.getNestedNodesAt(node.expression, line, column, matches);
                 break;
             case "PreProcStatement":
                 break;
@@ -714,6 +717,8 @@ export default class Script {
                 }
                 status = this.filterNestedNode(node.init, fn, matches);
                 return status;
+            case "ParenthesizedExpression":
+                    return this.filterNestedNode(node.expression, fn, matches);
             case "PreProcStatement":
                 break;
             case "RedimExpression":
@@ -814,7 +819,7 @@ export default class Script {
      * @param functions Function map for fallback lookups
      * @param depth Recursive depth tracking variable
      */
-    public getIdentifierDeclarator(identifier: IdentifierName | VariableIdentifier | Macro | null, stack: string[] = [], functions: FunctionDeclaration[] = [], depth: number = 0): FormalParameter | FunctionDeclaration | VariableDeclaration | EnumDeclaration | null {
+    public getIdentifierDeclarator(identifier: AutoIt3.IdentifierName | AutoIt3.VariableIdentifier | AutoIt3.Macro | null, stack: string[] = [], functions: AutoIt3.FunctionDeclaration[] = [], depth: number = 0): AutoIt3.FormalParameter | AutoIt3.FunctionDeclaration | AutoIt3.VariableDeclaration | AutoIt3.EnumDeclaration | null {
         if (identifier === null || identifier.type === "Macro") {
             return null;
         }
@@ -829,7 +834,7 @@ export default class Script {
             stack.push(uri);
         }
 
-        let declaration: FormalParameter | FunctionDeclaration | VariableDeclaration | EnumDeclaration | undefined | null;
+        let declaration: AutoIt3.FormalParameter | AutoIt3.FunctionDeclaration | AutoIt3.VariableDeclaration | AutoIt3.EnumDeclaration | undefined | null;
 
         switch (identifier.type) {
             case "Identifier":
@@ -867,7 +872,7 @@ export default class Script {
 
                 if ((declaration??null) === null) {
                     //Global lookup
-                    const matches: Array<VariableDeclaration> = [];
+                    const matches: Array<AutoIt3.VariableDeclaration> = [];
                     this.filterNestedNodes(this.program?.body ?? null, (node) => {
                         if (node.type === "FunctionDeclaration") {
                             functions.push(node);

@@ -1,4 +1,4 @@
-import { IncludeStatement } from 'autoit3-pegjs';
+import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
 import { Connection, Diagnostic } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from "./Script";
@@ -9,7 +9,7 @@ export type scriptList = {
     [uri: string]: Script | undefined,
 }
 
-type uri = string | URI;
+type uri = string | URI | {toString: () => string};
 
 export type diagnosticsListner = (uri: string, diagnostics: Array<Diagnostic>) => void;
 
@@ -80,15 +80,15 @@ export class Workspace {
     }
 
     public createOrUpdate(uri: uri, text: string): Script {
-        uri = uri.toString();
-        let script = this.scripts?.[uri];
+        const _uri = uri.toString();
+        let script = this.scripts?.[_uri];
 
         if (script !== undefined) {
             script.update(text);
             return script;
         }
 
-        script = new Script(text, URI.parse(uri), this);
+        script = new Script(text, URI.parse(_uri), this);
         this.add(script);
         script.triggerDiagnostics();
         return script;
@@ -112,7 +112,7 @@ export class Workspace {
         return includes ? this.getIdentifierDeclaratorFromIncludes(uri, identifier) : this._getIdentifierDeclarator(uri, identifier);
     }*/
 
-    public resolveInclude(include: IncludeStatement): Promise<IncludeResolve | null> {
+    public resolveInclude(include: AutoIt3.IncludeStatement): Promise<IncludeResolve | null> {
         let promise = this.connection?.workspace.getConfiguration("autoit3").then((configuration: AutoIt3Configuration) => {
             let promise:IncludePromise = Promise.resolve(null);
 
@@ -156,12 +156,12 @@ export class Workspace {
         return promise;
     }
 
-    protected includeLocal(uri: string, documentUri: string, promise: IncludePromise): IncludePromise {
+    protected includeLocal(uri: string, documentUri: GrammarSource, promise: IncludePromise): IncludePromise {
         // If document uri starts with 'untitled:', it is not yet saved to disk
-        const isUntitled = documentUri.startsWith('untitled:');
+        const isUntitled = documentUri.toString().startsWith('untitled:');
 
         //HACK: currently i check if the documentUri startsWith 'untitled:' to detect files not yet saved to disk. I cannot find a better solution so far...
-        return promise.then(x => x === null && !isUntitled ? this.openTextDocument(isAbsolutePath(uri) ? URI.file(uri) : Utils.resolvePath(Utils.dirname(URI.parse(documentUri)), uri)) : x);
+        return promise.then(x => x === null && !isUntitled ? this.openTextDocument(isAbsolutePath(uri) ? URI.file(uri) : Utils.resolvePath(Utils.dirname(URI.parse(documentUri.toString())), uri)) : x);
     }
 
     protected openTextDocument(uri: URI): IncludePromise {

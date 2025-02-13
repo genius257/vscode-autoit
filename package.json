@@ -138,7 +138,7 @@
         ]
     },
     "dependencies": {
-        "autoit3-pegjs": "github:genius257/autoit3-pegjs#2.0.0",
+        "autoit3-pegjs": "github:genius257/autoit3-pegjs#3.0.3",
         "locutus": "^2.0.32"
     },
     "devDependencies": {

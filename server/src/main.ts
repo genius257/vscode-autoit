@@ -10,7 +10,7 @@ import { /*Color, ColorInformation, Range,*/ InitializeParams, InitializeResult,
 import { URI } from 'vscode-uri';
 
 import nativeSuggestions from "./autoit/internal";
-import { CallExpression, EnumDeclaration, FormalParameter, FunctionDeclaration, Identifier, IncludeStatement, LocationRange, Macro, SingleLineComment, VariableDeclaration, VariableIdentifier } from 'autoit3-pegjs';
+import { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
 import Parser from './autoit/Parser';
 import PositionHelper from './autoit/PositionHelper';
 import { AutoIt3Configuration, Workspace } from './autoit/Workspace';
@@ -23,6 +23,8 @@ import StandardTagFactory from './autoit/docBlock/DocBlock/StandardTagFactory';
 import MarkdownDescriptionFactory from './autoit/docBlock/DocBlock/MarkdownDescriptionFactory';
 
 console.log('running server autoit3-lsp-web-extension');
+
+type WhereAstTypeEquals<T extends {type: string}, S extends string> = T extends {type: S} ? T : never;
 
 /* browser specific setup code */
 
@@ -109,7 +111,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 
 	const includes = workspace.get(params.textDocument.uri)?.getIncludes();
 	if (includes !== undefined) {
-		const statementToRange = (statement: IncludeStatement): Range => ({
+		const statementToRange = (statement: AutoIt3.IncludeStatement): Range => ({
 			start: {
 				line: statement.location.start.line - 1,
 				character: Math.max(0, statement.location.end.column - statement.file.length - 3)
@@ -155,7 +157,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		};
 	}
 
-	const identifierAtPos = nodesAt.find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	const identifierAtPos = nodesAt.find((node):node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
 		return null;
 	}
@@ -170,7 +172,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 		}
 	}
 
-	let identifier: FormalParameter | FunctionDeclaration | VariableDeclaration | EnumDeclaration | null | undefined = null;
+	let identifier: AutoIt3.FormalParameter | AutoIt3.FunctionDeclaration | AutoIt3.VariableDeclaration | AutoIt3.EnumDeclaration | null | undefined = null;
 
 	identifier = identifier ?? workspace.get(hoverParams.textDocument.uri)?.getIdentifierDeclarator(identifierAtPos);
 	if (!identifier) {
@@ -233,7 +235,7 @@ connection.onHover((hoverParams, token, workDoneProgress):Hover|null => {
 						}
 						break;
 					case 'SingleLineComment':
-						const comments: SingleLineComment[] = [previousIdentifierSibling];
+						const comments: AutoIt3.SingleLineComment[] = [previousIdentifierSibling];
 
 						for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
 							const element = precedingIdentifierSiblings[index]!;
@@ -297,7 +299,7 @@ function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
 	const nodesAt = workspace.get(params.textDocument.uri)?.getNodesAt(params.position);
-	const identifierAtPos = nodesAt?.reverse().find((node):node is Identifier|VariableIdentifier|Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
+	const identifierAtPos = nodesAt?.reverse().find((node):node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === "Identifier" || node.type === "VariableIdentifier" || node.type === "Macro");
 	if (identifierAtPos === undefined) {
 		return [];
 	}
@@ -359,7 +361,7 @@ async function getCompletionItems(params: CompletionParams): Promise<CompletionI
 	// If within a function, add everything defined before cursor as suggestions from the scope
 	let script = workspace.get(params.textDocument.uri);
 	if (script !== undefined) {
-		const matches: Array<VariableDeclaration|FormalParameter> = [];
+		const matches: Array<AutoIt3.VariableDeclaration | AutoIt3.FormalParameter> = [];
 		script.filterNestedNode(
 			script.declarations.find(declaration => declaration.type === "FunctionDeclaration" && Parser.isPositionWithinLocation(params.position.line, params.position.character, declaration.location)) ?? null,
 			(node) => {
@@ -400,7 +402,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 		return null;
 	}
 
-	const callExpression = nodesAt.reverse().find((node):node is CallExpression => node.type === "CallExpression");
+	const callExpression = nodesAt.reverse().find((node):node is WhereAstTypeEquals<AutoIt3.CallExpression, "CallExpression"> => node.type === "CallExpression");
 	if (callExpression === undefined) {
 		return null;
 	}
@@ -423,8 +425,9 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 	let parameterIndex: number|null = null;
 
 	if (callExpression.arguments.length > 0) {
+		type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 		// Make new array of deep cloned location ranges, to prevent modifying original AST location values.
-		const argumentLocations = callExpression.arguments.map<LocationRange>(argument => JSON.parse(JSON.stringify(argument.location)));
+		const argumentLocations = callExpression.arguments.map<Writeable<LocationRange>>(argument => JSON.parse(JSON.stringify(argument.location)));
 		let textBetween = text.substring(callExpression.callee.location.end.offset, argumentLocations[0]!.start.offset);
 		let parenthesisIndex = textBetween.indexOf('(');
 		argumentLocations[0]!.start = PositionHelper.offsetToLocation(argumentLocations[0]!.start.offset - Math.abs((textBetween.length - 1) - parenthesisIndex), text);

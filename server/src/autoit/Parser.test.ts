@@ -8,7 +8,7 @@ describe("Parser", function () {
                 1,
                 1,
                 {
-                    "source": undefined,
+                    "source": "",
                     "start": { "offset": 15, "line": 2, "column": 5 },
                     "end": { "offset": 23, "line": 3, "column": 1 }
                 }
@@ -20,7 +20,7 @@ describe("Parser", function () {
                 2,
                 4,
                 {
-                    "source": undefined,
+                    "source": "",
                     "start": { "offset": 15, "line": 2, "column": 5 },
                     "end": { "offset": 23, "line": 3, "column": 1 }
                 }
@@ -34,7 +34,7 @@ describe("Parser", function () {
                 2,
                 17,
                 {
-                    "source": undefined,
+                    "source": "",
                     "start": { "offset": 15, "line": 2, "column": 5 },
                     "end": { "offset": 23, "line": 3, "column": 1 }
                 }
@@ -48,7 +48,7 @@ describe("Parser", function () {
                 3,
                 2,
                 {
-                    "source": undefined,
+                    "source": "",
                     "start": { "offset": 15, "line": 2, "column": 5 },
                     "end": { "offset": 23, "line": 3, "column": 1 }
                 }
@@ -60,7 +60,7 @@ describe("Parser", function () {
                 4,
                 1,
                 {
-                    "source": undefined,
+                    "source": "",
                     "start": { "offset": 15, "line": 2, "column": 5 },
                     "end": { "offset": 23, "line": 3, "column": 1 }
                 }
@@ -70,7 +70,7 @@ describe("Parser", function () {
 
     test("AstToString, simple", function() {
         const source = "$x = null";
-        const ast = Parser.parse(source, undefined);
+        const ast = Parser.parse(source, "");
         const actual = Parser.AstToString(ast);
 
         expect(actual).toBe(source);
