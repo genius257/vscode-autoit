@@ -313,7 +313,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 	const identifier = declarator.id;
 	return [
 		{
-			targetUri: declarator.location.source,
+			targetUri: declarator.location.source.toString(),
 			targetRange: PositionHelper.locationRangeToRange(declarator.location),
 			targetSelectionRange: PositionHelper.locationRangeToRange(identifier.location),
 		}
@@ -466,7 +466,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null
 
 	//FIXME: this currently won't work for member expressions!
 
-	if (callExpression.callee.type === "ExpressionStatement" || callExpression.callee.type === "Macro" || callExpression.callee.type === "MemberExpression" || callExpression.callee.type === "Literal" || callExpression.callee.type === "Keyword") {
+	if (callExpression.callee.type === "CallExpression" || callExpression.callee.type === "ParenthesizedExpression" || /*callExpression.callee.type === "ExpressionStatement" || callExpression.callee.type === "Macro" ||*/ callExpression.callee.type === "MemberExpression" || callExpression.callee.type === "Literal" || callExpression.callee.type === "Keyword") {
 		return null;
 	}
 

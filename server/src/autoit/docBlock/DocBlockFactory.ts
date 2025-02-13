@@ -1,4 +1,4 @@
-import type { Location, MultiLineComment, SingleLineComment} from "autoit3-pegjs";
+import type { Location, AutoIt3} from "autoit3-pegjs";
 import DocBlock from "./DocBlock";
 import DescriptionFactory from "./DocBlock/DescriptionFactory";
 import Tag, { TagLike } from "./DocBlock/Tag";
@@ -57,7 +57,7 @@ export default class DocBlockFactory {
         return docBlockFactory;
     }
 
-    public createFromLegacyComments(comments: SingleLineComment[]): DocBlock|null {
+    public createFromLegacyComments(comments: AutoIt3.SingleLineComment[]): DocBlock|null {
         //TODO: move this to a legacy factory class maybe?
         // Extract relevant information and convert legacy function documentaion header to DocBlock
 
@@ -97,7 +97,7 @@ export default class DocBlockFactory {
         );
     }
 
-    public createFromMultilineComment(comment: MultiLineComment): DocBlock {
+    public createFromMultilineComment(comment: AutoIt3.MultiLineComment): DocBlock {
         return this.create(comment.body);
     }
 
