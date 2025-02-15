@@ -154,7 +154,25 @@
 			"patterns": [
 				{
 					"name": "comment.line.au3",
-					"match": "(;).*"
+					"match": ";(.*)",
+					"captures": {
+						"1": {
+							"patterns": [
+								{
+									"match": "(?<=^;)[ ]#([A-Za-z_]*(?:[ ][A-Za-z_]*)*)#[ ][=]+$",
+									"captures": {
+										"1": {
+											"name": "storage.type.udfheader"
+										}
+									}
+								},
+								{
+									"match": "(?<=^;)[ ]([A-Z][A-Za-z]*(?:[ ][A-Za-z]+)*(?:\\([sS]\\))?)[ ]?([.]*)([:])",
+									"name": "storage.type.udfheader"
+								}
+							]
+						}
+					}
 				}
 			]
 		},
@@ -167,6 +185,59 @@
 					"patterns": [
 						{
 							"include": "#comment.block"
+						},
+						{
+							"match": "^\\s*#\\s*(@param)(?:[ ](?!\\$)([^ ]+))?(?:[ ](\\$[A-Za-z_][A-Za-z_0-9]*))(?:[ ]|$)",
+							"captures": {
+								"1": {
+									"name": "storage.type.au3doc"
+								},
+								"2": {
+									"name": "entity.name.type.au3doc",
+									"patterns": [
+										{
+											"match": "\\|",
+											"name": "keyword.operator.type.au3doc"
+										}
+									]
+								},
+								"3": {
+									"name": "variable.other.au3doc"
+								}
+							}
+						},
+						{
+							"match": "^\\s*#\\s*(@(?:return|type))(?:[ ](?!\\$)([^ ]+))(?:[ ]|$)",
+							"captures": {
+								"1": {
+									"name": "storage.type.au3doc"
+								},
+								"2": {
+									"name": "entity.name.type.au3doc",
+									"patterns": [
+										{
+											"match": "\\|",
+											"name": "keyword.operator.type.au3doc"
+										}
+									]
+								}
+							}
+						},
+						{
+							"match": "^\\s*#\\s*(@[\\w\\-_\\\\:]+(\\s+|$))",
+							"captures": {
+								"1": {
+									"name": "storage.type.au3doc"
+								}
+							}
+						},
+						{
+							"match": "{(@[\\w\\-_\\\\:]+)(\\s+[^}]*)?}",
+							"captures": {
+								"1": {
+									"name": "storage.type.au3doc"
+								}
+							}
 						}
 					]
 				}
