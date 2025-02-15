@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2025-02-15
+
+### Fixed
+
+- Error caused by package install scripts, when generating types in autoit3-pegjs. THey are now pre-generated via NPM.
+
 ## [1.8.0] - 2025-02-15
 
 ### Added
