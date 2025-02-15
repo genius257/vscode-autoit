@@ -1,8 +1,8 @@
-import { expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest';
 import Script from "./Script";
 import { AutoIt3Configuration, Workspace } from "./Workspace";
-import { URI, Utils } from 'vscode-uri';
-import { Connection/*, RemoteConsole*/ } from 'vscode-languageserver';
+import { URI /*, Utils*/ } from 'vscode-uri';
+import { Connection /*, RemoteConsole*/ } from 'vscode-languageserver';
 
 test('something', () => {
     const workspace = new Workspace();
@@ -56,8 +56,8 @@ test('resolveInclude', () => {
     //expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toBeCalledWith('autoit3');
 
-    const installDir = "C:\\Program Files (x86)\\AutoIt3\\";
-    const uri = "D:\\users\\bob\\workspace\\one.au3".replace(/\\/g, '/');
+    //const installDir = "C:\\Program Files (x86)\\AutoIt3\\";
+    //const uri = "D:\\users\\bob\\workspace\\one.au3".replace(/\\/g, '/');
 
     // console.log(Utils.resolvePath(URI.file(installDir), 'Include', uri).toString());
 });
