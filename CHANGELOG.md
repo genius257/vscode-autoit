@@ -7,14 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2025-02-15
+
 ### Added
 
-- all 255 parameters for all relevant build in functions
+- Au3 DocBlock `@link` tag support
 - Syntax highlighting for au3 DocBlock and legacy UDF headers
 
 ### Changed
 
-- prepended syntax error text for related diagnostic messages
+- changed number of parameters to 255 for all relevant built-in functions
+- prepended syntax error text for related diagnostic messages (#59)
+
+### Fixed
+
+- Failure message with signature help for nested call expressions (#52)
 
 ## [1.7.0] - 2024-12-17
 
@@ -189,7 +196,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.7.0...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.0...HEAD
+[1.8.0]: https://github.com/genius257/vscode-autoit/compare/1.7.0...1.8.0
 [1.7.0]: https://github.com/genius257/vscode-autoit/compare/1.6.1...1.7.0
 [1.6.1]: https://github.com/genius257/vscode-autoit/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/genius257/vscode-autoit/compare/1.5.0...1.6.0
