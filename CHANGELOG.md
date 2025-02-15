@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Variable declarations in For loops was ignored (issue #50)
-- Invalid document links was created on include statements that failed to resove
+- Invalid document links was created on include statements that failed to resolve
 
 ## [1.6.0] - 2024-07-31
 
@@ -66,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Variable declaration lookup would think the variable was witin a function scope of a included script, if it was within the same number of lines as the function declaration (issue #43)
+- Variable declaration lookup would think the variable was within a function scope of a included script, if it was within the same number of lines as the function declaration (issue #43)
 - Error message when hovering on a function declaration with no previous sibling elements.
 
 ## [1.4.0] - 2024-02-28
@@ -103,7 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Syntax highlight for hexadecimal numbers not working when using uppercase X. (issue #40)
-- Syntax highlight for double, integer, hex and scientific notation litterals, most notably, in regards to leading posetive or negative value indicator.
+- Syntax highlight for double, integer, hex and scientific notation literals, most notably, in regards to leading positive or negative value indicator.
 - Missing link to Appendix of possible values in hover text for relevant macros: @KBLayout, @MUILang and @OSLang
 
 ### Changed
@@ -132,7 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed issue with suggestion from includes would stop working seemlingly randomly (issue #22)
+- Fixed issue with suggestion from includes would stop working seemingly randomly (issue #22)
 - Fixed issue where include statements would fail on new files not existing on disk with: Request textDocument/documentLink failed. (issue #8)
 
 ## [1.2.1] - 2023-02-11
@@ -144,8 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed issue with resolving IncludeStatement document links for Standard library files (issue #19)
-- Fixed include statement document link position broken if immidialy followed by a single line comment (issue #16)
-- Fixed issue where all builtin suggestions types were marked as functions
+- Fixed include statement document link position broken if immediately followed by a single line comment (issue #16)
+- Fixed issue where all built-in suggestions types were marked as functions
 - Fixed issue with keywords not included in completion suggestions (issue #20)
 - Fixed issue function and variables suggestions from included files not shown (issue #18)
 
@@ -170,7 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed issue with RedimExpression throwing an not implemented error
-- Fixed issue where some parts of the au3 AST were not accessable, when iterating the tree.
+- Fixed issue where some parts of the au3 AST were not accessible, when iterating the tree.
 - Fixed au3 hover support within functions (issue #7)
 - Fixed issue caused by the au3 `Default` keyword
 - Fixed issue where resolving uri from installDir setting did not work
