@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - all 255 parameters for all relevant build in functions
+- Syntax highlighting for au3 DocBlock and legacy UDF headers
 
 ### Changed
 
