@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.2] - 2025-02-15
+
+## Fixed
+
+- Linting warnings that prevented automatic deployment
+
 ## [1.8.1] - 2025-02-15
 
 ### Fixed
@@ -202,7 +208,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.1...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.2...HEAD
+[1.8.1]: https://github.com/genius257/vscode-autoit/compare/1.8.1...1.8.2
 [1.8.1]: https://github.com/genius257/vscode-autoit/compare/1.8.0...1.8.1
 [1.8.0]: https://github.com/genius257/vscode-autoit/compare/1.7.0...1.8.0
 [1.7.0]: https://github.com/genius257/vscode-autoit/compare/1.6.1...1.7.0
