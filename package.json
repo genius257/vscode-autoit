@@ -142,6 +142,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.20.0",
+        "@stylistic/eslint-plugin": "^4.0.0",
         "@types/locutus": "^0.0.8",
         "@typescript-eslint/eslint-plugin": "^8.24.0",
         "@typescript-eslint/parser": "^8.24.0",
