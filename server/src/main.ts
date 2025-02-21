@@ -245,7 +245,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                 const precedingIdentifierSiblings = identifierScript
                     .filterNodes((node) => {
                         // eslint-disable-next-line @stylistic/max-len
-                        if (node.location.end.line >= identifier!.location.start.line) {
+                        if (node.location.end.line >= identifier.location.start.line) {
                             return NodeFilterAction.StopAndSkip;
                         }
 
@@ -305,6 +305,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
 
                         // eslint-disable-next-line @stylistic/max-len
                         for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
+                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                             const element = precedingIdentifierSiblings[index]!;
 
                             if (element.type !== 'SingleLineComment') {
@@ -573,18 +574,22 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
             );
         let textBetween = text.substring(
             callExpression.callee.location.end.offset,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             argumentLocations[0]!.start.offset,
         );
         let parenthesisIndex = textBetween.indexOf('(');
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         argumentLocations[0]!.start = PositionHelper.offsetToLocation(
-            // eslint-disable-next-line @stylistic/max-len
+            // eslint-disable-next-line @stylistic/max-len, @typescript-eslint/no-non-null-assertion
             argumentLocations[0]!.start.offset - Math.abs(textBetween.length - 1 - parenthesisIndex),
             text,
         );
 
         if (argumentLocations.length > 1) {
             for (let index = 0; index < argumentLocations.length - 1; index++) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const argumentLeft = argumentLocations[index]!;
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const argumentRight = argumentLocations[index + 1]!;
                 const textBetween = text.substring(
                     argumentLeft.end.offset,
@@ -604,13 +609,15 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
         }
 
         textBetween = text.substring(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             argumentLocations[argumentLocations.length - 1]!.end.offset,
             callExpression.location.end.offset,
         );
         parenthesisIndex = textBetween.indexOf(')');
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         argumentLocations[argumentLocations.length - 1]!.end = PositionHelper
             .offsetToLocation(
-                // eslint-disable-next-line @stylistic/max-len
+                // eslint-disable-next-line @stylistic/max-len, @typescript-eslint/no-non-null-assertion
                 argumentLocations[argumentLocations.length - 1]!.end.offset + parenthesisIndex,
                 text,
             );
