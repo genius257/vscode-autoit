@@ -20,6 +20,7 @@ export default class DescriptionFactory {
         const tags: Tag[] = [];
 
         for (let index = 1; index < count; index += 2) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             tags.push(this.tagFactory.create(tokens[index]!, context));
             tokens[index] = `%${++tagCount}$s`;
         }
@@ -31,6 +32,7 @@ export default class DescriptionFactory {
          * See unit tests for examples.
          */
         for (let index = 0; index < count; index += 2) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             tokens[index] = tokens[index]!
                 .replace(/{@}/g, '@')
                 .replace(/{}/g, '}')
@@ -99,6 +101,7 @@ export default class DescriptionFactory {
 
         for (let index = 1, iMax = lines.length; index < iMax; ++index) {
             // lines with a no length do not count as they are not indented at all
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             if (lines[index]!.trim() === '') {
                 continue;
             }
@@ -109,6 +112,7 @@ export default class DescriptionFactory {
              */
             startingSpaceCount = Math.min(
                 startingSpaceCount,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 lines[index]!.length - lines[index]!.trimStart().length,
             );
         }
@@ -116,6 +120,7 @@ export default class DescriptionFactory {
         // strip the number of spaces from each line
         if (startingSpaceCount > 0) {
             for (let index = 1, iMax = lines.length; index < iMax; ++index) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 lines[index] = lines[index]!.substring(startingSpaceCount);
             }
         }

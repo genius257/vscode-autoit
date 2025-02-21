@@ -1,4 +1,4 @@
-// import FqsenResolver from './FqsenResolver';
+import FqsenResolver from './FqsenResolver';
 import TypeParser from './Parser/TypeParser';
 import Lexer from './Lexer/Lexer';
 import ConstExprParser from './Parser/ConstExprParser';
@@ -63,7 +63,8 @@ export default class TypeResolver {
 
     private readonly lexer: Lexer;
 
-    public constructor(/* fqsenResolver: FqsenResolver | null = null*/) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public constructor(fqsenResolver: FqsenResolver | null = null) {
         // this.fqsenResolver = fqsenResolver ?? new FqsenResolver();
         this.typeParser = new TypeParser(new ConstExprParser());
         this.lexer = new Lexer();

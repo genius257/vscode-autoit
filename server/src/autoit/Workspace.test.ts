@@ -35,6 +35,7 @@ test('resolveInclude', () => {
         },
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const spy = vi.spyOn(connection.workspace!, 'getConfiguration');
 
     const workspace = new Workspace(connection as Connection);

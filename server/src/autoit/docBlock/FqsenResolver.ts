@@ -24,11 +24,14 @@ export default class FqsenResolver {
         type: string,
         context: Context,
     ): Fqsen {
-        const typeParts = type.split(FqsenResolver.OPERATOR_NAMESPACE, 2);
+        const typeParts = type.split(
+            FqsenResolver.OPERATOR_NAMESPACE,
+            2,
+        ) as [string] | [string, string];
 
         const namespaceAliases = context.getNamespaceAliases;
 
-        if (!(typeParts[0]! in namespaceAliases)) {
+        if (!(typeParts[0] in namespaceAliases)) {
             let namespace = context.getNamespace();
 
             if (namespace !== '') {
@@ -38,7 +41,7 @@ export default class FqsenResolver {
             return new Fqsen(`${FqsenResolver.OPERATOR_NAMESPACE}${namespace}${type}`);
         }
 
-        typeParts[0] = namespaceAliases[typeParts[0]!];
+        typeParts[0] = namespaceAliases[typeParts[0]];
 
         return new Fqsen(`${FqsenResolver.OPERATOR_NAMESPACE}${typeParts.join(FqsenResolver.OPERATOR_NAMESPACE)}`);
     }

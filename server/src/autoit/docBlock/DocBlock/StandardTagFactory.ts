@@ -85,10 +85,10 @@ export default class StandardTagFactory extends TagFactory {
     }
 
     public addService(
-        service: { name: string },
+        service: object,
         alias: string | null = null,
     ): void {
-        this.serviceLocator[alias ?? service.name] = service;
+        this.serviceLocator[alias ?? service.constructor.name] = service;
     }
 
     public registerTagHandler(
@@ -143,12 +143,14 @@ export default class StandardTagFactory extends TagFactory {
         let handlerClassName: TagLike | Factory = Generic;
 
         if (tagName in this.tagHandlerMappings) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             handlerClassName = this.tagHandlerMappings[tagName]!;
         } else if (this.isAnnotation(tagName)) {
             // TODO: Annotation support is planned for a later stage and as such is disabled for now
             tagName = this.fqsenResolver.resolve(tagName, context).toString();
 
             if (tagName in this.annotationMappings) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 handlerClassName = this.annotationMappings[tagName]!;
             }
         }

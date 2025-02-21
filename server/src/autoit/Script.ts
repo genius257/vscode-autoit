@@ -242,21 +242,21 @@ export default class Script {
         // Update the list of includes
         this.includes = currrentIncludes?.map((include) => {
             // Check if the include statement is already cached
-            const cacheIndex = this.includeCache.findIndex(
+            const cached = this.includeCache.find(
                 (cacheItem) => cacheItem.statement.file === include.file &&
                     cacheItem.statement.library === include.library,
             );
 
             // If it is, use the cached version
-            if (cacheIndex > -1) {
-                this.includeCache[cacheIndex]!.statement = include;
-                this.includeCache[cacheIndex]!.promise.then((value) => {
+            if (cached !== undefined) {
+                cached.statement = include;
+                cached.promise.then((value) => {
                     if (value !== null) {
                         this.workspace?.get(value)?.addReference();
                     }
                 });
 
-                return this.includeCache[cacheIndex]!;
+                return cached;
             }
 
             // If not, create a new include, and add it to the cache
