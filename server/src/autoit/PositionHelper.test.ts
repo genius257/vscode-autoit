@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { Location } from 'autoit3-pegjs';
-import PositionHelper from './PositionHelper';
+import * as PositionHelper from './PositionHelper';
 
 test('offsetToLocation', () => {
     const text = 'a\nb\nc\nd';

@@ -4,8 +4,8 @@ import { /* Color, ColorInformation, Range,*/ InitializeParams, InitializeResult
 import { URI } from 'vscode-uri';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
-import Parser from './autoit/Parser';
-import PositionHelper from './autoit/PositionHelper';
+import * as Parser from './autoit/Parser';
+import * as PositionHelper from './autoit/PositionHelper';
 import { AutoIt3Configuration, Workspace } from './autoit/Workspace';
 import { NodeFilterAction } from './autoit/Script';
 import DocBlockFactory from './autoit/docBlock/DocBlockFactory';

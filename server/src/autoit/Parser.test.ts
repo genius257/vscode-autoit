@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import Parser from './Parser';
+import * as Parser from './Parser';
 
 describe('Parser', function () {
     test('isPositionWithinLocation out of scope before', function () {

@@ -1,9 +1,9 @@
 import parser, { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
 import { Diagnostic, DiagnosticSeverity, /* DiagnosticTag,*/ Position } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import Parser from './Parser';
+import * as Parser from './Parser';
 import { Workspace } from './Workspace';
-import PositionHelper from './PositionHelper';
+import * as PositionHelper from './PositionHelper';
 import debounce from '../utils/debounce';
 
 export type Include = {
