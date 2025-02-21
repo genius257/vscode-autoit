@@ -1,3 +1,6 @@
 export default class Lexer {
-    public tokenize(type: string) {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public tokenize(type: string) {
+        //
+    }
 }

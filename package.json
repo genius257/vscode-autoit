@@ -141,6 +141,8 @@
         "locutus": "^2.0.32"
     },
     "devDependencies": {
+        "@eslint/js": "^9.20.0",
+        "@stylistic/eslint-plugin": "^4.0.0",
         "@types/locutus": "^0.0.8",
         "@typescript-eslint/eslint-plugin": "^8.24.0",
         "@typescript-eslint/parser": "^8.24.0",
@@ -150,7 +152,8 @@
         "path-browserify": "^1.0.1",
         "svg-png-converter": "0.0.9",
         "ts-loader": "^9.4.2",
-        "typescript": "^5.3.3",
+        "typescript": "^5.7.3",
+        "typescript-eslint": "^8.24.0",
         "vite": "^6.1.0",
         "vitest": "^3.0.5",
         "webpack": "^5.75.0",
@@ -161,7 +164,7 @@
         "compile": "webpack",
         "watch": "webpack --watch",
         "package": "webpack --mode production --devtool hidden-source-map",
-        "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+        "lint": "eslint ./client/src ./server/src",
         "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
         "chrome": "npm run compile && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ./test-data",
         "test": "vitest --typecheck"

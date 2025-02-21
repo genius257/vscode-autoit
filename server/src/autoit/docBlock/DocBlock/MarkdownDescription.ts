@@ -1,7 +1,7 @@
-import vsprintf from "locutus/php/strings/vsprintf";
-import Description from "./Description";
-import Formatter from "./Tags/Formatter";
-import InlineMarkdownFormatter from "./Tags/Formatter/InlineMarkdownFormatter";
+import vsprintf from 'locutus/php/strings/vsprintf';
+import Description from './Description';
+import Formatter from './Tags/Formatter';
+import InlineMarkdownFormatter from './Tags/Formatter/InlineMarkdownFormatter';
 
 export default class MarkdownDescription extends Description {
     public override render(formatter: Formatter | null = null): string {
