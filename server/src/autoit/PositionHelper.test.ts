@@ -1,9 +1,9 @@
-import { expect, test } from 'vitest'
-import { Location } from "autoit3-pegjs";
-import PositionHelper from "./PositionHelper";
+import { expect, test } from 'vitest';
+import { Location } from 'autoit3-pegjs';
+import PositionHelper from './PositionHelper';
 
 test('offsetToLocation', () => {
-    const text = "a\nb\nc\nd";
+    const text = 'a\nb\nc\nd';
     const location = PositionHelper.offsetToLocation(5, text);
     expect(location).toMatchObject({
         line: 3,

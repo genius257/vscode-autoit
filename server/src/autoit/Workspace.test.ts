@@ -1,8 +1,8 @@
 import { expect, test, vi } from 'vitest';
-import Script from "./Script";
-import { AutoIt3Configuration, Workspace } from "./Workspace";
-import { URI /*, Utils*/ } from 'vscode-uri';
-import { Connection /*, RemoteConsole*/ } from 'vscode-languageserver';
+import Script from './Script';
+import { AutoIt3Configuration, Workspace } from './Workspace';
+import { URI /* , Utils*/ } from 'vscode-uri';
+import { Connection /* , RemoteConsole*/ } from 'vscode-languageserver';
 
 test('something', () => {
     const workspace = new Workspace();
@@ -20,23 +20,28 @@ test('something', () => {
 test('resolveInclude', () => {
     const connection: Partial<Connection> = {
         workspace: {
-            getConfiguration: (): Promise<AutoIt3Configuration> => Promise.resolve({
-                version: "1.0.0",
-                userDefinedLibraries: [],
-                installDir: "C:\\Program Files (x86)\\AutoIt3\\",
-                ignoreInternalInIncludes: false,
-            })
+            getConfiguration: (): Promise<AutoIt3Configuration> => {
+                return Promise.resolve({
+                    version: '1.0.0',
+                    userDefinedLibraries: [],
+                    installDir: 'C:\\Program Files (x86)\\AutoIt3\\',
+                    ignoreInternalInIncludes: false,
+                });
+            },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
-        sendRequest: <P extends string>(type: P, params: P) => Promise.resolve(URI.parse(params).toString()),
+        sendRequest: <P extends string>(type: P, params: P) => {
+            return Promise.resolve(URI.parse(params).toString());
+        },
     };
 
-   const spy = vi.spyOn(connection.workspace!, 'getConfiguration');
+    const spy = vi.spyOn(connection.workspace!, 'getConfiguration');
 
     const workspace = new Workspace(connection as Connection);
 
     workspace.resolveInclude({
-        file: "D:\\users\\bob\\workspace\\one.au3",
-        type: "IncludeStatement",
+        file: 'D:\\users\\bob\\workspace\\one.au3',
+        type: 'IncludeStatement',
         library: false,
         location: {
             start: {
@@ -49,15 +54,16 @@ test('resolveInclude', () => {
                 line: 1,
                 offset: 1,
             },
-            source: "",
+            source: '',
         },
-    })/*.then(e => console.log(e))*/;
+    });
 
-    //expect(spy).toHaveBeenCalledTimes(1);
+    // expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toBeCalledWith('autoit3');
 
-    //const installDir = "C:\\Program Files (x86)\\AutoIt3\\";
-    //const uri = "D:\\users\\bob\\workspace\\one.au3".replace(/\\/g, '/');
+    // const installDir = "C:\\Program Files (x86)\\AutoIt3\\";
+
+    // const uri = "D:\\users\\bob\\workspace\\one.au3".replace(/\\/g, '/');
 
     // console.log(Utils.resolvePath(URI.file(installDir), 'Include', uri).toString());
 });

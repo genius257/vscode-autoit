@@ -1,7 +1,7 @@
 import { URI, Utils } from 'vscode-uri';
 
 export function isAbsolutePath(path: string): boolean {
-    return /^(\/|[a-zA-Z]\:(\\|\/)|\\\\\?\\|\\)/.test(path);
+    return /^(\/|[a-zA-Z]:(\\|\/)|\\\\\?\\|\\)/.test(path);
 }
 
 export function isRelativePath(path: string): boolean {
@@ -21,12 +21,12 @@ export function removeLeadingSlash(path: string): string {
 }
 
 // function to resolve a relative path to an absolute path, or return the original path if it is already absolute
-export function resolvePath(path: string|URI, ...paths: string[]): URI {
+export function resolvePath(path: string | URI, ...paths: string[]): URI {
     if (isAbsolutePath(path.valueOf().toString())) {
-        return typeof path === "string" ? URI.file(path) : path;
+        return typeof path === 'string' ? URI.file(path) : path;
     }
 
-    path = typeof path === "string" ? URI.file(path) : path;
+    path = typeof path === 'string' ? URI.file(path) : path;
 
     return Utils.resolvePath(path, ...paths);
 }

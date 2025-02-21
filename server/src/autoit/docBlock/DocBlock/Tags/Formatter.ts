@@ -1,5 +1,7 @@
-import Tag from "../Tag";
+import Tag from '../Tag';
 
-export default interface Formatter {
-    format(tag: Tag): string
-}
+type Formatter = {
+    format(tag: Tag): string,
+};
+
+export default Formatter;

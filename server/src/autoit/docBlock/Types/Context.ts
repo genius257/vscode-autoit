@@ -2,11 +2,17 @@ export default class Context {
     private namespace: string;
 
     private namespaceAliases: Record<string, string>;
-    
-    public constructor(namespace: string, namespaceAliases: Record<string, string> = {}) {
+
+    public constructor(
+        namespace: string,
+        namespaceAliases: Record<string, string> = {},
+    ) {
         this.namespace = namespace !== 'global' && namespace !== 'default' ? namespace.replace(/(^\\+|\\+$)/, '') : '';
 
-        Object.entries(namespaceAliases).forEach(([alias, fqnn]) => {
+        Object.entries(namespaceAliases).forEach(([
+            alias,
+            fqnn,
+        ]) => {
             if (fqnn[0] === '\\') {
                 fqnn = fqnn.substring(1);
             }

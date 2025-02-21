@@ -1,13 +1,13 @@
-import Tag from "../Tag";
-import Formatter from "./Formatter";
-import PassthroughFormatter from "./Formatter/PassthroughFormatter";
+import Tag from '../Tag';
+import Formatter from './Formatter';
+import PassthroughFormatter from './Formatter/PassthroughFormatter';
 
 export default class InvalidTag extends Tag {
     private name: string;
 
     private body: string;
 
-    private throwable: unknown;//FIXME
+    private throwable: unknown;// FIXME
 
     private constructor(name: string, body: string) {
         super();
@@ -15,7 +15,7 @@ export default class InvalidTag extends Tag {
         this.body = body;
     }
 
-    public getException(): unknown|null {
+    public getException(): unknown | null {
         return this.throwable;
     }
 
@@ -28,7 +28,7 @@ export default class InvalidTag extends Tag {
     }
 
     public withError(exception: unknown): InvalidTag {
-        //this.flattenExceptionBacktrace(exception);
+        // this.flattenExceptionBacktrace(exception);
         const tag = new InvalidTag(this.name, this.body);
         tag.throwable = exception;
 
@@ -39,7 +39,7 @@ export default class InvalidTag extends Tag {
 
     // private flattenArguments(value: unknown): unknown
 
-    public render(formatter: Formatter|null = null): string {
+    public render(formatter: Formatter | null = null): string {
         if (formatter === null) {
             formatter = new PassthroughFormatter();
         }

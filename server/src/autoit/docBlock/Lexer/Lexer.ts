@@ -1,3 +1,5 @@
 export default class Lexer {
-    public tokenize(type: string) {}
+    public tokenize(type: string) {
+        //
+    }
 }

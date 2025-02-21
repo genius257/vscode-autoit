@@ -1,58 +1,58 @@
-import { expect, test, describe } from 'vitest'
-import Parser from "./Parser";
+import { expect, test, describe } from 'vitest';
+import Parser from './Parser';
 
-describe("Parser", function () {
-    test("isPositionWithinLocation out of scope before", function () {
+describe('Parser', function () {
+    test('isPositionWithinLocation out of scope before', function () {
         expect(
             Parser.isPositionWithinLocation(
                 1,
                 1,
                 {
-                    "source": "",
-                    "start": { "offset": 15, "line": 2, "column": 5 },
-                    "end": { "offset": 23, "line": 3, "column": 1 }
-                }
-            )
+                    source: '',
+                    start: { offset: 15, line: 2, column: 5 },
+                    end: { offset: 23, line: 3, column: 1 },
+                },
+            ),
         ).toEqual(false);
-        
+
         expect(
             Parser.isPositionWithinLocation(
                 2,
                 4,
                 {
-                    "source": "",
-                    "start": { "offset": 15, "line": 2, "column": 5 },
-                    "end": { "offset": 23, "line": 3, "column": 1 }
-                }
-            )
+                    source: '',
+                    start: { offset: 15, line: 2, column: 5 },
+                    end: { offset: 23, line: 3, column: 1 },
+                },
+            ),
         ).toEqual(false);
     });
 
-    test("isPositionWithinLocation in scope within", function () {
+    test('isPositionWithinLocation in scope within', function () {
         expect(
             Parser.isPositionWithinLocation(
                 2,
                 17,
                 {
-                    "source": "",
-                    "start": { "offset": 15, "line": 2, "column": 5 },
-                    "end": { "offset": 23, "line": 3, "column": 1 }
-                }
-            )
+                    source: '',
+                    start: { offset: 15, line: 2, column: 5 },
+                    end: { offset: 23, line: 3, column: 1 },
+                },
+            ),
         ).toEqual(true);
     });
-    
-    test("isPositionWithinLocation out of scope after", function () {
+
+    test('isPositionWithinLocation out of scope after', function () {
         expect(
             Parser.isPositionWithinLocation(
                 3,
                 2,
                 {
-                    "source": "",
-                    "start": { "offset": 15, "line": 2, "column": 5 },
-                    "end": { "offset": 23, "line": 3, "column": 1 }
-                }
-            )
+                    source: '',
+                    start: { offset: 15, line: 2, column: 5 },
+                    end: { offset: 23, line: 3, column: 1 },
+                },
+            ),
         ).toEqual(false);
 
         expect(
@@ -60,17 +60,17 @@ describe("Parser", function () {
                 4,
                 1,
                 {
-                    "source": "",
-                    "start": { "offset": 15, "line": 2, "column": 5 },
-                    "end": { "offset": 23, "line": 3, "column": 1 }
-                }
-            )
+                    source: '',
+                    start: { offset: 15, line: 2, column: 5 },
+                    end: { offset: 23, line: 3, column: 1 },
+                },
+            ),
         ).toEqual(false);
     });
 
-    test("AstToString, simple", function() {
-        const source = "$x = null";
-        const ast = Parser.parse(source, "");
+    test('AstToString, simple', function () {
+        const source = '$x = null';
+        const ast = Parser.parse(source, '');
         const actual = Parser.AstToString(ast);
 
         expect(actual).toBe(source);

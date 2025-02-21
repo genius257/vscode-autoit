@@ -1,4 +1,4 @@
-import BaseTag from "./BaseTag";
+import BaseTag from './BaseTag';
 
 export default class Author extends BaseTag {
     protected override name: string = 'author';
@@ -21,8 +21,8 @@ export default class Author extends BaseTag {
         return this.authorEmail;
     }
 
-    static override create(body: string): Author|null {
-        const splitTagContent = body.match(/^([^<]*)(?:<([^>]*)>)?$/u) as null | (RegExpMatchArray & { 1: string });
+    static override create(body: string): Author | null {
+        const splitTagContent = body.match(/^([^<]*)(?:<([^>]*)>)?$/u) as null | (RegExpMatchArray & { '1': string });
 
         if (splitTagContent === null) {
             return null;
@@ -41,6 +41,9 @@ export default class Author extends BaseTag {
             authorEmail = `<${this.authorEmail}>`;
         }
 
-        return [this.authorName, authorEmail].filter(value => value).join(' ');
+        return [
+            this.authorName,
+            authorEmail,
+        ].filter((value) => value).join(' ');
     }
 }

@@ -1,12 +1,12 @@
-import Description from "../Description";
-import DescriptionFactory from "../DescriptionFactory";
-import BaseTag from "./BaseTag";
-import TypeContext from "../../Types/Context";
-import StandardTagFactory from "../StandardTagFactory";
-import FqsenResolver from "../../FqsenResolver";
+import Description from '../Description';
+import DescriptionFactory from '../DescriptionFactory';
+import BaseTag from './BaseTag';
+import TypeContext from '../../Types/Context';
+import StandardTagFactory from '../StandardTagFactory';
+import FqsenResolver from '../../FqsenResolver';
 
 export default class Link extends BaseTag {
-    protected override name: string = "link";
+    protected override name: string = 'link';
 
     private link: string;
 
@@ -19,11 +19,12 @@ export default class Link extends BaseTag {
     public static override create(
         body: string,
         descriptionFactory: DescriptionFactory | null = null,
-        context: TypeContext | null = null
+        context: TypeContext | null = null,
     ): Link | null {
         descriptionFactory ??= new DescriptionFactory(
             new StandardTagFactory(new FqsenResolver())
         ); // Qick fix, since the current codebase diviates from the original PHPDoc codebase.
+
         const parts = body.split(/\s+(.*)/u, 2); // Trick to match PHP preg_match with a limit of 2 https://stackoverflow.com/a/4607799 https://github.com/phpDocumentor/ReflectionDocBlock/blob/e5e784149a09bd69d9a5e3b01c5cbd2e2bd653d8/src/DocBlock/Tags/Link.php#L47
         const description =
             parts.length > 1
@@ -43,12 +44,12 @@ export default class Link extends BaseTag {
 
     public toString(): string {
         const description =
-            this.description !== null ? this.description.render() : "";
+            this.description !== null ? this.description.render() : '';
 
         const link = this.link;
 
         return `${link}${
-            description !== "" ? (link !== "" ? " " : "") + description : ""
+            description !== '' ? (link !== '' ? ' ' : '') + description : ''
         }`;
     }
 }

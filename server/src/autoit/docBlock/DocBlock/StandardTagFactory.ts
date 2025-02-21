@@ -1,12 +1,12 @@
-import Tag, { TagLike } from "./Tag";
-import TagFactory from "./TagFactory";
-import Author from "./Tags/Author";
-import Factory from "./Tags/Factory/Factory";
-import FqsenResolver from "../FqsenResolver";
-import TypeContext from "../Types/Context";
-import InvalidTag from "./Tags/InvalidTag";
-import Generic from "./Tags/Generic";
-import LinkTag from "./Tags/Link";
+import Tag, { TagLike } from './Tag';
+import TagFactory from './TagFactory';
+import Author from './Tags/Author';
+import Factory from './Tags/Factory/Factory';
+import FqsenResolver from '../FqsenResolver';
+import TypeContext from '../Types/Context';
+import InvalidTag from './Tags/InvalidTag';
+import Generic from './Tags/Generic';
+import LinkTag from './Tags/Link';
 
 // https://github.com/phpDocumentor/ReflectionDocBlock/blob/master/src/DocBlock/StandardTagFactory.php
 
@@ -15,12 +15,13 @@ export default class StandardTagFactory extends TagFactory {
     public static readonly REGEX_TAGNAME = '[\\w\\-_\\\\:]+';
 
     /** A object representing a mapping of tag names to Tag Handler Classes */
-    private tagHandlerMappings: Record<string, TagLike|Factory> = {
-        'author': Author,
+    private tagHandlerMappings: Record<string, TagLike | Factory> = {
+        /* eslint-disable @stylistic/lines-around-comment, @stylistic/multiline-comment-style */
+        author: Author,
         // 'covers': Covers,
         // 'deprecated': Deprecated,
         // 'example': Example,
-        'link': LinkTag,
+        link: LinkTag,
         // 'method': Method,
         // 'param': Param,
         // 'property-:d' => PropertyRead,
@@ -35,53 +36,70 @@ export default class StandardTagFactory extends TagFactory {
         // 'uses': Uses,
         // 'var': Var_,
         // 'version': Version,
+        /* eslint-enable @stylistic/lines-around-comment, @stylistic/multiline-comment-style */
     };
 
     /** A object representing a mapping of annotation names to Tag Handler Classes */
     private annotationMappings: Record<string, TagLike> = {};
 
-    private fqsenResolver: FqsenResolver; //FIXME
+    private fqsenResolver: FqsenResolver; // FIXME
 
     /**
      * An array representing a simple Service Locator where we can store parameters and services that can be inserted into the Factory Methods of Tag Handlers.
      */
     private serviceLocator: unknown[] = [];
 
-    public constructor(fqsenResolver: FqsenResolver, tagHandlers: Record<string, TagLike>|null = null) {
+    public constructor(
+        fqsenResolver: FqsenResolver,
+        tagHandlers: Record<string, TagLike> | null = null,
+    ) {
         super();
 
         this.fqsenResolver = fqsenResolver;
+
         if (tagHandlers !== null) {
             this.tagHandlerMappings = tagHandlers;
         }
 
-        this.addService(fqsenResolver, FqsenResolver.name);
+        this.addService(
+            fqsenResolver as unknown as { name: string },
+            FqsenResolver.name,
+        );
     }
 
-    public create(tagLine: string, context: TypeContext|null = null): Tag {
+    public create(tagLine: string, context: TypeContext | null = null): Tag {
         if (context === null) {
             context = new TypeContext('');
         }
 
-        const [tagName, tagBody] = this.extractTagParts(tagLine);
+        const [
+            tagName,
+            tagBody,
+        ] = this.extractTagParts(tagLine);
 
-        return this.createTag(tagBody!.trim(), tagName!, context);
+        return this.createTag(tagBody.trim(), tagName, context);
     }
 
     public addParameter(name: string, value: unknown): void {
         this.serviceLocator[name] = value;
     }
 
-    public addService(service: any, alias: string|null = null): void {
+    public addService(
+        service: { name: string },
+        alias: string | null = null,
+    ): void {
         this.serviceLocator[alias ?? service.name] = service;
     }
 
-    public registerTagHandler(tagName: string, handler: Factory | TagLike): void {
+    public registerTagHandler(
+        tagName: string,
+        handler: Factory | TagLike,
+    ): void {
         if (tagName.includes('\\') && tagName !== '\\') {
             throw new Error('A namespaced tag must have a leading backslash as it must be fully qualified');
         }
 
-        if (handler instanceof Factory) { //FIXME
+        if (handler instanceof Factory) { // FIXME
             this.tagHandlerMappings[tagName] = handler;
 
             return;
@@ -90,7 +108,7 @@ export default class StandardTagFactory extends TagFactory {
         this.tagHandlerMappings[tagName] = handler;
     }
 
-    private extractTagParts(tagLine: string): string[] {
+    private extractTagParts(tagLine: string): [string, string, string] {
         const matches = tagLine.match(new RegExp(`^@(${StandardTagFactory.REGEX_TAGNAME})((?:[\\s\\(\\{])\\s*([^\\s].*)|$)`, 'us'));
 
         if (matches === null) {
@@ -101,14 +119,16 @@ export default class StandardTagFactory extends TagFactory {
             matches.push('');
         }
 
-        return matches.slice(1);
+        return matches.slice(1) as [string, string, string];
     }
 
     private createTag(body: string, name: string, context: TypeContext): Tag {
         const handlerClassName = this.findHandlerClassName(name, context);
 
         try {
-            const tag = handlerClassName === Generic ? (handlerClassName as typeof Generic).create(body, name) : handlerClassName.create(body);
+            const tag = handlerClassName === Generic
+                ? (handlerClassName as typeof Generic).create(body, name)
+                : handlerClassName.create(body);
 
             return tag ?? InvalidTag.create(body, name);
         } catch (e) {
@@ -116,13 +136,18 @@ export default class StandardTagFactory extends TagFactory {
         }
     }
 
-    private findHandlerClassName(tagName: string, context: TypeContext): TagLike|Factory {
-        let handlerClassName: TagLike|Factory = Generic;
+    private findHandlerClassName(
+        tagName: string,
+        context: TypeContext,
+    ): TagLike | Factory {
+        let handlerClassName: TagLike | Factory = Generic;
+
         if (tagName in this.tagHandlerMappings) {
             handlerClassName = this.tagHandlerMappings[tagName]!;
         } else if (this.isAnnotation(tagName)) {
             // TODO: Annotation support is planned for a later stage and as such is disabled for now
             tagName = this.fqsenResolver.resolve(tagName, context).toString();
+
             if (tagName in this.annotationMappings) {
                 handlerClassName = this.annotationMappings[tagName]!;
             }
@@ -131,12 +156,15 @@ export default class StandardTagFactory extends TagFactory {
         return handlerClassName;
     }
 
-    //TODO: currently source have not implemented this, maybe remove from here?
+    // TODO: currently source have not implemented this, maybe remove from here?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private isAnnotation(tegContext: string): boolean {
-        // 1. Contains a namespace separator
-        // 2. Contains parenthesis
-        // 3. Is present in a list of known annotations (make the algorithm smart by first checking is the last part
-        //    of the annotation class name matches the found tag name
+        /*
+         * 1. Contains a namespace separator
+         * 2. Contains parenthesis
+         * 3. Is present in a list of known annotations (make the algorithm smart by first checking is the last part
+         *    of the annotation class name matches the found tag name
+         */
 
         return false;
     }

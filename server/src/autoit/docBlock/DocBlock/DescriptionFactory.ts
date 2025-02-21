@@ -1,34 +1,41 @@
-import Description from "./Description";
-import Factory from "./Tags/Factory/Factory";
-import TypeContext from "../Types/Context";
-import Tag from "./Tag";
+import Description from './Description';
+import Factory from './Tags/Factory/Factory';
+import TypeContext from '../Types/Context';
+import Tag from './Tag';
 
 export default class DescriptionFactory {
     private tagFactory: Factory;
-    
+
     public constructor(tagFactory: Factory) {
         this.tagFactory = tagFactory;
     }
 
-    public create(contents: string, context: TypeContext|null = null): Description {
+    public create(
+        contents: string,
+        context: TypeContext | null = null,
+    ): Description {
         const tokens = this.lex(contents);
         const count = tokens.length;
         let tagCount = 0;
         const tags: Tag[] = [];
 
-        for (let index = 1; index < count; index+=2) {
+        for (let index = 1; index < count; index += 2) {
             tags.push(this.tagFactory.create(tokens[index]!, context));
             tokens[index] = `%${++tagCount}$s`;
         }
 
-        //In order to allow "literal" inline tags, the otherwise invalid
-        //sequence "{@}" is changed to "@", and "{}" is changed to "}".
-        //"%" is escaped to "%%" because of vsprintf.
-        //See unit tests for examples.
-        for (let index = 0; index < count; index+=2) {
-            tokens[index] = tokens[index]!.replace(/{@}/g, '@').replace(/{}/g, '}').replace(/%/g, '%%');
+        /*
+         * In order to allow "literal" inline tags, the otherwise invalid
+         * sequence "{@}" is changed to "@", and "{}" is changed to "}".
+         * "%" is escaped to "%%" because of vsprintf.
+         * See unit tests for examples.
+         */
+        for (let index = 0; index < count; index += 2) {
+            tokens[index] = tokens[index]!
+                .replace(/{@}/g, '@')
+                .replace(/{}/g, '}')
+                .replace(/%/g, '%%');
         }
-
 
         return new Description(tokens.join(''), tags);
     }
@@ -41,14 +48,14 @@ export default class DescriptionFactory {
             return [contents];
         }
 
+        /* eslint-disable @stylistic/indent, @stylistic/lines-around-comment, @stylistic/multiline-comment-style */
         // https://www.dormant.ninja/multiline-regex-in-javascript-with-comments/
-        // prettier-ignore
-        const regexParts: Array<RegExp | string> = [
+        const regexParts: (RegExp | string)[] = [
             /\{/,
                 // "{@}" is not a valid inline tag. This ensures that we do not treat it as one, but treat it literally.
                 /(?!@\})/,
                 // We want to capture the whole tag line, but without the inline tag delimiters.
-                "(@",
+                '(@',
                     // Match everything up to the next delimiter.
                     /[^{}]*/,
                     /* // BUG: the JS RegEx engine does not support numbered subpattern references, like (?1), so for now we are limited to one level of inline tags.
@@ -68,33 +75,42 @@ export default class DescriptionFactory {
                     ")*", // If there are more inline tags, match them as well. We use "*" since there may not be any
                         // nested inline tags.
                     */
-                ")",
+                ')',
             /\}/,
         ];
+        /* eslint-enable @stylistic/indent, @stylistic/lines-around-comment, @stylistic/multiline-comment-style */
 
-        return contents.split(new RegExp(regexParts.map(part => typeof part === "string" ? part : part.source).join(""), "u"));
+        return contents.split(new RegExp(regexParts.map((part) => (typeof part === 'string' ? part : part.source)).join(''), 'u'));
     }
 
     private removeSuperfluousStartingWhitespace(contents: string): string {
         const lines = contents.split(/\r\n?|\n/g);
 
-        // if there is only one line then we don't have lines with superfluous whitespace and
-        // can use the contents as-is
+        /*
+         * if there is only one line then we don't have lines with superfluous whitespace and
+         * can use the contents as-is
+         */
         if (lines.length <= 1) {
             return contents;
         }
 
         // determine how many whitespace characters need to be stripped
         let startingSpaceCount = 9999999;
+
         for (let index = 1, iMax = lines.length; index < iMax; ++index) {
             // lines with a no length do not count as they are not indented at all
             if (lines[index]!.trim() === '') {
                 continue;
             }
 
-            // determine the number of prefixing spaces by checking the difference in line length before and after
-            // an ltrim
-            startingSpaceCount = Math.min(startingSpaceCount, lines[index]!.length - lines[index]!.trimStart().length);
+            /*
+             * determine the number of prefixing spaces by checking the difference in line length before and after
+             * an ltrim
+             */
+            startingSpaceCount = Math.min(
+                startingSpaceCount,
+                lines[index]!.length - lines[index]!.trimStart().length,
+            );
         }
 
         // strip the number of spaces from each line
@@ -104,6 +120,6 @@ export default class DescriptionFactory {
             }
         }
 
-        return lines.join("\n");
+        return lines.join('\n');
     }
 }

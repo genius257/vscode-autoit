@@ -1,5 +1,5 @@
-import BaseTag from "../BaseTag";
-import type Formatter from "../Formatter";
+import BaseTag from '../BaseTag';
+import type Formatter from '../Formatter';
 
 export default class PassthroughFormatter implements Formatter {
     /**
