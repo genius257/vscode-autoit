@@ -6,7 +6,7 @@ import native from './native.au3?raw';
 import { isAbsolutePath } from './Path';
 
 /** The key is the script URI */
-export type scriptList = Record<string, Script | undefined>;
+export type ScriptList = Map<string, Script>;
 
 type uri = string | URI | { toString: () => string };
 
@@ -32,7 +32,7 @@ export type AutoIt3Configuration = {
 };
 
 export class Workspace {
-    protected scripts: scriptList = {};
+    protected scripts: ScriptList = new Map();
     protected connection: Connection | null;
     protected diagnosticsListners: diagnosticsListner[] = [];
 
@@ -75,20 +75,20 @@ export class Workspace {
         }
 
         script.workspace = this;
-        this.scripts[uri.toString()] = script;
+        this.scripts.set(uri.toString(), script);
     }
 
     public get(uri: uri): Script | undefined {
-        return this.scripts[uri.toString()];
+        return this.scripts.get(uri.toString());
     }
 
     public exists(uri: uri) {
-        return uri.toString() in this.scripts;
+        return this.scripts.has(uri.toString());
     }
 
     public createOrUpdate(uri: uri, text: string): Script {
         const _uri = uri.toString();
-        let script = this.scripts?.[_uri];
+        let script = this.scripts.get(_uri);
 
         if (script !== undefined) {
             script.update(text);
@@ -104,7 +104,7 @@ export class Workspace {
     }
 
     public remove(uri: uri): void {
-        delete this.scripts[uri.toString()];
+        this.scripts.delete(uri.toString());
     }
 
     /**
