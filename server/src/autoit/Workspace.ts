@@ -205,6 +205,10 @@ export class Workspace {
     }
 
     protected openTextDocument(uri: URI): IncludePromise {
+        if (uri.scheme !== 'file') {
+            return Promise.resolve(null);
+        }
+
         const promise = this.connection?.sendRequest<string | null>('openTextDocument', uri.toString()).then<IncludeResolve | null>((x) => (x === null ? x : { uri: uri, text: x })) ?? Promise.resolve(null);
 
         promise.then((value) => {
