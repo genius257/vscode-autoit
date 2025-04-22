@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.3] - 2025-04-22
+
+### Fixed
+
+- Resolving include URI's with non file scheme, resulted in looping and extreme CPU/IO usage
+
 ## [1.8.2] - 2025-02-15
 
-## Fixed
+### Fixed
 
 - Linting warnings that prevented automatic deployment
 
@@ -78,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Array dimention specification on constant variable declarations was not seen as valid by parser (issue #48).
+- Array dimension specification on constant variable declarations was not seen as valid by parser (issue #48).
 - Volatile keyword on function declarations in parsing is no longer case-sensitive.
 
 ## [1.4.1] - 2024-03-05
@@ -208,8 +214,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.2...HEAD
-[1.8.1]: https://github.com/genius257/vscode-autoit/compare/1.8.1...1.8.2
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.3...HEAD
+[1.8.3]: https://github.com/genius257/vscode-autoit/compare/1.8.2...1.8.3
+[1.8.2]: https://github.com/genius257/vscode-autoit/compare/1.8.1...1.8.2
 [1.8.1]: https://github.com/genius257/vscode-autoit/compare/1.8.0...1.8.1
 [1.8.0]: https://github.com/genius257/vscode-autoit/compare/1.7.0...1.8.0
 [1.7.0]: https://github.com/genius257/vscode-autoit/compare/1.6.1...1.7.0
