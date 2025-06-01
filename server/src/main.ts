@@ -173,7 +173,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
 
         if (suggestion !== undefined) {
             return {
-                contents: { kind: MarkupKind.Markdown, value: suggestion.detail + '\n\n' + suggestion.documentation } satisfies MarkupContent,
+                contents: { kind: MarkupKind.Markdown, value: (suggestion.detail ?? '') + '\n\n' + suggestion.documentation } satisfies MarkupContent,
                 range: PositionHelper.locationRangeToRange(
                     identifierAtPos.location,
                 ),
