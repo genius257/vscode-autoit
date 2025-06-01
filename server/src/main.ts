@@ -1,19 +1,12 @@
-// import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { /* Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /* TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
 import * as Parser from './autoit/Parser';
 import * as PositionHelper from './autoit/PositionHelper';
-import { AutoIt3Configuration, Workspace } from './autoit/Workspace';
-import { NodeFilterAction } from './autoit/Script';
-import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
-import InvalidTag from './autoit/docBlock/DocBlock/Tags/InvalidTag';
-import MarkdownFormatter from './autoit/docBlock/DocBlock/Tags/Formatter/MarkdownFormatter';
-import FqsenResolver from './autoit/docBlock/FqsenResolver';
-import StandardTagFactory from './autoit/docBlock/DocBlock/StandardTagFactory';
-import MarkdownDescriptionFactory from './autoit/docBlock/DocBlock/MarkdownDescriptionFactory';
+import { Workspace } from './autoit/Workspace';
+import { CompletionItemBridge } from './providers/CompletionItemBridge';
 
 console.log('running server autoit3-lsp-web-extension');
 
@@ -103,12 +96,6 @@ connection.onDidCloseTextDocument((params) => {
     workspace.get(params.textDocument.uri)?.release();
 });
 
-// Register providers
-
-// connection.onDocumentColor(params => getColorInformation(params.textDocument));
-
-// connection.onColorPresentation(params => getColorPresentation(params.color, params.range));
-
 connection.onDocumentSymbol(getDocumentSymbol);
 connection.onDefinition(getDefinition);
 connection.onCompletion(getCompletionItems);
@@ -186,7 +173,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
 
         if (suggestion !== undefined) {
             return {
-                contents: { kind: MarkupKind.Markdown, value: suggestion.detail + '\n\n' + suggestion.documentation } satisfies MarkupContent,
+                contents: { kind: MarkupKind.Markdown, value: (suggestion.detail ?? '') + '\n\n' + suggestion.documentation } satisfies MarkupContent,
                 range: PositionHelper.locationRangeToRange(
                     identifierAtPos.location,
                 ),
@@ -210,133 +197,29 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         return null;
     }
 
+    const contents: MarkupContent = {
+        kind: MarkupKind.Markdown,
+        value: '',
+    };
+
     switch (identifier.type) {
         case 'VariableDeclarator':
         {
-            let value:
-                | string
-                | number
-                | boolean
-                | null
-                | undefined;
+            let value: string | null = null;
 
             if (identifier.init !== null) {
                 value = Parser.AstToString(identifier.init);
             }
 
-            return {
-                contents: (identifierAtPos.type === 'VariableIdentifier' ? '$' : '') + identifier.id.name + (value === undefined ? '' : ' = ' + value),
-                range: PositionHelper.locationRangeToRange(
-                    identifierAtPos.location,
-                ),
-            };
+            contents.value += `\`\`\`au3\n${identifierAtPos.type === 'VariableIdentifier' ? '$' : ''}${identifier.id.name}${value === null ? '' : ' = ' + value}\n\`\`\``;
+
+            break;
         }
         case 'FunctionDeclaration':
         {
-            const hoverContents: MarkupContent =
-                {
-                    kind: MarkupKind.Markdown,
-                    value: `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(', ')})\n\`\`\``,
-                };
+            contents.value += `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(', ')})\n\`\`\``;
 
-            const identifierScript = workspace.get(identifier.location.source);
-
-            if (identifierScript !== undefined) {
-                const precedingIdentifierSiblings = identifierScript
-                    .filterNodes((node) => {
-                        // eslint-disable-next-line @stylistic/max-len
-                        if (node.location.end.line >= identifier.location.start.line) {
-                            return NodeFilterAction.StopAndSkip;
-                        }
-
-                        if (node.type === 'EmptyStatement') {
-                            return NodeFilterAction.SkipAndStopPropagation;
-                        }
-
-                        return NodeFilterAction.StopPropagation;
-                    });
-
-                const previousIdentifierSibling = precedingIdentifierSiblings[
-                    precedingIdentifierSiblings.length - 1
-                ];
-
-                switch (previousIdentifierSibling?.type) {
-                    case 'MultiLineComment':
-                        // FIXME: move docblock parsing to script analysis instead
-                        try {
-                            const fqsenResolver = new FqsenResolver();
-                            const tagFactory =
-                                new StandardTagFactory(fqsenResolver);
-                            const descriptionFactory =
-                                new MarkdownDescriptionFactory(tagFactory);
-                            const docBlockFactory =
-                                new DocBlockFactory(
-                                    descriptionFactory,
-                                    tagFactory,
-                                );
-                            const docBlock =
-                                docBlockFactory.createFromMultilineComment(
-                                    previousIdentifierSibling,
-                                );
-
-                            const markdownFormatter = new MarkdownFormatter();
-                            hoverContents.value += `\n\n${[
-                                docBlock.summary.toString(),
-                                docBlock.description.toString(),
-                                docBlock.tags.map((tag) => {
-                                    if (tag instanceof InvalidTag) {
-                                        connection.console.error(`${tag.getException()}`);
-
-                                        return null;
-                                    }
-
-                                    return `${tag.render(markdownFormatter)}`;
-                                }).join('\n\n'),
-                            ].join('\n\n')}`;
-                        } catch (e) {
-                            connection.console.error(`${e}`);// FIXME: depending on the error, it should be added as a diagnostic instead.
-                        }
-
-                        break;
-                    case 'SingleLineComment':
-                    {
-                        // eslint-disable-next-line @stylistic/max-len
-                        const comments: AutoIt3.SingleLineComment[] = [previousIdentifierSibling];
-
-                        // eslint-disable-next-line @stylistic/max-len
-                        for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
-                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            const element = precedingIdentifierSiblings[index]!;
-
-                            if (element.type !== 'SingleLineComment') {
-                                break;
-                            }
-
-                            comments.unshift(element);
-                        }
-
-                        if (comments.length >= 3) { // A minunum of 3 lines are needed for legacy UDF function header
-                            const docBlock = DocBlockFactory.createInstance()
-                                .createFromLegacyComments(comments);
-
-                            if (docBlock !== null) {
-                                hoverContents.value += `\n\n${[
-                                    docBlock.summary.toString(),
-                                    docBlock.description.toString(),
-                                ].join('\n\n')}`;
-                            }
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            return {
-                contents: hoverContents,
-                range: PositionHelper
-                    .locationRangeToRange(identifierAtPos.location),
-            };
+            break;
         }
         case 'Parameter':
         {
@@ -346,42 +229,59 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                 parameterValue = Parser.AstToString(identifier.init);
             }
 
-            return {
-                contents: '(parameter) $' + identifier.id.name + (parameterValue === undefined ? '' : ' = ' + parameterValue),
-                range: PositionHelper
-                    .locationRangeToRange(identifierAtPos.location),
-            };
+            contents.value += `\`\`\`au3\n(parameter) $${identifier.id.name}${parameterValue === undefined ? '' : ' = ' + parameterValue}\n\`\`\``;
+
+            break;
         }
         default:
-            break;
+            return null;
     }
 
-    return null;
+    const identifierScript = workspace.get(identifier.location.source);
+
+    if (identifierScript !== undefined && (
+        identifier.type === 'FunctionDeclaration' ||
+        identifier.type === 'VariableDeclarator'
+    )) {
+        const docBlock = identifierScript.docBlocks.get(identifier);
+
+        if (docBlock !== undefined) {
+            contents.value += `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
+        }
+    }
+
+    return {
+        contents: contents,
+        range: PositionHelper.locationRangeToRange(
+            identifierAtPos.location,
+        ),
+    };
 });
 
 // Listen on the connection
 connection.listen();
 
-function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
-    const symbols: DocumentSymbol[] = [];
+function getDocumentSymbol(
+    params: DocumentSymbolParams,
+): DocumentSymbol[] | null {
+    const script = workspace.get(params.textDocument.uri);
 
-    workspace.get(params.textDocument.uri)?.filterNodes((node) => (node.type === 'FunctionDeclaration' || node.type === 'VariableDeclarator' ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip))
-        .forEach((declaration) => {
-            if (declaration.type === 'FunctionDeclaration' || declaration.type === 'VariableDeclarator') {
-                symbols.push({
-                    kind: declaration.type === 'FunctionDeclaration' ? SymbolKind.Function : SymbolKind.Variable,
-                    name: declaration.id.name,
-                    range: PositionHelper.locationRangeToRange(
-                        declaration.location,
-                    ),
-                    selectionRange: PositionHelper.locationRangeToRange(
-                        declaration.id.location,
-                    ),
-                });
-            }
-        });
+    if (script === undefined) {
+        return null;
+    }
 
-    return symbols;
+    return script.declarations.map((declaration) => {
+        return {
+            kind: declaration.type === 'FunctionDeclaration' ? SymbolKind.Function : SymbolKind.Variable,
+            name: declaration.id.name,
+            range: PositionHelper.locationRangeToRange(
+                declaration.location,
+            ),
+            selectionRange: PositionHelper.locationRangeToRange(
+                declaration.id.location,
+            ),
+        };
+    });
 }
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
@@ -396,11 +296,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
     const declarator = workspace.get(params.textDocument.uri)
         ?.getIdentifierDeclarator(identifierAtPos);
 
-    if (!declarator) {
-        return [];
-    }
-
-    if (declarator === null) {
+    if (declarator === null || declarator === undefined) {
         return [];
     }
 
@@ -421,110 +317,13 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 
 async function getCompletionItems(
     params: CompletionParams,
-): Promise<CompletionItem[]> {
-    let completionItems: CompletionItem[] = [];
-    const includes: string[] = [params.textDocument.uri];
-    const configuration: AutoIt3Configuration = await connection.workspace.getConfiguration('autoit3');
+): Promise<CompletionItem[] | CompletionList | undefined | null> {
+    const completionItemBridge = new CompletionItemBridge(workspace);
 
-    // Loop though all unique included files and add completion items found in each.
-    for (const include of includes) {
-        const script = workspace.get(include);
-
-        if (script !== undefined) {
-            const _completionItems = script.declarations
-                .reduce<CompletionItem[]>((completionItems, declaration) => {
-                    if (configuration.ignoreInternalInIncludes && declaration.id.name.startsWith('__')) {
-                        // If the declaration is an internal variable and the setting is true for ignoring those, we return early.
-                        return completionItems;
-                    }
-
-                    switch (declaration.type) {
-                        case 'FunctionDeclaration':
-                            completionItems.push({
-                                label: declaration.id.name,
-                                kind: CompletionItemKind.Function,
-                            });
-
-                            break;
-                        case 'VariableDeclarator':
-                            completionItems.push({
-                                label: '$' + declaration.id.name,
-                                kind: CompletionItemKind.Variable,
-                                insertText: '$' + declaration.id.name,
-                            });
-
-                            break;
-                    }
-
-                    return completionItems;
-                }, []);
-            completionItems.push(..._completionItems);
-            includes.push(
-                ...script.getIncludes()
-                    .map((x) => x.uri)
-                    .filter(
-                        (x): x is string => x !== null && !includes.includes(x),
-                    ),
-            );
-        }
-    }
-
-    // If within a function, add everything defined before cursor as suggestions from the scope
-    const script = workspace.get(params.textDocument.uri);
-
-    if (script !== undefined) {
-        const matches: (
-            | AutoIt3.VariableDeclaration
-            | AutoIt3.FormalParameter
-        )[] = [];
-        script.filterNestedNode(
-            script.declarations.find((declaration) => declaration.type === 'FunctionDeclaration' && Parser.isPositionWithinLocation(params.position.line, params.position.character, declaration.location)) ?? null,
-            (node) => {
-                if (node.location.start.line >= params.position.line + 1) {
-                    return NodeFilterAction.SkipAndStopPropagation;
-                }
-
-                if (node.type === 'Parameter' || node.type === 'VariableDeclarator') {
-                    return NodeFilterAction.Continue;
-                }
-
-                return NodeFilterAction.Skip;
-            },
-            matches,
-        );
-
-        completionItems.push(...matches.map<CompletionItem>((match) => ({ label: '$' + match.id.name, kind: CompletionItemKind.Variable })));
-    }
-
-    // Filter duplicate suggestions out based on case insensetive name comparison
-    completionItems = completionItems.filter(
-        (completionItem, index, array) => array.findIndex(
-            (x) => x.label.toLowerCase() === completionItem.label.toLowerCase(),
-        ) === index,
+    return completionItemBridge.resolveCompletionItems(
+        params.textDocument.uri,
+        params.position,
     );
-
-    // Add all native suggestions
-    completionItems = completionItems.concat(
-        Object.entries(nativeSuggestions).map<CompletionItem>(
-            // eslint-disable-next-line @stylistic/array-bracket-newline
-            ([, nativeSuggestion]) => ({
-                label: nativeSuggestion.title,
-                kind: nativeSuggestion.kind,
-                documentation: nativeSuggestion.documentation !== undefined
-                    ? {
-                        kind: MarkupKind.Markdown,
-                        value: nativeSuggestion.documentation,
-                    }
-                    : undefined,
-
-                // detail: nativeSuggestion.detail,
-
-                // labelDetails: {description: nativeSuggestion.detail},
-            }),
-        ),
-    );
-
-    return completionItems;
 }
 
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
@@ -683,77 +482,3 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
         activeSignature: 0,
     };
 }
-
-// const colorRegExp = /#([0-9A-Fa-f]{6})/g;
-
-// NOTE: currently colorization is done via simple vscode tmLanguage logic, but using the parser, when ready may be a better choice. Time will tell.
-/*
- *function getColorInformation(textDocument: TextDocumentIdentifier) {
- *  const colorInfos: ColorInformation[] = [];
- *
- *  const document = documents.get(textDocument.uri);
- *  if (document) {
- *      const text = document.getText();
- *
- *      colorRegExp.lastIndex = 0;
- *      let match;
- *      while ((match = colorRegExp.exec(text)) != null) {
- *          const offset = match.index;
- *          const length = match[0].length;
- *
- *          const range = Range.create(document.positionAt(offset), document.positionAt(offset + length));
- *          const color = parseColor(text, offset);
- *          colorInfos.push({ color, range });
- *      }
- *  }
- *
- *  return colorInfos;
- *}
- *
- *function getColorPresentation(color: Color, range: Range) {
- *  const result: ColorPresentation[] = [];
- *  const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
- *
- *  function toTwoDigitHex(n: number): string {
- *      const r = n.toString(16);
- *      return r.length !== 2 ? '0' + r : r;
- *  }
- *
- *  const label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
- *  result.push({ label: label, textEdit: TextEdit.replace(range, label) });
- *
- *  return result;
- *}
- *
- *
- *const enum CharCode {
- *  Digit0 = 48,
- *  Digit9 = 57,
- *
- *  A = 65,
- *  F = 70,
- *
- *  a = 97,
- *  f = 102,
- *}
- *
- *function parseHexDigit(charCode: CharCode): number {
- *  if (charCode >= CharCode.Digit0 && charCode <= CharCode.Digit9) {
- *      return charCode - CharCode.Digit0;
- *  }
- *  if (charCode >= CharCode.A && charCode <= CharCode.F) {
- *      return charCode - CharCode.A + 10;
- *  }
- *  if (charCode >= CharCode.a && charCode <= CharCode.f) {
- *      return charCode - CharCode.a + 10;
- *  }
- *  return 0;
- *}
- *
- *function parseColor(content: string, offset: number): Color {
- *  const r = (16 * parseHexDigit(content.charCodeAt(offset + 1)) + parseHexDigit(content.charCodeAt(offset + 2))) / 255;
- *  const g = (16 * parseHexDigit(content.charCodeAt(offset + 3)) + parseHexDigit(content.charCodeAt(offset + 4))) / 255;
- *  const b = (16 * parseHexDigit(content.charCodeAt(offset + 5)) + parseHexDigit(content.charCodeAt(offset + 6))) / 255;
- *  return Color.create(r, g, b, 1);
- *}
- */

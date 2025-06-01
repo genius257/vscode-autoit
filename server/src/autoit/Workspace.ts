@@ -1,5 +1,5 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
@@ -35,9 +35,20 @@ export class Workspace {
     protected scripts: ScriptList = new Map();
     protected connection: Connection | null;
     protected diagnosticsListners: diagnosticsListner[] = [];
+    protected configuration: AutoIt3Configuration | null = null;
 
     constructor(connection: Connection | null = null) {
         this.connection = connection;
+
+        this.connection?.onInitialized(() => {
+            this.connection?.workspace.getConfiguration('autoit3').then((configuration: AutoIt3Configuration) => {
+                this.configuration = configuration;
+            });
+            this.connection?.client.register(DidChangeConfigurationNotification.type, { section: 'autoit3' });
+        });
+        this.connection?.onDidChangeConfiguration((change) => {
+            this.configuration = change.settings.autoit3;
+        });
 
         const script = new Script(native, URI.from({ scheme: 'autoit3doc', path: 'native.au3' }));
         script.addReference();// we falsely increment the reference count here, to make sure it is never released.
@@ -218,5 +229,9 @@ export class Workspace {
         });
 
         return promise;
+    }
+
+    public getConfiguration(): AutoIt3Configuration | null {
+        return this.configuration;
     }
 }
