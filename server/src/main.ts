@@ -268,26 +268,27 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
 // Listen on the connection
 connection.listen();
 
-function getDocumentSymbol(params: DocumentSymbolParams): DocumentSymbol[] {
-    const symbols: DocumentSymbol[] = [];
+function getDocumentSymbol(
+    params: DocumentSymbolParams,
+): DocumentSymbol[] | null {
+    const script = workspace.get(params.textDocument.uri);
 
-    workspace.get(params.textDocument.uri)?.filterNodes((node) => (node.type === 'FunctionDeclaration' || node.type === 'VariableDeclarator' ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip))
-        .forEach((declaration) => {
-            if (declaration.type === 'FunctionDeclaration' || declaration.type === 'VariableDeclarator') {
-                symbols.push({
-                    kind: declaration.type === 'FunctionDeclaration' ? SymbolKind.Function : SymbolKind.Variable,
-                    name: declaration.id.name,
-                    range: PositionHelper.locationRangeToRange(
-                        declaration.location,
-                    ),
-                    selectionRange: PositionHelper.locationRangeToRange(
-                        declaration.id.location,
-                    ),
-                });
-            }
-        });
+    if (script === undefined) {
+        return null;
+    }
 
-    return symbols;
+    return script.declarations.map((declaration) => {
+        return {
+            kind: declaration.type === 'FunctionDeclaration' ? SymbolKind.Function : SymbolKind.Variable,
+            name: declaration.id.name,
+            range: PositionHelper.locationRangeToRange(
+                declaration.location,
+            ),
+            selectionRange: PositionHelper.locationRangeToRange(
+                declaration.id.location,
+            ),
+        };
+    });
 }
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
