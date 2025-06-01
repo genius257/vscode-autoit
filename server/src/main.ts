@@ -303,11 +303,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
     const declarator = workspace.get(params.textDocument.uri)
         ?.getIdentifierDeclarator(identifierAtPos);
 
-    if (!declarator) {
-        return [];
-    }
-
-    if (declarator === null) {
+    if (declarator === null || declarator === undefined) {
         return [];
     }
 
