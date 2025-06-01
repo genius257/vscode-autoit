@@ -5,6 +5,11 @@ import * as Parser from './Parser';
 import { Workspace } from './Workspace';
 import * as PositionHelper from './PositionHelper';
 import debounce from '../utils/debounce';
+import DocBlock from './docBlock/DocBlock';
+import FqsenResolver from './docBlock/FqsenResolver';
+import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
+import MarkdownDescriptionFactory from './docBlock/DocBlock/MarkdownDescriptionFactory';
+import DocBlockFactory from './docBlock/DocBlockFactory';
 
 export type Include = {
     /** Resolved include statement URI path */
@@ -99,10 +104,20 @@ export default class Script {
     protected refCount: number = 1;
 
     protected program: AutoIt3.Program | undefined;
+    protected functionDeclarations = new Map<
+        string,
+        AutoIt3.FunctionDeclaration
+    >();
+    protected variableDeclarations = new Map<
+        string,
+        AutoIt3.VariableDeclaration
+    >();
+    public docBlocks = new Map<typeof this.declarations[number], DocBlock>();
 
     public declarations: (
         | AutoIt3.FunctionDeclaration
         | AutoIt3.VariableDeclaration
+        | AutoIt3.EnumDeclaration
     )[] = [];// FIXME: varaible declarations with the global scope should be added here aswell.
 
     constructor(
@@ -194,8 +209,60 @@ export default class Script {
     }
 
     public analyze() {
+        const docBlocks = new Map<typeof this.declarations[number], DocBlock>();
+        let previousNode: Node | AutoIt3.SingleLineComment[] | null = null;
+
+        const fqsenResolver = new FqsenResolver();
+        const tagFactory =
+            new StandardTagFactory(fqsenResolver);
+        const descriptionFactory =
+            new MarkdownDescriptionFactory(tagFactory);
+        const docBlockFactory =
+            new DocBlockFactory(
+                descriptionFactory,
+                tagFactory,
+            );
+
         this.declarations = (this.filterNodes((node) => {
             const isDeclerator = node.type === 'FunctionDeclaration' || node.type === 'VariableDeclarator';
+
+            if (isDeclerator) {
+                if (Array.isArray(previousNode) || previousNode?.type === 'MultiLineComment') {
+                    const docBlock = Array.isArray(previousNode)
+                        ? docBlockFactory
+                            .createFromLegacyComments(previousNode)
+                        : docBlockFactory
+                            .createFromMultilineComment(previousNode);
+
+                    if (docBlock !== null) {
+                        docBlocks.set(node, docBlock);
+                    }
+                }
+            } else if (node.type === 'VariableDeclaration') {
+                if (Array.isArray(previousNode) || previousNode?.type === 'MultiLineComment') {
+                    const docBlock = Array.isArray(previousNode)
+                        ? docBlockFactory
+                            .createFromLegacyComments(previousNode)
+                        : docBlockFactory
+                            .createFromMultilineComment(previousNode);
+
+                    if (docBlock !== null) {
+                        node.declarations.forEach((declaration) => {
+                            docBlocks.set(declaration, docBlock);
+                        });
+                    }
+                }
+            } else {
+                if (node.type === 'SingleLineComment') {
+                    if (Array.isArray(previousNode)) {
+                        previousNode.push(node);
+                    } else {
+                        previousNode = [node];
+                    }
+                } else {
+                    previousNode = node;
+                }
+            }
 
             return isDeclerator
                 ? NodeFilterAction.StopPropagation
@@ -203,7 +270,10 @@ export default class Script {
         }) as unknown) as (
             | AutoIt3.FunctionDeclaration
             | AutoIt3.VariableDeclaration
+            | AutoIt3.EnumDeclaration
         )[];
+
+        this.docBlocks = docBlocks;
 
         // const previousIncludes = this.includes;
         const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement') as AutoIt3.IncludeStatement[] | undefined;
