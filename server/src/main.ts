@@ -204,133 +204,29 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         return null;
     }
 
+    const contents: MarkupContent = {
+        kind: MarkupKind.Markdown,
+        value: '',
+    };
+
     switch (identifier.type) {
         case 'VariableDeclarator':
         {
-            let value:
-                | string
-                | number
-                | boolean
-                | null
-                | undefined;
+            let value: string | null = null;
 
             if (identifier.init !== null) {
                 value = Parser.AstToString(identifier.init);
             }
 
-            return {
-                contents: (identifierAtPos.type === 'VariableIdentifier' ? '$' : '') + identifier.id.name + (value === undefined ? '' : ' = ' + value),
-                range: PositionHelper.locationRangeToRange(
-                    identifierAtPos.location,
-                ),
-            };
+            contents.value += `\`\`\`au3\n${identifierAtPos.type === 'VariableIdentifier' ? '$' : ''}${identifier.id.name}${value === null ? '' : ' = ' + value}\n\`\`\``;
+
+            break;
         }
         case 'FunctionDeclaration':
         {
-            const hoverContents: MarkupContent =
-                {
-                    kind: MarkupKind.Markdown,
-                    value: `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(', ')})\n\`\`\``,
-                };
+            contents.value += `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(', ')})\n\`\`\``;
 
-            const identifierScript = workspace.get(identifier.location.source);
-
-            if (identifierScript !== undefined) {
-                const precedingIdentifierSiblings = identifierScript
-                    .filterNodes((node) => {
-                        // eslint-disable-next-line @stylistic/max-len
-                        if (node.location.end.line >= identifier.location.start.line) {
-                            return NodeFilterAction.StopAndSkip;
-                        }
-
-                        if (node.type === 'EmptyStatement') {
-                            return NodeFilterAction.SkipAndStopPropagation;
-                        }
-
-                        return NodeFilterAction.StopPropagation;
-                    });
-
-                const previousIdentifierSibling = precedingIdentifierSiblings[
-                    precedingIdentifierSiblings.length - 1
-                ];
-
-                switch (previousIdentifierSibling?.type) {
-                    case 'MultiLineComment':
-                        // FIXME: move docblock parsing to script analysis instead
-                        try {
-                            const fqsenResolver = new FqsenResolver();
-                            const tagFactory =
-                                new StandardTagFactory(fqsenResolver);
-                            const descriptionFactory =
-                                new MarkdownDescriptionFactory(tagFactory);
-                            const docBlockFactory =
-                                new DocBlockFactory(
-                                    descriptionFactory,
-                                    tagFactory,
-                                );
-                            const docBlock =
-                                docBlockFactory.createFromMultilineComment(
-                                    previousIdentifierSibling,
-                                );
-
-                            const markdownFormatter = new MarkdownFormatter();
-                            hoverContents.value += `\n\n${[
-                                docBlock.summary.toString(),
-                                docBlock.description.toString(),
-                                docBlock.tags.map((tag) => {
-                                    if (tag instanceof InvalidTag) {
-                                        connection.console.error(`${tag.getException()}`);
-
-                                        return null;
-                                    }
-
-                                    return `${tag.render(markdownFormatter)}`;
-                                }).join('\n\n'),
-                            ].join('\n\n')}`;
-                        } catch (e) {
-                            connection.console.error(`${e}`);// FIXME: depending on the error, it should be added as a diagnostic instead.
-                        }
-
-                        break;
-                    case 'SingleLineComment':
-                    {
-                        // eslint-disable-next-line @stylistic/max-len
-                        const comments: AutoIt3.SingleLineComment[] = [previousIdentifierSibling];
-
-                        // eslint-disable-next-line @stylistic/max-len
-                        for (let index = precedingIdentifierSiblings.length - 2; index >= 0; index--) {
-                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            const element = precedingIdentifierSiblings[index]!;
-
-                            if (element.type !== 'SingleLineComment') {
-                                break;
-                            }
-
-                            comments.unshift(element);
-                        }
-
-                        if (comments.length >= 3) { // A minunum of 3 lines are needed for legacy UDF function header
-                            const docBlock = DocBlockFactory.createInstance()
-                                .createFromLegacyComments(comments);
-
-                            if (docBlock !== null) {
-                                hoverContents.value += `\n\n${[
-                                    docBlock.summary.toString(),
-                                    docBlock.description.toString(),
-                                ].join('\n\n')}`;
-                            }
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            return {
-                contents: hoverContents,
-                range: PositionHelper
-                    .locationRangeToRange(identifierAtPos.location),
-            };
+            break;
         }
         case 'Parameter':
         {
@@ -340,17 +236,33 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                 parameterValue = Parser.AstToString(identifier.init);
             }
 
-            return {
-                contents: '(parameter) $' + identifier.id.name + (parameterValue === undefined ? '' : ' = ' + parameterValue),
-                range: PositionHelper
-                    .locationRangeToRange(identifierAtPos.location),
-            };
+            contents.value += `\`\`\`au3\n(parameter) $${identifier.id.name}${parameterValue === undefined ? '' : ' = ' + parameterValue}\n\`\`\``;
+
+            break;
         }
         default:
-            break;
+            return null;
     }
 
-    return null;
+    const identifierScript = workspace.get(identifier.location.source);
+
+    if (identifierScript !== undefined && (
+        identifier.type === 'FunctionDeclaration' ||
+        identifier.type === 'VariableDeclarator'
+    )) {
+        const docBlock = identifierScript.docBlocks.get(identifier);
+
+        if (docBlock !== undefined) {
+            contents.value += `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
+        }
+    }
+
+    return {
+        contents: contents,
+        range: PositionHelper.locationRangeToRange(
+            identifierAtPos.location,
+        ),
+    };
 });
 
 // Listen on the connection
