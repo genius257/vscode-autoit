@@ -1,19 +1,12 @@
-// import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { /* Color, ColorInformation, Range,*/ InitializeParams, InitializeResult, ServerCapabilities, /* TextDocuments,*/ CompletionItem, CompletionItemKind, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
 import * as Parser from './autoit/Parser';
 import * as PositionHelper from './autoit/PositionHelper';
-import { AutoIt3Configuration, Workspace } from './autoit/Workspace';
-import { NodeFilterAction } from './autoit/Script';
-import DocBlockFactory from './autoit/docBlock/DocBlockFactory';
-import InvalidTag from './autoit/docBlock/DocBlock/Tags/InvalidTag';
-import MarkdownFormatter from './autoit/docBlock/DocBlock/Tags/Formatter/MarkdownFormatter';
-import FqsenResolver from './autoit/docBlock/FqsenResolver';
-import StandardTagFactory from './autoit/docBlock/DocBlock/StandardTagFactory';
-import MarkdownDescriptionFactory from './autoit/docBlock/DocBlock/MarkdownDescriptionFactory';
+import { Workspace } from './autoit/Workspace';
+import { CompletionItemBridge } from './providers/CompletionItemBridge';
 
 console.log('running server autoit3-lsp-web-extension');
 
