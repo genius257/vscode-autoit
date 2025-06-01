@@ -103,12 +103,6 @@ connection.onDidCloseTextDocument((params) => {
     workspace.get(params.textDocument.uri)?.release();
 });
 
-// Register providers
-
-// connection.onDocumentColor(params => getColorInformation(params.textDocument));
-
-// connection.onColorPresentation(params => getColorPresentation(params.color, params.range));
-
 connection.onDocumentSymbol(getDocumentSymbol);
 connection.onDefinition(getDefinition);
 connection.onCompletion(getCompletionItems);
