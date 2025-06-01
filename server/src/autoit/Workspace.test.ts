@@ -33,6 +33,10 @@ test('resolveInclude', () => {
         sendRequest: <P extends string>(type: P, params: P) => {
             return Promise.resolve(URI.parse(params).toString());
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
     };
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
