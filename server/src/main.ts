@@ -324,110 +324,13 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 
 async function getCompletionItems(
     params: CompletionParams,
-): Promise<CompletionItem[]> {
-    let completionItems: CompletionItem[] = [];
-    const includes: string[] = [params.textDocument.uri];
-    const configuration: AutoIt3Configuration = await connection.workspace.getConfiguration('autoit3');
+): Promise<CompletionItem[] | CompletionList | undefined | null> {
+    const completionItemBridge = new CompletionItemBridge(workspace);
 
-    // Loop though all unique included files and add completion items found in each.
-    for (const include of includes) {
-        const script = workspace.get(include);
-
-        if (script !== undefined) {
-            const _completionItems = script.declarations
-                .reduce<CompletionItem[]>((completionItems, declaration) => {
-                    if (configuration.ignoreInternalInIncludes && declaration.id.name.startsWith('__')) {
-                        // If the declaration is an internal variable and the setting is true for ignoring those, we return early.
-                        return completionItems;
-                    }
-
-                    switch (declaration.type) {
-                        case 'FunctionDeclaration':
-                            completionItems.push({
-                                label: declaration.id.name,
-                                kind: CompletionItemKind.Function,
-                            });
-
-                            break;
-                        case 'VariableDeclarator':
-                            completionItems.push({
-                                label: '$' + declaration.id.name,
-                                kind: CompletionItemKind.Variable,
-                                insertText: '$' + declaration.id.name,
-                            });
-
-                            break;
-                    }
-
-                    return completionItems;
-                }, []);
-            completionItems.push(..._completionItems);
-            includes.push(
-                ...script.getIncludes()
-                    .map((x) => x.uri)
-                    .filter(
-                        (x): x is string => x !== null && !includes.includes(x),
-                    ),
-            );
-        }
-    }
-
-    // If within a function, add everything defined before cursor as suggestions from the scope
-    const script = workspace.get(params.textDocument.uri);
-
-    if (script !== undefined) {
-        const matches: (
-            | AutoIt3.VariableDeclaration
-            | AutoIt3.FormalParameter
-        )[] = [];
-        script.filterNestedNode(
-            script.declarations.find((declaration) => declaration.type === 'FunctionDeclaration' && Parser.isPositionWithinLocation(params.position.line, params.position.character, declaration.location)) ?? null,
-            (node) => {
-                if (node.location.start.line >= params.position.line + 1) {
-                    return NodeFilterAction.SkipAndStopPropagation;
-                }
-
-                if (node.type === 'Parameter' || node.type === 'VariableDeclarator') {
-                    return NodeFilterAction.Continue;
-                }
-
-                return NodeFilterAction.Skip;
-            },
-            matches,
-        );
-
-        completionItems.push(...matches.map<CompletionItem>((match) => ({ label: '$' + match.id.name, kind: CompletionItemKind.Variable })));
-    }
-
-    // Filter duplicate suggestions out based on case insensetive name comparison
-    completionItems = completionItems.filter(
-        (completionItem, index, array) => array.findIndex(
-            (x) => x.label.toLowerCase() === completionItem.label.toLowerCase(),
-        ) === index,
+    return completionItemBridge.resolveCompletionItems(
+        params.textDocument.uri,
+        params.position,
     );
-
-    // Add all native suggestions
-    completionItems = completionItems.concat(
-        Object.entries(nativeSuggestions).map<CompletionItem>(
-            // eslint-disable-next-line @stylistic/array-bracket-newline
-            ([, nativeSuggestion]) => ({
-                label: nativeSuggestion.title,
-                kind: nativeSuggestion.kind,
-                documentation: nativeSuggestion.documentation !== undefined
-                    ? {
-                        kind: MarkupKind.Markdown,
-                        value: nativeSuggestion.documentation,
-                    }
-                    : undefined,
-
-                // detail: nativeSuggestion.detail,
-
-                // labelDetails: {description: nativeSuggestion.detail},
-            }),
-        ),
-    );
-
-    return completionItems;
 }
 
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
