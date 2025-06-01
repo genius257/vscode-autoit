@@ -62,7 +62,6 @@ export class CompletionItemBridge {
         });
 
         const configuration = this.workpspace.getConfiguration();
-        this.workpspace.getConnection()?.console.log(JSON.stringify(configuration));
 
         // Add includes
         includes.push(

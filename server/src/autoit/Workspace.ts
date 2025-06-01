@@ -41,16 +41,13 @@ export class Workspace {
         this.connection = connection;
 
         this.connection?.onInitialized(() => {
-            this.connection?.console.log('onInitialized');
             this.connection?.workspace.getConfiguration('autoit3').then((configuration: AutoIt3Configuration) => {
                 this.configuration = configuration;
             });
             this.connection?.client.register(DidChangeConfigurationNotification.type, { section: 'autoit3' });
         });
         this.connection?.onDidChangeConfiguration((change) => {
-            this.connection?.console.log('onDidChangeConfiguration');
-            // eslint-disable-next-line @stylistic/max-len
-            this.configuration = change.settings.autoit3 as AutoIt3Configuration;
+            this.configuration = change.settings.autoit3;
         });
 
         const script = new Script(native, URI.from({ scheme: 'autoit3doc', path: 'native.au3' }));
