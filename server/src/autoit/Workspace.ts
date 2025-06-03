@@ -177,7 +177,7 @@ export class Workspace {
         promise: IncludePromise,
         configuration: AutoIt3Configuration | null,
     ): IncludePromise {
-        return promise.then((x) => (x === null && typeof configuration?.installDir === 'string' ? this.openTextDocument(Utils.resolvePath(URI.file(configuration.installDir), 'Include', uri)) : x));
+        return promise.then((includeResolve) => (includeResolve === null && typeof configuration?.installDir === 'string' ? this.openTextDocument(Utils.resolvePath(URI.file(configuration.installDir), 'Include', uri)) : includeResolve));
     }
 
     protected includeUserDefined(
@@ -186,9 +186,9 @@ export class Workspace {
         configuration: AutoIt3Configuration | null,
     ): IncludePromise {
         for (const path of configuration?.userDefinedLibraries ?? []) {
-            promise = promise.then((x) => (x === null
+            promise = promise.then((includeResolve) => (includeResolve === null
                 ? this.openTextDocument(Utils.resolvePath(URI.file(path), uri))
-                : x
+                : includeResolve
             ));
         }
 
@@ -204,14 +204,15 @@ export class Workspace {
         const isUntitled = documentUri.toString().startsWith('untitled:');
 
         // HACK: currently i check if the documentUri startsWith 'untitled:' to detect files not yet saved to disk. I cannot find a better solution so far...
-        return promise.then((x) => (x === null && !isUntitled
-            ? this.openTextDocument(isAbsolutePath(uri)
-                ? URI.file(uri)
-                : Utils.resolvePath(
-                    Utils.dirname(URI.parse(documentUri.toString())),
-                    uri,
-                ))
-            : x
+        return promise.then((includeResolve) => (
+            includeResolve === null && !isUntitled
+                ? this.openTextDocument(isAbsolutePath(uri)
+                    ? URI.file(uri)
+                    : Utils.resolvePath(
+                        Utils.dirname(URI.parse(documentUri.toString())),
+                        uri,
+                    ))
+                : includeResolve
         ));
     }
 
