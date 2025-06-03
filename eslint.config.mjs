@@ -74,7 +74,7 @@ export default tseslint.config({
       }
     ], //TODO: did not use applyDefaultIgnorePatterns, maybe needed later
     "@stylistic/lines-between-class-members": ["error", { enforce: [/*{blankLine: "never", prev: "field", next: "field"}, */{blankLine: "always", prev: "*", next: "method"}] }],
-    "@stylistic/max-len": ["error", {code: 80, ignoreComments: true, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreRegExpLiterals: true}],
+    // "@stylistic/max-len": ["error", {code: 80, ignoreComments: true, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreRegExpLiterals: true}],
     "@stylistic/max-statements-per-line": ["error", { max: 1 }], //TODO: maybe too strict
     "@stylistic/member-delimiter-style": ["error", {multiline: {delimiter: "comma", requireLast: true}, singleline: {delimiter: "comma", requireLast: false}, multilineDetection: "brackets"}],
     "@stylistic/multiline-comment-style": ["error", "starred-block"],

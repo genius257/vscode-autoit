@@ -379,7 +379,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
         let parenthesisIndex = textBetween.indexOf('(');
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         argumentLocations[0]!.start = PositionHelper.offsetToLocation(
-            // eslint-disable-next-line @stylistic/max-len, @typescript-eslint/no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             argumentLocations[0]!.start.offset - Math.abs(textBetween.length - 1 - parenthesisIndex),
             text,
         );
@@ -400,7 +400,6 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
                     text,
                 );
                 argumentRight.start = PositionHelper.offsetToLocation(
-                    // eslint-disable-next-line @stylistic/max-len
                     argumentRight.start.offset - Math.abs(textBetween.length - 1 - commaIndex),
                     text,
                 );
@@ -416,7 +415,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         argumentLocations[argumentLocations.length - 1]!.end = PositionHelper
             .offsetToLocation(
-                // eslint-disable-next-line @stylistic/max-len, @typescript-eslint/no-non-null-assertion
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 argumentLocations[argumentLocations.length - 1]!.end.offset + parenthesisIndex,
                 text,
             );
@@ -438,9 +437,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
                 return null;
             }
 
-            // eslint-disable-next-line @stylistic/max-len
             if (params.context.activeSignatureHelp.activeParameter !== undefined && parameterIndex !== -1) {
-                // eslint-disable-next-line @stylistic/max-len
                 params.context.activeSignatureHelp.activeParameter = parameterIndex ?? undefined;
             }
         } else {
@@ -471,7 +468,6 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
             {
                 label: declarator.id.name + '(' + Parser.AstArrayToStringArray(declarator.params).join(', ') + ')',
                 documentation: undefined, // FIXME: built in funcs have this as not undefined
-                // eslint-disable-next-line @stylistic/max-len
                 parameters: declarator.params.map((parameter): ParameterInformation => ({
                     label: '$' + parameter.id.name,
                     documentation: undefined, // FIXME: built in funcs have this as not undefined in the future

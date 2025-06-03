@@ -1386,7 +1386,6 @@ export default class Script {
                             // check function parameters
                             declaration = declaration ??
                                 nodesAtPosition[0].params.find(
-                                    // eslint-disable-next-line @stylistic/max-len
                                     (parameter) => parameter.id.name.toLowerCase() === identifier.name.toLowerCase(),
                                 );
 
@@ -1418,7 +1417,6 @@ export default class Script {
                             }
 
                             if (node.type === 'VariableDeclarator' && (node.location.source !== identifier.location.source || node.location.start.offset <= identifier.location.start.offset)) {
-                                // eslint-disable-next-line @stylistic/max-len
                                 if (node.id.name.toLowerCase() === identifier.name.toLowerCase()) {
                                     return NodeFilterAction.Stop;
                                 }
@@ -1426,7 +1424,6 @@ export default class Script {
 
                             if (node.type === 'IncludeStatement' && this.workspace !== undefined) {
                                 const uri = this.includes.find(
-                                    // eslint-disable-next-line @stylistic/max-len
                                     (include) => include.statement.file === node.file && include.statement.library === node.library,
                                 )?.uri;
 
@@ -1460,10 +1457,8 @@ export default class Script {
                                 case 'VariableDeclaration':
                                     return node.scope?.toLowerCase() === 'global'
                                         ? NodeFilterAction.Skip
-                                        // eslint-disable-next-line @stylistic/max-len
                                         : NodeFilterAction.SkipAndStopPropagation;
                                 case 'VariableDeclarator':
-                                    // eslint-disable-next-line @stylistic/max-len
                                     if (node.id.name.toLowerCase() === identifier.name.toLowerCase()) {
                                         declaration = node;
 
@@ -1474,7 +1469,6 @@ export default class Script {
                                 case 'FunctionDeclaration':
                                     return NodeFilterAction.Skip;
                                 default:
-                                    // eslint-disable-next-line @stylistic/max-len
                                     return NodeFilterAction.SkipAndStopPropagation;
                             }
                         }, []);

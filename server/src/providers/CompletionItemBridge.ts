@@ -103,7 +103,6 @@ export class CompletionItemBridge {
 
         return [
             ...Array.from(declarationMap.values())
-                // eslint-disable-next-line @stylistic/max-len
                 .map((declaration) => this.declarationToCompletionItem(declaration)),
             ...this.getNativeSuggestions(),
         ];
