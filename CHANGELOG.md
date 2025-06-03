@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Text "undefined" would appear in macro hover text, if detail property was undefined.
+- `ignoreInternalInIncludes` setting would also ignore declarations in current file
+- When resolving included files, the same file could be loaded from disk multiple times (issue #73)
+- Missing documentation text for completion suggestions on variable and function declarations (issue #63)
 
 ## [1.8.3] - 2025-04-22
 
