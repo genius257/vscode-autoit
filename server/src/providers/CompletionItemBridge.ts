@@ -2,7 +2,7 @@ import { CompletionItem, CompletionItemKind, CompletionList, MarkupKind, Positio
 import { Workspace } from '../autoit/Workspace';
 import { Node, NodeFilterAction } from '../autoit/Script';
 import { AutoIt3 } from 'autoit3-pegjs';
-import { isPositionWithinLocation } from '../autoit/Parser';
+import { AstArrayToStringArray, AstToString, isPositionWithinLocation } from '../autoit/Parser';
 import nativeSuggestions from '../autoit/internal';
 
 type WhereAstTypeEquals<T extends { type: string }, S extends string> =
@@ -111,25 +111,57 @@ export class CompletionItemBridge {
 
     public declarationToCompletionItem(
         declaration: WhereAstTypeEquals<Node, 'FunctionDeclaration' | 'VariableDeclarator' | 'Parameter'>,
-    ) {
+    ): CompletionItem {
         const type = declaration.type;
+
+        const script = this.workpspace.get(declaration.location.source);
+
+        const docBlock = type === 'Parameter' ? null : script?.docBlocks.get(declaration) ?? null;
 
         switch (type) {
             case 'FunctionDeclaration':
                 return {
                     label: declaration.id.name,
                     kind: CompletionItemKind.Function,
+                    documentation: {
+                        kind: MarkupKind.Markdown,
+                        value: '```au3\nFunc ' + declaration.id.name + '(' + AstArrayToStringArray(declaration.params) + ')\n```' + (docBlock === null ? '' : `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`),
+                    },
                 };
             case 'VariableDeclarator':
+            {
+                let value: string | null = null;
+
+                if (declaration.init !== null) {
+                    value = AstToString(declaration.init);
+                }
+
                 return {
                     label: '$' + declaration.id.name,
                     kind: CompletionItemKind.Variable,
+                    documentation: {
+                        kind: MarkupKind.Markdown,
+                        value: `\`\`\`au3\n$${declaration.id.name}${value === null ? '' : ' = ' + value}\n\`\`\``,
+                    },
                 };
+            }
             case 'Parameter':
+            {
+                let parameterValue: string | number | boolean | null | undefined;
+
+                if (declaration.init !== null) {
+                    parameterValue = AstToString(declaration.init);
+                }
+
                 return {
                     label: '$' + declaration.id.name,
                     kind: CompletionItemKind.Variable,
+                    documentation: {
+                        kind: MarkupKind.Markdown,
+                        value: `\`\`\`au3\n(parameter) $${declaration.id.name}${parameterValue === undefined ? '' : ' = ' + parameterValue}\n\`\`\``,
+                    },
                 };
+            }
             default:
                 throw new Error(`Unknown declaration type: ${type satisfies never}`);
         }
