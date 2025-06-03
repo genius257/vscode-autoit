@@ -13,7 +13,7 @@ type uri = string | URI | { toString: () => string };
 export type diagnosticsListner = (
     uri: string, diagnostics: Diagnostic[]) => void;
 
-export type IncludeResolve = { uri: URI, text: string };
+export type IncludeResolve = { uri: URI, text: string | null };
 
 export type IncludePromise = Promise<IncludeResolve | null>;
 
@@ -33,6 +33,7 @@ export type AutoIt3Configuration = {
 
 export class Workspace {
     protected scripts: ScriptList = new Map();
+    protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
     protected diagnosticsListners: diagnosticsListner[] = [];
     protected configuration: AutoIt3Configuration | null = null;
@@ -221,12 +222,26 @@ export class Workspace {
             return Promise.resolve(null);
         }
 
-        const promise = this.connection?.sendRequest<string | null>('openTextDocument', uri.toString()).then<IncludeResolve | null>((x) => (x === null ? x : { uri: uri, text: x })) ?? Promise.resolve(null);
+        if (this.exists(uri)) {
+            return Promise.resolve({ uri: uri, text: null });
+        }
+
+        const resolvingInclude = this.resolvingIncludes.get(uri.toString());
+
+        if (resolvingInclude !== undefined) {
+            return resolvingInclude;
+        }
+
+        const promise = this.connection?.sendRequest<string | null>('openTextDocument', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve })) ?? Promise.resolve(null);
+
+        this.resolvingIncludes.set(uri.toString(), promise);
 
         promise.then((value) => {
-            if (value !== null) {
+            if (value !== null && value.text !== null) {
                 this.createOrUpdate(value.uri, value.text);
             }
+
+            this.resolvingIncludes.delete(uri.toString());
         });
 
         return promise;
