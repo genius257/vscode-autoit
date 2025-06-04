@@ -8,6 +8,23 @@ import nativeSuggestions from '../autoit/internal';
 type WhereAstTypeEquals<T extends { type: string }, S extends string> =
     T extends { type: S } ? T : never;
 
+const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
+    // eslint-disable-next-line @stylistic/array-bracket-newline
+    .map(([, nativeSuggestion]) => ({
+        label: nativeSuggestion.title,
+        kind: nativeSuggestion.kind,
+        documentation: nativeSuggestion.documentation !== undefined
+            ? {
+                kind: MarkupKind.Markdown,
+                value: nativeSuggestion.documentation,
+            }
+            : undefined,
+
+        // detail: nativeSuggestion.detail,
+
+        // labelDetails: {description: nativeSuggestion.detail},
+    }));
+
 /**
  * Bridge between the CompletionItemProvider and the Script
  */
@@ -195,21 +212,6 @@ export class CompletionItemBridge {
     }
 
     public getNativeSuggestions() {
-        return this.nativeSuggestions ??= Object.entries(nativeSuggestions)
-            // eslint-disable-next-line @stylistic/array-bracket-newline
-            .map(([, nativeSuggestion]) => ({
-                label: nativeSuggestion.title,
-                kind: nativeSuggestion.kind,
-                documentation: nativeSuggestion.documentation !== undefined
-                    ? {
-                        kind: MarkupKind.Markdown,
-                        value: nativeSuggestion.documentation,
-                    }
-                    : undefined,
-
-                // detail: nativeSuggestion.detail,
-
-                // labelDetails: {description: nativeSuggestion.detail},
-            }));
+        return nativeCompletionItems;
     }
 }
