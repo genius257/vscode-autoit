@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ignoreInternalInIncludes` setting would also ignore declarations in current file
 - When resolving included files, the same file could be loaded from disk multiple times (issue #73)
 - Missing documentation text for completion suggestions on variable and function declarations (issue #63)
+- Return value documentation for MapExists was Boolean. Testing revealed 0|1
 
 ## [1.8.3] - 2025-04-22
 

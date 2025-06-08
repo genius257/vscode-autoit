@@ -5080,7 +5080,7 @@ EndFunc
 # @param Map $map An existing Map
 # @param String $key The key to check
 #
-# @return Boolean
+# @return 0|1
 #ce
 Func MapExists($map, $key)
     #native code
