@@ -109,6 +109,10 @@ export function AstToString(
         case 'Keyword':
             return ast.value;
         case 'Literal':
+            if (typeof ast.value === 'string') {
+                return '"' + ast.value + '"';
+            }
+
             return JSON.stringify(ast.value);
         case 'LogicalExpression':
             return ast.left + ' ' + ast.operator + ' ' + ast.right;
