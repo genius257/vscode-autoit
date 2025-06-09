@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.4] - 2025-06-09
+
 ### Fixed
 
 - Text "undefined" would appear in macro hover text, if detail property was undefined.
@@ -223,7 +225,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.3...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.4...HEAD
+[1.8.4]: https://github.com/genius257/vscode-autoit/compare/1.8.3...1.8.4
 [1.8.3]: https://github.com/genius257/vscode-autoit/compare/1.8.2...1.8.3
 [1.8.2]: https://github.com/genius257/vscode-autoit/compare/1.8.1...1.8.2
 [1.8.1]: https://github.com/genius257/vscode-autoit/compare/1.8.0...1.8.1
