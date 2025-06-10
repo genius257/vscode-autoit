@@ -40,7 +40,23 @@
 			"outFiles": [
 				"${workspaceRoot}/server/dist/**/*.js"
 			]
-		}
+		},
+		{
+			"name": "Run Web Extension",
+			"type": "extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionDevelopmentKind=web",
+				"--disable-extensions=1"
+			],
+			"outFiles": [
+				"${workspaceFolder}/client/dist/**/*.js",
+				"${workspaceFolder}/server/dist/**/*.js"
+			],
+			"preLaunchTask": "npm: watch",
+		},
     ],
     "compounds": [
 		{

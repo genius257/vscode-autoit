@@ -25,6 +25,7 @@ const clientConfig = {
 		filename: '[name].js',
 		path: path.join(__dirname, 'client', 'dist'),
 		libraryTarget: 'commonjs',
+		devtoolModuleFilenameTemplate: '../[resource-path]',
 	},
 	resolve: {
 		mainFields: ['module', 'main'],
@@ -57,7 +58,7 @@ const clientConfig = {
 	performance: {
 		hints: false,
 	},
-	devtool: 'source-map',
+	devtool: 'nosources-source-map',
 };
 
 /** @type WebpackConfig */
@@ -73,6 +74,7 @@ const serverConfig = {
 		path: path.join(__dirname, 'server', 'dist'),
 		libraryTarget: 'var',
 		library: 'serverExportVar',
+		devtoolModuleFilenameTemplate: '../[resource-path]',
 	},
 	resolve: {
 		mainFields: ['module', 'main'],
@@ -105,7 +107,7 @@ const serverConfig = {
 	performance: {
 		hints: false,
 	},
-	devtool: 'source-map',
+	devtool: 'nosources-source-map',
 };
 
 module.exports = [clientConfig, serverConfig];

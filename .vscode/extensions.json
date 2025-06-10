@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "dbaeumer.vscode-eslint",
-        "yoavbls.pretty-ts-errors"
+        "amodio.tsl-problem-matcher",
+        "yoavbls.pretty-ts-errors",
     ]
 }
