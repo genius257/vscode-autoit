@@ -85,7 +85,7 @@ export default class DocBlockFactory {
             return null;
         }
 
-        const docBlockItems = [...docBlock.matchAll(/^[ \t]* ([\w ]+)[ \t]?\.*:([^\n]*\n(?:(?![ \t]*\w+[ \t]?\.*:|[ \t]*=+[ \t]*$)[^\n]+)?)/gm)];
+        const docBlockItems = [...docBlock.matchAll(/^[ \t]* ([\w ]+)[ \t]?\.*:([^\n]*\n(?:(?![ \t]*[\w ]+[ \t]?\.*:|[ \t]*=+[ \t]*$)[^\n]*\n)*)/gm)];
 
         if (docBlockItems.length === 0) {
             throw new Error('Failed to split UDF header elements! RegEx failed!');
