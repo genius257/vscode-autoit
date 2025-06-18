@@ -81,7 +81,7 @@ export default class DocBlockFactory {
 
         const docBlock = comments.map((comment) => comment.body).join('\n');
 
-        if (!/^[ \t]* #\w+# =*\n([ \t]* \w+[ \t]?\.*:( [^\n]*\n([ \t]* (?!\w+[ \t]?\.*:).*\n)*|\n))*[ \t]* =*$/.test(docBlock)) {
+        if (!/^[ \t]* #\w+# =*\n([ \t]* \w+[ \t]?\.*:([^\n]*\n([ \t]*(?!\w+[ \t]?\.*:).*\n)*|\n))*[ \t]* =*$/.test(docBlock)) {
             return null;
         }
 
