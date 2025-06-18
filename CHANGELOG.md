@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.5] - 2025-06-18
+
+### Fixed
+
+- Legacy UDF documentation headers with an empty newline in their content would trigger catastrophic backtracking in a regular expression, causing the server to hang. ([report](https://www.autoitscript.com/forum/topic/209759-another-autoit-extension-for-visual-studio-code/page/3/#findComment-1543814))
+- Legacy UDF documentation headers with an empty newline in their content would not capture text after newline, and therefore not be shown in tooltip box.
+
 ## [1.8.4] - 2025-06-09
 
 ### Fixed
@@ -225,7 +232,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.4...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.5...HEAD
+[1.8.5]: https://github.com/genius257/vscode-autoit/compare/1.8.4...1.8.5
 [1.8.4]: https://github.com/genius257/vscode-autoit/compare/1.8.3...1.8.4
 [1.8.3]: https://github.com/genius257/vscode-autoit/compare/1.8.2...1.8.3
 [1.8.2]: https://github.com/genius257/vscode-autoit/compare/1.8.1...1.8.2
