@@ -264,15 +264,11 @@ class CallExpressionHelper {
                 offset: this.shadowExpressionOffset + previousEndLocation.offset + beforeDividerIndex,
             };
 
-            // location.start = PositionHelper.offsetToLocation(this.shadowExpressionOffset + previousEndLocation.offset + beforeDividerIndex, text);
-
             location.end = {
                 line: nextCallArgument.line,
                 column: calculateColumn(endLocationText, nextCallArgument.column + afterDividerIndex),
                 offset: this.shadowExpressionOffset + nextCallArgument.offset + afterDividerIndex,
             };
-
-            // location.end = PositionHelper.offsetToLocation(this.shadowExpressionOffset + nextCallArgument.offset + afterDividerIndex, text);
 
             callArguments.push(location);
         }
