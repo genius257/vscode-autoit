@@ -170,7 +170,7 @@ class CallExpressionHelper {
 
             if (validation === true) {
                 this.shadowExpressionText = callExpressionText;
-                this.shadowExpressionOffset = lines.slice(0, this.expression.location.start.line - 1).join('\n').length; // +1 to account for the newline character
+                this.shadowExpressionOffset = lines.slice(0, this.expression.location.start.line - 1).join('\n').length + (this.expression.location.start.line > 1 ? 1 : 0); // +1 to account for the newline character
 
                 return;
             }
@@ -319,8 +319,7 @@ class CallExpressionHelper {
         for (const callArgument of callArguments) {
             let shiftedOffset = offset + offsetShift;
 
-            // const isShadowValue = this.shadowValues.some((shadowValue) => shadowValue.start.offset + this.shadowExpressionOffset === callArgument.start.offset && shadowValue.end.offset + this.shadowExpressionOffset === callArgument.end.offset);
-            const isShadowValue = this.shadowValues.some((shadowValue) => shadowValue.start.offset === callArgument.start.offset && shadowValue.end.offset === callArgument.end.offset);
+            const isShadowValue = this.shadowValues.some((shadowValue) => shadowValue.start.offset + this.shadowExpressionOffset === callArgument.start.offset && shadowValue.end.offset + this.shadowExpressionOffset === callArgument.end.offset);
 
             if (isShadowValue && shiftedOffset >= callArgument.start.offset) {
                 const diff = callArgument.end.offset - callArgument.start.offset;
