@@ -61,8 +61,6 @@ export class SignatureHelpBridge {
 
             this.callExpression = callExpression;
 
-            this.workpspace.getConnection()?.console.debug(callExpression.callee.name + ' at ' + callExpression.location.start.line + ':' + callExpression.location.start.column + ' in ' + callExpression.location.source.toString() + ' <=> ' + callExpression.location.end.line + ':' + callExpression.location.end.column);
-
             declarator = script.getIdentifierDeclarator(callExpression.callee);
 
             if (declarator === null || declarator.type === 'VariableDeclarator' || declarator.type === 'Parameter') { // FIXME: currently we don't look for identifier in the VariableDeclarator init!
@@ -71,8 +69,6 @@ export class SignatureHelpBridge {
 
             this.declarator = declarator;
         }
-
-        this.workpspace.getConnection()?.console.debug('SignatureHelpBridge: resolveSignatureHelp: ' + declarator.id.name + ' at ' + declarator.id.location.start.line + ':' + declarator.id.location.start.column + ' in ' + declarator.id.location.source.toString() + ' <=> ' + declarator.id.location.end.line + ':' + declarator.id.location.end.column);
 
         const callExpressionHelper = new CallExpressionHelper(callExpression, script);
 
@@ -323,7 +319,6 @@ class CallExpressionHelper {
 
             if (isShadowValue && shiftedOffset >= callArgument.start.offset) {
                 const diff = callArgument.end.offset - callArgument.start.offset;
-                this.script.workspace?.getConnection()?.console.debug(`diff: ${diff}`);
                 offsetShift += diff; // Adjust the offset shift for shadow values
                 shiftedOffset += diff; // Adjust the shifted offset for shadow values
             }
