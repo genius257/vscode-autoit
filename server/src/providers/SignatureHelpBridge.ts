@@ -74,7 +74,16 @@ export class SignatureHelpBridge {
 
         // If there is a syntax error, we try to patch and re-parse the relevant text
         if (hasSyntaxErrors) {
-            callExpressionHelper.tryAndFixMissingArguments();
+            try {
+                callExpressionHelper.tryAndFixMissingArguments();
+            } catch (error) {
+                if (error instanceof UnfixableCallExpressionError) {
+                    // Failed to fix expression, we cannot give signature help, and will return early.
+                    return null;
+                }
+
+                throw error;
+            }
         }
 
         if (callExpressionHelper.isPositionWithinCallExpression(position) === false) {
@@ -174,7 +183,7 @@ class CallExpressionHelper {
             }
 
             if (validation === false) {
-                throw new Error('Invalid call expression: ' + this.expression.location.source.toString());
+                throw new UnfixableCallExpressionError('Invalid call expression: ' + this.expression.location.source.toString());
             }
 
             switch (validation.found) {
@@ -203,7 +212,7 @@ class CallExpressionHelper {
             }
         }
 
-        throw new Error('Failed to fix call expression after ' + attempts + ' attempts: ' + this.expression.location.source.toString());
+        throw new UnfixableCallExpressionError('Failed to fix call expression after ' + attempts + ' attempts: ' + this.expression.location.source.toString());
     }
 
     public getParameterLocations(): LocationRange[] {
@@ -343,5 +352,12 @@ class CallExpressionHelper {
 
         return this.shadowExpression.location.start.offset + this.shadowExpressionOffset <= offset &&
             this.shadowExpression.location.end.offset + this.shadowExpressionOffset - shadowValuesOffset >= offset;
+    }
+}
+
+export class UnfixableCallExpressionError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'UnfixableCallExpressionError';
     }
 }
