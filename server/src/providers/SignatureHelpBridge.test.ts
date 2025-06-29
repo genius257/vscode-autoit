@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import { SignatureHelpBridge } from './SignatureHelpBridge';
 import { Workspace } from '../autoit/Workspace';
 import { URI } from 'vscode-uri';
+import { SignatureHelpTriggerKind } from 'vscode-languageserver';
 
 test('resolveSignatureHelp', () => {
     const workspace = new Workspace();
@@ -101,6 +102,10 @@ test('resolveSignatureHelp', () => {
             position: {
                 line: 0,
                 character: 5,
+            },
+            context: {
+                isRetrigger: true,
+                triggerKind: SignatureHelpTriggerKind.ContentChange,
             },
         },
     );
