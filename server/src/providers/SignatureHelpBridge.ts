@@ -131,6 +131,10 @@ class CallExpressionHelper {
 
             const statement = ast.body[0];
 
+            if (statement === undefined) {
+                return false;
+            }
+
             if (statement.type !== 'ExpressionStatement') {
                 return false;
             }
