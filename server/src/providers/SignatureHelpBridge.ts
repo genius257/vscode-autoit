@@ -87,8 +87,6 @@ export class SignatureHelpBridge {
             return null;
         }
 
-        // let parameterIndex: number | null = null;
-
         const activeParameterIndex = callExpressionHelper.getParameterIndexFromPosition(position);
 
         return {
