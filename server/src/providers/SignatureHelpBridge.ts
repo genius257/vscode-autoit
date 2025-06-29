@@ -296,10 +296,10 @@ class CallExpressionHelper {
             const end = this.expression.location.end;
 
             // locationrange start is based on index of "(" follwing start
-            const startOffset = this.text.indexOf('(', start.offset) + 2; // +2 to move past the "("
+            const startOffset = this.text.indexOf('(', start.offset) + 1; // +2 to move past the "("
 
             // locationrange end is based on index of ")" before end
-            const endOffset = this.text.lastIndexOf(')', end.offset) + 1; // +1 to include the ")"
+            const endOffset = this.text.lastIndexOf(')', end.offset); // +1 to include the ")"
 
             const locationRange: LocationRange = {
                 start: PositionHelper.offsetToLocation(startOffset, this.text),
