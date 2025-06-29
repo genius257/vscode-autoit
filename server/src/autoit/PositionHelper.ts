@@ -57,12 +57,12 @@ export function offsetToPosition(offset: number, text: string): Position {
 
 export function offsetToLocation(offset: number, text: string): Location {
     const textBeforeOffset = text.substring(0, offset);
-    const lastNewLineOffset = textBeforeOffset.match(/\n(?=[^\n]*$)/)?.index;
+    const lastNewLineOffset = textBeforeOffset.lastIndexOf('\n');
 
     return {
         column: textBeforeOffset.substring(
-            lastNewLineOffset === undefined ? 0 : lastNewLineOffset,
-        ).length,
+            lastNewLineOffset === -1 ? 0 : lastNewLineOffset + 1,
+        ).length + 1,
         line: (textBeforeOffset.match(/\n/g) || []).length + 1, // https://stackoverflow.com/a/4009768/3958400
         offset: offset,
     };
