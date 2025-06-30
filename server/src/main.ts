@@ -1,8 +1,8 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import nativeSuggestions from './autoit/internal';
-import { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
+import { type AutoIt3 } from 'autoit3-pegjs';
 import * as Parser from './autoit/Parser';
 import * as PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
@@ -10,9 +10,6 @@ import { CompletionItemBridge } from './providers/CompletionItemBridge';
 import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
 
 console.log('running server autoit3-lsp-web-extension');
-
-type WhereAstTypeEquals<T extends { type: string }, S extends string> =
-    T extends { type: S } ? T : never;
 
 /* browser specific setup code */
 

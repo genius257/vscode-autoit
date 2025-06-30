@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticSeverity, ParameterInformation, Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
+import { DiagnosticSeverity, Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
 import { Workspace } from '../autoit/Workspace';
 import { LocationRange, SyntaxError, type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from '../autoit/PositionHelper';
