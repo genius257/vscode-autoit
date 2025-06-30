@@ -4,7 +4,7 @@ import { AutoIt3Configuration, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
 import { Connection /* , RemoteConsole*/ } from 'vscode-languageserver';
 
-test('something', () => {
+test('get', () => {
     const workspace = new Workspace();
 
     const script1 = new Script('hello world!', URI.file('/one.au3'));
