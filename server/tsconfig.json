@@ -14,5 +14,5 @@
 		"noUncheckedIndexedAccess": true,
 	},
 	"include": ["src"],
-	"exclude": ["node_modules", ".vscode-test-web"]
+	"exclude": ["node_modules", ".vscode-test-web", "src/**/*.test.ts"],
 }
