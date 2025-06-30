@@ -1,17 +1,15 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, ParameterInformation, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import nativeSuggestions from './autoit/internal';
-import { type AutoIt3, type LocationRange } from 'autoit3-pegjs';
+import { type AutoIt3 } from 'autoit3-pegjs';
 import * as Parser from './autoit/Parser';
 import * as PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
+import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
 
 console.log('running server autoit3-lsp-web-extension');
-
-type WhereAstTypeEquals<T extends { type: string }, S extends string> =
-    T extends { type: S } ? T : never;
 
 /* browser specific setup code */
 
@@ -326,155 +324,13 @@ async function getCompletionItems(
     );
 }
 
+let lastSignatureHelpBridge: SignatureHelpBridge | undefined;
+
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
-    const script = workspace.get(params.textDocument.uri);
+    const signatureHelpBridge = params.context?.isRetrigger && lastSignatureHelpBridge !== undefined ? lastSignatureHelpBridge : new SignatureHelpBridge(workspace);
+    lastSignatureHelpBridge = signatureHelpBridge;
 
-    if (script === undefined) {
-        return null;
-    }
-
-    const nodesAt = script.getNodesAt(params.position);
-
-    if (nodesAt === undefined) {
-        return null;
-    }
-
-    const callExpression = nodesAt.reverse().find((node): node is WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'> => node.type === 'CallExpression');
-
-    if (callExpression === undefined) {
-        return null;
-    }
-
-    /**
-     * FIXME: currently due to the issue with nested call expressions, call expressions deeper than what is expected is returned,
-     * resulting in wrong function signature matching.
-     * Not much to do about that at the moment.
-     * So InetGet()() would give the signature for InetGet(), which is not what we want.
-     * The position issue at the parser level need to be fixed first, and then to provide signature help for the second part,
-     * we need functionality to resolve the result of the first call expression.
-     * And for that we need support type analysis.
-     */
-
-    const text = script.getText();
-
-    if (text === undefined) {
-        return null;
-    }
-
-    let parameterIndex: number | null = null;
-
-    if (callExpression.arguments.length > 0) {
-        type Writeable<T> = { -readonly [P in keyof T]: T[P] };
-
-        // Make new array of deep cloned location ranges, to prevent modifying original AST location values.
-        const argumentLocations = callExpression.arguments
-            .map<Writeable<LocationRange>>(
-                (argument) => JSON.parse(JSON.stringify(argument.location)),
-            );
-        let textBetween = text.substring(
-            callExpression.callee.location.end.offset,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            argumentLocations[0]!.start.offset,
-        );
-        let parenthesisIndex = textBetween.indexOf('(');
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        argumentLocations[0]!.start = PositionHelper.offsetToLocation(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            argumentLocations[0]!.start.offset - Math.abs(textBetween.length - 1 - parenthesisIndex),
-            text,
-        );
-
-        if (argumentLocations.length > 1) {
-            for (let index = 0; index < argumentLocations.length - 1; index++) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const argumentLeft = argumentLocations[index]!;
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const argumentRight = argumentLocations[index + 1]!;
-                const textBetween = text.substring(
-                    argumentLeft.end.offset,
-                    argumentRight.start.offset,
-                );
-                const commaIndex = textBetween.indexOf(',');
-                argumentLeft.end = PositionHelper.offsetToLocation(
-                    argumentLeft.end.offset + commaIndex,
-                    text,
-                );
-                argumentRight.start = PositionHelper.offsetToLocation(
-                    argumentRight.start.offset - Math.abs(textBetween.length - 1 - commaIndex),
-                    text,
-                );
-            }
-        }
-
-        textBetween = text.substring(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            argumentLocations[argumentLocations.length - 1]!.end.offset,
-            callExpression.location.end.offset,
-        );
-        parenthesisIndex = textBetween.indexOf(')');
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        argumentLocations[argumentLocations.length - 1]!.end = PositionHelper
-            .offsetToLocation(
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                argumentLocations[argumentLocations.length - 1]!.end.offset + parenthesisIndex,
-                text,
-            );
-
-        parameterIndex = argumentLocations.findIndex(
-            (location) => PositionHelper.isPositonWithinLocationRange(
-                params.position,
-                location,
-            ),
-        );
-    }
-
-    if (
-        params.context?.isRetrigger &&
-        params.context.activeSignatureHelp !== undefined
-    ) {
-        if (callExpression.arguments.length > 0) {
-            if (parameterIndex === -1) {
-                return null;
-            }
-
-            if (params.context.activeSignatureHelp.activeParameter !== undefined && parameterIndex !== -1) {
-                params.context.activeSignatureHelp.activeParameter = parameterIndex ?? undefined;
-            }
-        } else {
-            params.context.activeSignatureHelp.activeParameter = undefined;
-        }
-
-        return params.context.activeSignatureHelp;
-    }
-
-    // FIXME: this currently won't work for member expressions!
-
-    if (callExpression.callee.type === 'CallExpression' || callExpression.callee.type === 'ParenthesizedExpression' || /* callExpression.callee.type === "ExpressionStatement" || callExpression.callee.type === "Macro" ||*/ callExpression.callee.type === 'MemberExpression' || callExpression.callee.type === 'Literal' || callExpression.callee.type === 'Keyword') {
-        return null;
-    }
-
-    const declarator = script.getIdentifierDeclarator(callExpression.callee);
-
-    if (!declarator) {
-        return null;
-    }
-
-    if (declarator === null || declarator.type === 'VariableDeclarator' || declarator.type === 'Parameter') { // FIXME: currently we don't look for identifier in the VariableDeclarator init!
-        return null;
-    }
-
-    return {
-        signatures: [
-            {
-                label: declarator.id.name + '(' + Parser.AstArrayToStringArray(declarator.params).join(', ') + ')',
-                documentation: undefined, // FIXME: built in funcs have this as not undefined
-                parameters: declarator.params.map((parameter): ParameterInformation => ({
-                    label: '$' + parameter.id.name,
-                    documentation: undefined, // FIXME: built in funcs have this as not undefined in the future
-                })),
-            },
-        ],
-        activeParameter: parameterIndex ?? undefined,
-        activeSignature: 0,
-    };
+    return signatureHelpBridge.resolveSignatureHelp(
+        params,
+    );
 }

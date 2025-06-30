@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Function signature help would break, when pressing "," between parameters
+
 ## [1.8.5] - 2025-06-18
 
 ### Fixed
