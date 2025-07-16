@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.6] - 2025-07-16
+
 ### Fixed
 
 - Function signature help would break, when pressing "," between parameters
@@ -236,7 +238,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.5...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.6...HEAD
+[1.8.6]: https://github.com/genius257/vscode-autoit/compare/1.8.5...1.8.6
 [1.8.5]: https://github.com/genius257/vscode-autoit/compare/1.8.4...1.8.5
 [1.8.4]: https://github.com/genius257/vscode-autoit/compare/1.8.3...1.8.4
 [1.8.3]: https://github.com/genius257/vscode-autoit/compare/1.8.2...1.8.3
