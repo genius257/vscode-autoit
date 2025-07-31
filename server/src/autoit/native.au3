@@ -1663,7 +1663,7 @@ Func ControlFocus($title, $text, $controlID)
 EndFunc
 
 #cs
-# Returns the control's current text.
+# Returns the ControlRef# of the control that has keyboard focus within a specified window.
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1677,7 +1677,7 @@ Func ControlGetFocus($title, $text = "")
 EndFunc
 
 #cs
-# Returns the control's current text.
+# Retrieves the internal handle of a control.
 #
 # This function returns a HWND/Handle value.
 #
