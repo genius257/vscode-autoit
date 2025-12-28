@@ -78,7 +78,7 @@ function createWorkerLanguageClient(
     return new LanguageClient('autoit3-lsp-web-extension', 'AutoIt3 LSP Web Extension', clientOptions, worker);
 }
 
-function statusBarStateChange(e: TextEditor): void {
+function statusBarStateChange(e: TextEditor | undefined): void {
     if (e?.document?.languageId === 'au3') {
         statusBarItem.show();
     } else {
