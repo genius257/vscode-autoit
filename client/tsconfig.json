@@ -1,11 +1,8 @@
 {
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es2020",
-		"lib": ["es2020", "WebWorker"],
+		/* Modules */
 		"rootDir": "src",
-		"sourceMap": true,
-		"esModuleInterop": true,
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test-web"]

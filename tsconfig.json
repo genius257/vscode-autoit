@@ -1,0 +1,38 @@
+{
+    "compilerOptions": {
+        /* Emit */
+		"sourceMap": true,
+
+        /* Interop Constraints */
+		"esModuleInterop": true,
+
+        /* Modules */
+		"module": "commonjs",
+
+        /* Language and Environment */
+		"target": "es2020",
+		"lib": ["es2020", "WebWorker"],
+
+        /* Type Checking */
+        "strict": true,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        // "alwaysStrict": true,
+        // "exactOptionalPropertyTypes": true,
+        // "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": false,
+        "noImplicitThis": true,
+        // "noPropertyAccessFromIndexSignature": false,
+        "noUncheckedIndexedAccess": true,
+        "noUnusedLocals": true,
+        // "noUnusedParameters": false,
+        "strictBindCallApply": true,
+        "strictBuiltinIteratorReturn": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "useUnknownInCatchVariables": true,
+    }
+}

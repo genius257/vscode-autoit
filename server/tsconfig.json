@@ -1,17 +1,11 @@
 {
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"target": "es2020",
-		"lib": ["es2020", "WebWorker"],
-		"module": "commonjs",
+		/* Modules */
 		"moduleResolution": "node",
-		"sourceMap": true,
-		"strict": true,
-		"esModuleInterop": true,
 
+		/* Type Checking */
 		"noImplicitAny": false,
-		"noUnusedLocals": true,
-		"noImplicitOverride": true,
-		"noUncheckedIndexedAccess": true,
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test-web", "src/**/*.test.ts"],
