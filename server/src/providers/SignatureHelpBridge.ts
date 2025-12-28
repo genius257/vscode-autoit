@@ -3,7 +3,8 @@ import { Workspace } from '../autoit/Workspace';
 import { LocationRange, SyntaxError, type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from '../autoit/PositionHelper';
 import * as Parser from '../autoit/Parser';
-import Script from '../autoit/Script';
+import Script, { Node, NodeFilterAction } from '../autoit/Script';
+import AstWalker from '../autoit/AstWalker';
 
 type WhereAstTypeEquals<T extends { type: string }, S extends string> =
     T extends { type: S } ? T : never;
@@ -136,17 +137,16 @@ class CallExpressionHelper {
         try {
             const ast = Parser.parse(callExpressionText, this.expression.location.source.toString());
 
-            const statement = ast.body[0];
+            const matches: Node[] = [];
+            AstWalker.filterNestedNodes(ast.body, (node) => {
+                return node.type === 'CallExpression' ? NodeFilterAction.StopPropagation : NodeFilterAction.Skip;
+            }, matches);
 
-            if (statement === undefined) {
+            const expression = matches.length === 0 ? matches[0] : matches.find((node) => node.location.start.line === 1 && node.location.start.column === this.expression.location.start.column);
+
+            if (expression === undefined) {
                 return false;
             }
-
-            if (statement.type !== 'ExpressionStatement') {
-                return false;
-            }
-
-            const expression = statement.expression;
 
             if (expression.type !== 'CallExpression') {
                 return false;
