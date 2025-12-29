@@ -7414,7 +7414,7 @@ EndFunc
 #
 # @return Handle Window handle or 0 if timeout was reached.
 #ce
-Func WinWaitNotActive($title, $text = "", $timeout = 0)
+Func WinWaitClose($title, $text = "", $timeout = 0)
     #native code
 EndFunc
 
