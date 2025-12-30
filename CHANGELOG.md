@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wrong summary on ControlGetFocus and ControlGetHandle
 - Function signature helper will now work for lines that contains more than a single call expression
 - Native function WinWaitClose was declared as duplicate WinWaitNotActive function
+- Missing array index information was not shown for variable declarations in hover information.
 
 ## [1.8.6] - 2025-07-16
 
