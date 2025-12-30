@@ -183,6 +183,7 @@ export function AstArrayToStringArray(
         | AutoIt3.ArgumentList
         | AutoIt3.CaseValueList
         | AutoIt3.ArrayDeclarationElementList
+        | AutoIt3.AssignmentExpression[]
         | null,
 ): string[] {
     const result: string[] = [];
