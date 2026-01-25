@@ -57,7 +57,17 @@
 		},
 		"operators": {
 			"name": "keyword.operator.au3",
-			"match": "([+\\-*\\/&<>]=|==?|<>|[&+\\-*\\/^<>]|\\b(?i:And|Or|Not)\\b)"
+			"match": "([+\\-*\\/&<>]=|==?|<>|[&+\\-*\\/^<>]|\\b(?i:And|Or|Not)\\b)",
+			"captures": {
+				"1": {
+					"patterns": [
+						{
+							"name": "keyword.operator.logical.au3",
+							"match": "(?i:And|Or|Not)"
+						}
+					]
+				}
+			}
 		},
 		"macros": {
 			"name": "variable.other.constant.au3",
