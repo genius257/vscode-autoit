@@ -94,7 +94,6 @@
 						"name": "variable.other.au3"
 					},
 					"2": {
-						"xname": "keyword.operator.au3",
 						"patterns": [
 							{
 								"match": "\\s*(\\.)([a-zA-Z0-9_]*)",
