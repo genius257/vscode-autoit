@@ -283,8 +283,6 @@ export default class AstWalker {
                 return status;
             case 'MultiLineComment':
                 break;
-            case 'NotExpression':
-                return this.filterNestedNode(node.value, fn, matches);
             case 'Parameter':
                 status = this.filterNestedNode(node.id, fn, matches);
 

@@ -41,16 +41,25 @@ export function AstToString(
         | AutoIt3.Program
         | AutoIt3.SourceElement
         | AutoIt3.AssignmentExpression
+        | AutoIt3.AssignmentExpressionInWith
         | AutoIt3.FormalParameter
         | AutoIt3.Statement
+        | AutoIt3.StatementInWith
         | AutoIt3.RedimIdentifierExpression
         | AutoIt3.DefaultClause
+        | AutoIt3.DefaultClauseInWith
         | AutoIt3.SelectCaseClause
+        | AutoIt3.SelectCaseClauseInWith
         | AutoIt3.CaseClause
+        | AutoIt3.CaseClauseInWith
         | AutoIt3.VariableDeclaration
+        | AutoIt3.VariableDeclarationInWith
         | AutoIt3.EnumDeclaration
+        | AutoIt3.EnumDeclarationInWith
         | AutoIt3.Initialiser
+        | AutoIt3.InitialiserInWith
         | AutoIt3.SwitchCaseValue
+        | AutoIt3.SwitchCaseValueInWith
         | AutoIt3.Macro,
 ): string {
     if (ast === null) {
@@ -66,7 +75,9 @@ export function AstToString(
             return '[' + AstArrayToStringArray(ast.elements).join(', ') + ']';
         case 'AssignmentExpression':
             return AstToString(ast.left) +
+                ' ' +
                 ast.operator +
+                ' ' +
                 AstToString(ast.right);
         case 'BinaryExpression':
             return AstToString(ast.left) +
@@ -126,8 +137,6 @@ export function AstToString(
             }
         case 'MultiLineComment':
             return '#cs' + ast.body + '\n#ce';
-        case 'NotExpression':
-            return 'Not ' + AstToString(ast.value);
         case 'Parameter':
             return (ast.const ? 'Const ' : '') + (ast.byref ? 'ByRef ' : '') + AstToString(ast.id) + (ast.init === null ? '' : ' = ' + AstToString(ast.init));
         case 'ParenthesizedExpression':
@@ -174,16 +183,25 @@ export function AstToString(
 export function AstArrayToStringArray(
     astArray:
         | AutoIt3.StatementList
+        | AutoIt3.StatementListInWith
         | AutoIt3.FormalParameterList
         | AutoIt3.RedimIdentifierExpression[]
         | (AutoIt3.DefaultClause | AutoIt3.SelectCaseClause)[]
+        | (AutoIt3.DefaultClauseInWith | AutoIt3.SelectCaseClauseInWith)[]
         | (AutoIt3.DefaultClause | AutoIt3.CaseClause)[]
+        | (AutoIt3.DefaultClauseInWith | AutoIt3.CaseClauseInWith)[]
         | AutoIt3.VariableDeclarationList
+        | AutoIt3.VariableDeclarationListInWith
         | AutoIt3.EnumDeclarationList
+        | AutoIt3.EnumDeclarationListInWith
         | AutoIt3.ArgumentList
+        | AutoIt3.ArgumentListInWith
         | AutoIt3.CaseValueList
+        | AutoIt3.CaseValueListInWith
         | AutoIt3.ArrayDeclarationElementList
+        | AutoIt3.ArrayDeclarationElementListInWith
         | AutoIt3.AssignmentExpression[]
+        | AutoIt3.AssignmentExpressionInWith[]
         | null,
 ): string[] {
     const result: string[] = [];

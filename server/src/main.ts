@@ -183,7 +183,9 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         | AutoIt3.FormalParameter
         | AutoIt3.FunctionDeclaration
         | AutoIt3.VariableDeclaration
+        | AutoIt3.VariableDeclarationInWith
         | AutoIt3.EnumDeclaration
+        | AutoIt3.EnumDeclarationInWith
         | null
         | undefined = null;
 

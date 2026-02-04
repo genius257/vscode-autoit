@@ -38,32 +38,58 @@ export type ScriptDiagnostic =
 
 export type Node =
     | AutoIt3.SourceElement
+    | AutoIt3.StatementInWith
     | AutoIt3.AssignmentExpression
+    | AutoIt3.AssignmentExpressionInWith
     | AutoIt3.FormalParameter
+    | AutoIt3.VariableStatement
+    | AutoIt3.VariableStatementInWith
     | AutoIt3.VariableDeclaration
+    | AutoIt3.VariableDeclarationInWith
     | AutoIt3.EnumDeclaration
+    | AutoIt3.EnumDeclarationInWith
     | AutoIt3.ArrayDeclaration
+    | AutoIt3.ArrayDeclarationInWith
     | AutoIt3.DefaultClause
+    | AutoIt3.DefaultClauseInWith
     | AutoIt3.CaseClause
+    | AutoIt3.CaseClauseInWith
     | AutoIt3.SelectCaseClause
+    | AutoIt3.SelectCaseClauseInWith
     | AutoIt3.SwitchCaseValue
+    | AutoIt3.SwitchCaseValueInWith
     | AutoIt3.Macro
     | AutoIt3.IncludeStatement
+    | AutoIt3.IfStatement
+    | AutoIt3.IfStatementInWith
     | AutoIt3.ElseIfClause
-    | AutoIt3.ElseClause;
+    | AutoIt3.ElseIfClauseInWith
+    | AutoIt3.ElseClause
+    | AutoIt3.ElseClauseInWith;
 
 export type NodeList =
-    | AutoIt3.SourceElements
+    | AutoIt3.StatementList
+    | AutoIt3.StatementListInWith
+    | AutoIt3.SourceElement[]
     | AutoIt3.ArgumentList
+    | AutoIt3.ArgumentListInWith
     | AutoIt3.VariableDeclarationList
+    | AutoIt3.VariableDeclarationListInWith
     | AutoIt3.EnumDeclarationList
+    | AutoIt3.EnumDeclarationListInWith
     | AutoIt3.FormalParameterList
     | (AutoIt3.DefaultClause | AutoIt3.CaseClause | AutoIt3.SelectCaseClause)[]
+    | (AutoIt3.DefaultClauseInWith | AutoIt3.CaseClauseInWith | AutoIt3.SelectCaseClauseInWith)[]
     | AutoIt3.ArrayDeclarationElementList
+    | AutoIt3.ArrayDeclarationElementListInWith
     | AutoIt3.CaseValueList
+    | AutoIt3.CaseValueListInWith
     | AutoIt3.ElseIfClauses
+    | AutoIt3.ElseIfClausesInWith
     | AutoIt3.ElseClause[]
+    | AutoIt3.ElseClauseInWith[]
     | (AutoIt3.ElseClause | AutoIt3.ElseIfClause)[]
+    | (AutoIt3.ElseClauseInWith | AutoIt3.ElseIfClauseInWith)[]
     | AutoIt3.FunctionDeclaration[];
 
 export enum NodeFilterAction {
@@ -117,7 +143,9 @@ export default class Script {
     public declarations: (
         | AutoIt3.FunctionDeclaration
         | AutoIt3.VariableDeclaration
+        | AutoIt3.VariableDeclarationInWith
         | AutoIt3.EnumDeclaration
+        | AutoIt3.EnumDeclarationInWith
     )[] = [];// FIXME: varaible declarations with the global scope should be added here aswell.
 
     constructor(
@@ -722,8 +750,6 @@ export default class Script {
                 break;
             case 'MultiLineComment':
                 break;
-            case 'NotExpression':
-                return this.getNestedNodesAt(node.value, line, column, matches);
             case 'Parameter':
                 this.getNestedNodesAt(node.id, line, column, matches);
                 this.getNestedNodesAt(node.init, line, column, matches);
@@ -1144,8 +1170,6 @@ export default class Script {
                 return status;
             case 'MultiLineComment':
                 break;
-            case 'NotExpression':
-                return this.filterNestedNode(node.value, fn, matches);
             case 'Parameter':
                 status = this.filterNestedNode(node.id, fn, matches);
 
@@ -1322,7 +1346,9 @@ export default class Script {
         | AutoIt3.FormalParameter
         | AutoIt3.FunctionDeclaration
         | AutoIt3.VariableDeclaration
+        | AutoIt3.VariableDeclarationInWith
         | AutoIt3.EnumDeclaration
+        | AutoIt3.EnumDeclarationInWith
         | null {
         if (identifier === null || identifier.type === 'Macro') {
             return null;
@@ -1342,7 +1368,9 @@ export default class Script {
             | AutoIt3.FormalParameter
             | AutoIt3.FunctionDeclaration
             | AutoIt3.VariableDeclaration
+            | AutoIt3.VariableDeclarationInWith
             | AutoIt3.EnumDeclaration
+            | AutoIt3.EnumDeclarationInWith
             | undefined
             | null;
 
