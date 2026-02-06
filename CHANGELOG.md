@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - textmate scope for `And`, `Or` and `Not` operators to still have `keyword.operator` scope, but additionally `logical` was added to the scope string, to allow custom styling (issue #85)
 - textmate scope for built-in functions to be `support.function.au3`, to allow for visual distinction between built-in and user defined functions. (issue #85)
+- Upgrade dependency: autoit3-pegjs to 4.1.2
 
 ## [1.8.7] - 2025-12-31
 
