@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.8] - 2025-02-07
+
 ### Changed
 
 - textmate scope for `And`, `Or` and `Not` operators to still have `keyword.operator` scope, but additionally `logical` was added to the scope string, to allow custom styling (issue #85)
@@ -253,7 +255,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.7...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.8...HEAD
+[1.8.8]: https://github.com/genius257/vscode-autoit/compare/1.8.7...1.8.8
 [1.8.7]: https://github.com/genius257/vscode-autoit/compare/1.8.6...1.8.7
 [1.8.6]: https://github.com/genius257/vscode-autoit/compare/1.8.5...1.8.6
 [1.8.5]: https://github.com/genius257/vscode-autoit/compare/1.8.4...1.8.5
