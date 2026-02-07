@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Hover text for variables showed variable declarations having a set of square brackets at the end of the variable name, for normal declarations that in reality had none.
+- Hover text for variables showed array dimensions at the end of the variable name wrong, when multiple dimensions was defined.
 
 ## [1.8.8] - 2025-02-07
 
