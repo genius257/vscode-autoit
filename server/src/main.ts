@@ -211,7 +211,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                 value = Parser.AstToString(identifier.init);
             }
 
-            const dimensions = 'dimensions' in identifier && identifier.dimensions.length > 0 ? '[' + Parser.AstArrayToStringArray(identifier.dimensions.filter((dimension) => dimension !== null)) + ']' : '';
+            const dimensions = 'dimensions' in identifier && identifier.dimensions.length > 0 ? '[' + identifier.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']' : '';
 
             contents.value += `\`\`\`au3\n${identifierAtPos.type === 'VariableIdentifier' ? '$' : ''}${identifier.id.name}${dimensions}${value === null ? '' : ' = ' + value}\n\`\`\``;
 
