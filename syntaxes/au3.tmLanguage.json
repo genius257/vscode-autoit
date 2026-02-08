@@ -101,7 +101,7 @@
 										"name": "keyword.operator.au3"
 									},
 									"2": {
-										"name": "support.type.property-name"
+										"name": "support.type.property-name.au3"
 									}
 								}
 							}
@@ -345,7 +345,7 @@
 			]
 		},
 		"numbers": {
-			"name": "constant.numeric",
+			"name": "constant.numeric.au3",
 			"patterns": [
 				{
 					"name": "constant.numeric.scientific_notation.au3",
