@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.9] - 2026-02-09
+
+### Changed
+
+- Upgrade dependency: autoit3-pegjs to 4.1.3
+
 ### Fixed
 
 - Hover text for variables showed variable declarations having a set of square brackets at the end of the variable name, for normal declarations that in reality had none.
 - Hover text for variables showed array dimensions at the end of the variable name wrong, when multiple dimensions was defined.
+- Some AutoIt3 textmate scopes was missing `.au3` at the end
 
 ## [1.8.8] - 2026-02-07
 
@@ -260,7 +267,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.8...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.9...HEAD
+[1.8.9]: https://github.com/genius257/vscode-autoit/compare/1.8.8...1.8.9
 [1.8.8]: https://github.com/genius257/vscode-autoit/compare/1.8.7...1.8.8
 [1.8.7]: https://github.com/genius257/vscode-autoit/compare/1.8.6...1.8.7
 [1.8.6]: https://github.com/genius257/vscode-autoit/compare/1.8.5...1.8.6
