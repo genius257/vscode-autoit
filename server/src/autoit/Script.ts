@@ -186,7 +186,7 @@ export default class Script {
                     'diagnostics',
                     {
                         uri: this.uri.toString(),
-                        diagnostics: this.getDiagnostics()
+                        diagnostics: this.getDiagnostics(),
                     },
                 );
             }

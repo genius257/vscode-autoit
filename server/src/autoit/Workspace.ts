@@ -34,7 +34,7 @@ export class Workspace {
     protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
     protected configuration: AutoIt3Configuration | null = null;
-    public readonly eventEmitter: EventEmitter<{diagnostics: {uri: string, diagnostics: Diagnostic[]}}> = new EventEmitter();
+    public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
 
     constructor(connection: Connection | null = null) {
         this.connection = connection;

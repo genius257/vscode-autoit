@@ -11,7 +11,8 @@ export default class EventEmitter<Events extends EventMap> {
         if (!this.listeners[event]) {
             this.listeners[event] = new Set();
         }
-        this.listeners[event]!.add(listener);
+
+        this.listeners[event].add(listener);
     }
 
     off<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
@@ -19,6 +20,7 @@ export default class EventEmitter<Events extends EventMap> {
 
         // Optional cleanup to avoid empty sets accumulating
         if (this.listeners[event]?.size === 0) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete this.listeners[event];
         }
     }
@@ -43,6 +45,7 @@ export default class EventEmitter<Events extends EventMap> {
 
     clear<K extends keyof Events>(event?: K): void {
         if (event) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete this.listeners[event];
         } else {
             this.listeners = {};

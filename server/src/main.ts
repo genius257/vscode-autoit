@@ -68,7 +68,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
  */
 
 const workspace = new Workspace(connection);
-workspace.eventEmitter.on('diagnostics', function ({uri, diagnostics}) {
+workspace.eventEmitter.on('diagnostics', function ({ uri, diagnostics }) {
     // connection.window.showWarningMessage("onDiagnostics");
     connection.sendDiagnostics({
         uri,
