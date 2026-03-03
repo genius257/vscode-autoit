@@ -182,9 +182,12 @@ export default class Script {
     public triggerDiagnostics(): void {
         this.debouncedTriggerDiagnostics ??= debounce(() => {
             if (this.uri !== undefined) {
-                this.workspace?.triggerDiagnostics(
-                    this.uri.toString(),
-                    this.getDiagnostics(),
+                this.workspace?.eventEmitter.emit(
+                    'diagnostics',
+                    {
+                        uri: this.uri.toString(),
+                        diagnostics: this.getDiagnostics()
+                    },
                 );
             }
         }, 100);

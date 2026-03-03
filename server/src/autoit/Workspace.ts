@@ -4,14 +4,12 @@ import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
 import { isAbsolutePath } from './Path';
+import EventEmitter from '@utils/EventEmitter';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
 
 type uri = string | URI | { toString: () => string };
-
-export type diagnosticsListner = (
-    uri: string, diagnostics: Diagnostic[]) => void;
 
 export type IncludeResolve = { uri: URI, text: string | null };
 
@@ -35,8 +33,8 @@ export class Workspace {
     protected scripts: ScriptList = new Map();
     protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
-    protected diagnosticsListners: diagnosticsListner[] = [];
     protected configuration: AutoIt3Configuration | null = null;
+    public readonly eventEmitter: EventEmitter<{diagnostics: {uri: string, diagnostics: Diagnostic[]}}> = new EventEmitter();
 
     constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -58,25 +56,6 @@ export class Workspace {
 
     public getConnection(): Connection | null {
         return this.connection;
-    }
-
-    public onDiagnostics(fn: diagnosticsListner): void {
-        this.diagnosticsListners.push(fn);
-    }
-
-    /**
-     * function for removing a diagnostics listner
-     */
-    public offDiagnostics(fn: diagnosticsListner): void {
-        this.diagnosticsListners = this.diagnosticsListners.filter(
-            (x) => x !== fn,
-        );
-    }
-
-    public triggerDiagnostics(uri: string, diagnostics: Diagnostic[]): void {
-        for (const fn of this.diagnosticsListners) {
-            fn.call(this, uri, diagnostics);
-        }
     }
 
     public add(script: Script): void {
