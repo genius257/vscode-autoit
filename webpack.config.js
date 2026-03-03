@@ -77,7 +77,9 @@ const serverConfig = {
 	resolve: {
 		mainFields: ['module', 'main'],
 		extensions: ['.ts', '.js'], // support ts-files and js-files
-		alias: {},
+		alias: {
+			'@utils': path.resolve(__dirname, "./server/src/utils"),
+		},
 		fallback: {
 			//path: require.resolve("path-browserify")
 		},

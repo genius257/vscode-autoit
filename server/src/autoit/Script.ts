@@ -4,7 +4,7 @@ import { URI } from 'vscode-uri';
 import * as Parser from './Parser';
 import { Workspace } from './Workspace';
 import * as PositionHelper from './PositionHelper';
-import debounce from '../utils/debounce';
+import debounce from '@utils/debounce';
 import DocBlock from './docBlock/DocBlock';
 import FqsenResolver from './docBlock/FqsenResolver';
 import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';

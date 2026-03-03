@@ -6,6 +6,12 @@
 
 		/* Type Checking */
 		"noImplicitAny": false,
+
+		"paths": {
+			"@utils/*": [
+				"./src/utils/*",
+			],
+		},
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test-web", "src/**/*.test.ts"],
