@@ -3,5 +3,6 @@
     "[typescript]": {
         "editor.tabSize": 4,
         "editor.detectIndentation": false,
-    }
+    },
+    "typescript.preferences.quoteStyle": "single"
 }
