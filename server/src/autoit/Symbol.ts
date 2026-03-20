@@ -12,7 +12,21 @@ export default class Symbol {
 
     public constructor(node: Node) {
         this.node = node;
-        this.name = 'name' in node ? node.name : node.value;
+        this.name = this.getNodeName(node);
+    }
+
+    public getNodeName(node: Node): string {
+        const type = node.type;
+
+        switch (type) {
+            case 'Identifier':
+            case 'VariableIdentifier':
+                return node.name;
+            case 'Macro':
+                return node.value;
+            default:
+                throw new Error(`Unexpected node type: "${type satisfies never}" when trying to extract name for Symbol`);
+        }
     }
 }
 
