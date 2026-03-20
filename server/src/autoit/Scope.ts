@@ -5,18 +5,15 @@ export default class Scope {
     public readonly id: string;
     public readonly uri?: URI;
     public readonly range?: LocationRange;
-    public readonly name?: string; // e.g., function name for 'local' scope
     public readonly parent?: Scope;
 
     public constructor(
         range?: LocationRange,
         uri?: URI,
-        name?: string,
         parent?: Scope,
     ) {
         this.uri = uri;
         this.range = range;
-        this.name = name;
         this.parent = parent;
         this.id = `${uri}:${range?.start.line}:${range?.start.column}`;
     }
