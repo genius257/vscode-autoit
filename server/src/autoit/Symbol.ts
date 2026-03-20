@@ -7,10 +7,12 @@ type Node =
     AutoIt3.Macro | AutoIt3.VariableIdentifier | AutoIt3.Identifier;
 
 export default class Symbol {
+    public readonly name: string;
     protected node: Node;
 
     public constructor(node: Node) {
         this.node = node;
+        this.name = 'name' in node ? node.name : node.value;
     }
 }
 
