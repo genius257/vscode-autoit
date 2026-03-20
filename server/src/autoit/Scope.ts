@@ -1,5 +1,6 @@
 import { LocationRange } from 'autoit3-pegjs';
 import { URI } from 'vscode-uri';
+import Symbol from './Symbol';
 
 export default class Scope {
     public readonly id: string;
@@ -7,23 +8,20 @@ export default class Scope {
     public readonly range?: LocationRange;
     public readonly parent: Scope | null;
 
-    protected declarations: Map<string, Node>;
-    protected assignments: Map<string, Node>;
-    protected references: Map<string, Node>;
+    protected symbols: Map<string, Symbol>;
+    protected subscopes: Set<Scope>;
 
     public constructor(
         range?: LocationRange,
         uri?: URI,
-        declarations: typeof this.declarations = new Map(),
-        assignments: typeof this.assignments = new Map(),
-        references: typeof this.references = new Map(),
+        symbols: typeof this.symbols = new Map(),
+        subscopes: typeof this.subscopes = new Set(),
         parent: Scope | null = null,
     ) {
         this.uri = uri;
         this.range = range;
-        this.declarations = declarations;
-        this.assignments = assignments;
-        this.references = references;
+        this.symbols = symbols;
+        this.subscopes = subscopes;
         this.parent = parent;
         this.id = `${uri}:${range?.start.line}:${range?.start.column}`;
     }
