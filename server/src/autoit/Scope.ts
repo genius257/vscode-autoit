@@ -5,12 +5,12 @@ export default class Scope {
     public readonly id: string;
     public readonly uri?: URI;
     public readonly range?: LocationRange;
-    public readonly parent?: Scope;
+    public readonly parent: Scope | null;
 
     public constructor(
         range?: LocationRange,
         uri?: URI,
-        parent?: Scope,
+        parent: Scope | null = null,
     ) {
         this.uri = uri;
         this.range = range;
@@ -20,10 +20,11 @@ export default class Scope {
 
     public isDescendantOf(ancestor: Scope): boolean {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
-        let scope: Scope | undefined = this;
+        let scope: Scope | null = this;
 
-        while (scope !== undefined) {
-            if (scope.id === ancestor.id) {
+        while (scope !== null) {
+            if (scope === ancestor) {
+            // if (scope.id === ancestor.id) {
                 return true;
             }
 
