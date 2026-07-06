@@ -68,7 +68,7 @@ export function offsetToLocation(offset: number, text: string): Location {
     };
 }
 
-export function isPositonWithinLocationRange(
+export function isPositionWithinLocationRange(
     position: Position,
     locationRange: LocationRange,
 ): boolean {

@@ -50,7 +50,7 @@ export class SignatureHelpBridge {
                 return null;
             }
 
-            callExpression = nodesAt.reverse().find((node): node is WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'> => node.type === 'CallExpression' && PositionHelper.isPositonWithinLocationRange(position, node.location));
+            callExpression = nodesAt.reverse().find((node): node is WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'> => node.type === 'CallExpression' && PositionHelper.isPositionWithinLocationRange(position, node.location));
 
             if (callExpression === undefined) {
                 return null;
@@ -307,7 +307,7 @@ class CallExpressionHelper {
                 source: this.expression.location.source,
             };
 
-            return PositionHelper.isPositonWithinLocationRange(position, locationRange) ? 0 : -1; // If position is within the parentheses, return 0, otherwise -1
+            return PositionHelper.isPositionWithinLocationRange(position, locationRange) ? 0 : -1; // If position is within the parentheses, return 0, otherwise -1
         }
 
         // Cursor offset in the text
@@ -341,7 +341,7 @@ class CallExpressionHelper {
 
     public isPositionWithinCallExpression(position: Position): boolean {
         if (this.shadowExpression === null) {
-            return PositionHelper.isPositonWithinLocationRange(position, this.expression.location);
+            return PositionHelper.isPositionWithinLocationRange(position, this.expression.location);
         }
 
         const offset = PositionHelper.positionToOffset(position, this.script.getText());
