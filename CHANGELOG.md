@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.11] - 2026-07-08
+
+### Changed
+
+- Upgrade dependency: autoit3-pegjs to 4.1.5
+
+### Fixed
+
+- au3 TextMate grammar for include statements without a space between keyword and script string
+
 ## [1.8.10] - 2026-06-14
 
 ### Changed
@@ -277,7 +287,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.10...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.8.11...HEAD
+[1.8.11]: https://github.com/genius257/vscode-autoit/compare/1.8.10...1.8.11
 [1.8.10]: https://github.com/genius257/vscode-autoit/compare/1.8.9...1.8.10
 [1.8.9]: https://github.com/genius257/vscode-autoit/compare/1.8.8...1.8.9
 [1.8.8]: https://github.com/genius257/vscode-autoit/compare/1.8.7...1.8.8
