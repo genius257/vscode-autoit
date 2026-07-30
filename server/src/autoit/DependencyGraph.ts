@@ -2,23 +2,52 @@ import { URI } from 'vscode-languageserver';
 
 export default class DependencyGraph {
     protected adjacencyList = new Map<URI, Set<URI>>();
+    protected rev = new Map<URI, Set<URI>>();
 
-    public addDependency(parent: URI, child: URI): void {
-        if (this.adjacencyList.has(parent)) {
-            this.adjacencyList.set(parent, new Set());
+    public setDependencies(source: URI, targets: URI[]) {
+        const oldTargets = this.adjacencyList.get(source);
+        const newTargets = new Set(targets);
+
+        if (oldTargets === undefined) {
+            this.adjacencyList.set(source, newTargets);
+
+            return;
         }
 
-        this.adjacencyList.get(parent)?.add(child);
+        for (const oldTarget of oldTargets) {
+            if (!newTargets.has(oldTarget)) {
+                // Remove old reverse edges
+                this.rev.get(oldTarget)?.delete(source);
+            }
+        }
+
+        this.adjacencyList.set(source, newTargets);
+
+        // Add new reverse edges
+        for (const newTarget of newTargets) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const map = this.rev.get(newTarget) ?? this.rev.set(newTarget, new Set()).get(newTarget)!;
+
+            map.add(source);
+        }
     }
 
-    public removeDependency(parent: URI, child: URI): void {
-        const dependencies = this.adjacencyList.get(parent);
+    public addDependency(source: URI, target: URI): void {
+        if (!this.adjacencyList.has(source)) {
+            this.adjacencyList.set(source, new Set());
+        }
+
+        this.adjacencyList.get(source)?.add(target);
+    }
+
+    public removeDependency(source: URI, target: URI): void {
+        const dependencies = this.adjacencyList.get(source);
 
         if (dependencies === undefined) {
             return;
         }
 
-        dependencies.delete(child);
+        dependencies.delete(target);
     }
 
     public removeScript(id: URI): void {
