@@ -5,6 +5,9 @@ import Script from './Script';
 import native from './native.au3?raw';
 import { isAbsolutePath } from './Path';
 import EventEmitter from '@utils/EventEmitter';
+import Symbol from './Symbol';
+import Scope from './Scope';
+import DependencyGraph from './DependencyGraph';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -31,10 +34,12 @@ export type AutoIt3Configuration = {
 
 export class Workspace {
     protected scripts: ScriptList = new Map();
+    protected activeScripts = new Set<string>();
     protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
     protected configuration: AutoIt3Configuration | null = null;
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
+    public readonly dependencyGraph = new DependencyGraph();
 
     constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -83,13 +88,31 @@ export class Workspace {
 
         if (script !== undefined) {
             script.update(text);
-
-            return script;
-        }
-
+        } else {
         script = new Script(text, URI.parse(_uri), this);
         this.add(script);
         script.triggerDiagnostics();
+        }
+
+        // Collect all include URIs and set dependencies once
+        // This ensures old edges are cleaned up via setDependencies
+        const includeUris = Promise.all(
+            script.getIncludes().map((include) => include.promise),
+        );
+
+        includeUris.then((resolvedUris) => {
+            const dependencies: string[] = [
+                URI.from({ scheme: 'autoit3doc', path: 'native.au3' }).toString(),
+            ];
+
+            for (const resolvedUri of resolvedUris) {
+                if (resolvedUri !== null) {
+                    dependencies.push(resolvedUri);
+                }
+            }
+
+            this.dependencyGraph.setDependencies(_uri, dependencies);
+        });
 
         return script;
     }
@@ -228,5 +251,62 @@ export class Workspace {
 
     public getConfiguration(): AutoIt3Configuration | null {
         return this.configuration;
+    }
+
+    public openScript(uri: string, text: string) {
+        this.createOrUpdate(uri, text);
+        this.activeScripts.add(uri);
+    }
+
+    public updateScript(uri: string, text: string) {
+        this.createOrUpdate(uri, text);
+    }
+
+    public saveScript(uri: string, text: string) {
+        //
+    }
+
+    public closeScript(uri: string) {
+        this.activeScripts.delete(uri);
+    }
+
+    public getScopes(uri: string) {
+        const scopes: Scope[] = [];
+
+        let scope: Scope | undefined = this.scripts.get(uri)?.getScope();
+
+        if (scope === undefined) {
+            return scopes;
+        }
+
+        scopes.push(scope);
+
+        for (const dependency of this.dependencyGraph.resolveDependencies(uri)) {
+            scope = this.scripts.get(dependency)?.getScope();
+
+            if (scope !== undefined) {
+                scopes.push(scope);
+            }
+        }
+
+        return scopes;
+    }
+
+    public getSymbol(uri: string, symbolKey: string) {
+        const symbol: Symbol = new Symbol(symbolKey);
+
+        let scriptSymbol: Symbol | undefined;
+
+        for (const scope of this.getScopes(uri)) {
+            scriptSymbol = scope.getSymbol(symbolKey);
+
+            if (scriptSymbol === undefined) {
+                continue;
+            }
+
+            symbol.addSymbol(scriptSymbol);
+        }
+
+        return symbol;
     }
 }
