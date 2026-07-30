@@ -101,3 +101,7 @@ export function isPositionWithinLocationRange(
     // If none of the above conditions are met, the position is within the range
     return true;
 }
+
+export function isLocationWithinLocationRange(location: Location, locationRange: LocationRange) {
+    return isPositionWithinLocationRange(locationToPosition(location), locationRange);
+}
