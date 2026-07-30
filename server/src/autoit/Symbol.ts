@@ -3,29 +3,89 @@ import DocBlock from './docBlock/DocBlock';
 import { URI } from 'vscode-uri';
 import Scope from './Scope';
 
-type Node =
+export type Node =
     AutoIt3.Macro | AutoIt3.VariableIdentifier | AutoIt3.Identifier;
 
 export default class Symbol {
     public readonly name: string;
-    protected node: Node;
 
-    public constructor(node: Node) {
-        this.node = node;
-        this.name = this.getNodeName(node);
+    protected declarations = new Set<Node>();
+    protected assignments = new Set<Node>();
+    protected references = new Set<Node>();
+    protected docblocks = new Map<Node, DocBlock>();
+
+    public constructor(reference: Node | string) {
+        this.name = typeof reference === 'string'
+            ? reference
+            : Symbol.getNodeName(reference);
     }
 
-    public getNodeName(node: Node): string {
+    public static getNodeName(node: Node): string {
         const type = node.type;
 
         switch (type) {
             case 'Identifier':
+                return node.name.toLowerCase();
             case 'VariableIdentifier':
-                return node.name;
+                return '$' + node.name.toLowerCase();
             case 'Macro':
-                return node.value;
+                return node.value.toLowerCase();
             default:
                 throw new Error(`Unexpected node type: "${type satisfies never}" when trying to extract name for Symbol`);
+        }
+    }
+
+    public addDeclaration(node: Node) {
+        this.declarations.add(node);
+    }
+
+    public getDeclarations(): ReadonlySet<Node> {
+        return this.declarations;
+    }
+
+    public addAssignment(node: Node) {
+        this.assignments.add(node);
+    }
+
+    public getAssignments(): ReadonlySet<Node> {
+        return this.assignments;
+    }
+
+    public addReference(node: Node) {
+        this.references.add(node);
+    }
+
+    public getReferences(): ReadonlySet<Node> {
+        return this.references;
+    }
+
+    public addDocblock(node: Node, docblock: DocBlock) {
+        this.docblocks.set(node, docblock);
+    }
+
+    public getDocblock(node: Node) {
+        return this.docblocks.get(node);
+    }
+
+    public getDocblocks(): ReadonlyMap<Node, DocBlock> {
+        return this.docblocks;
+    }
+
+    public addSymbol(symbol: Symbol): void {
+        for (const docBlock of symbol.getDocblocks()) {
+            this.docblocks.set(docBlock[0], docBlock[1]);
+        }
+
+        for (const declaration of symbol.getDeclarations()) {
+            this.declarations.add(declaration);
+        }
+
+        for (const assignment of symbol.getAssignments()) {
+            this.assignments.add(assignment);
+        }
+
+        for (const reference of symbol.getReferences()) {
+            this.references.add(reference);
         }
     }
 }
@@ -74,5 +134,3 @@ export class Declaration {
         return this.references;
     }
 }
-
-export class Reference {}
