@@ -75,8 +75,8 @@ export class CompletionItemBridge {
                     return CompletionItemKind.Constant;
                 default:
                     break;
+            }
         }
-    }
 
         return CompletionItemKind.Variable;
     }
