@@ -257,13 +257,13 @@ function getDocumentSymbol(
                     ? SymbolKind.Function
                     : SymbolKind.Variable,
                 name: name,
-            range: PositionHelper.locationRangeToRange(
-                declaration.location,
-            ),
-            selectionRange: PositionHelper.locationRangeToRange(
+                range: PositionHelper.locationRangeToRange(
                     declaration.location,
-            ),
-    });
+                ),
+                selectionRange: PositionHelper.locationRangeToRange(
+                    declaration.location,
+                ),
+            });
         }
     }
 
@@ -289,12 +289,12 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 
     return [...symbol.getDeclarations()].map((declaration) => ({
         targetUri: declaration.location.source.toString(),
-            targetRange: PositionHelper.locationRangeToRange(
+        targetRange: PositionHelper.locationRangeToRange(
             declaration.location,
-            ),
-            targetSelectionRange: PositionHelper.locationRangeToRange(
+        ),
+        targetSelectionRange: PositionHelper.locationRangeToRange(
             declaration.location,
-            ),
+        ),
     }));
 }
 

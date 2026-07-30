@@ -272,8 +272,8 @@ export default class Script {
                         } else {
                             const x = docBlockFactory.createFromMultilineComment(relatedComments);
                             scope.getSymbol(Symbol.getNodeName(node.id))?.addDocblock(node.id, x);
+                        }
                     }
-                }
 
                     processFunctionNode(node);
 
@@ -319,7 +319,7 @@ export default class Script {
                     // node.body
                     break;
                 case 'VariableDeclaration':
-                        node.declarations.forEach((declaration) => {
+                    node.declarations.forEach((declaration) => {
                         scope.addDeclaration(declaration.id);
                     });
 
@@ -393,7 +393,7 @@ export default class Script {
                                         const ast = parser.parse(arg0.value);
 
                                         AstWalker.filterNestedNodes(ast.body, processNode, []);
-                }
+                                    }
 
                                     break;
                                 default:

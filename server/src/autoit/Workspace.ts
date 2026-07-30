@@ -89,9 +89,9 @@ export class Workspace {
         if (script !== undefined) {
             script.update(text);
         } else {
-        script = new Script(text, URI.parse(_uri), this);
-        this.add(script);
-        script.triggerDiagnostics();
+            script = new Script(text, URI.parse(_uri), this);
+            this.add(script);
+            script.triggerDiagnostics();
         }
 
         // Collect all include URIs and set dependencies once
