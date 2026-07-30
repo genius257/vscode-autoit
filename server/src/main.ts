@@ -1,9 +1,9 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
+import Symbol from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3 } from 'autoit3-pegjs';
-import * as Parser from './autoit/Parser';
 import * as PositionHelper from './autoit/PositionHelper';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
@@ -166,8 +166,12 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         return null;
     }
 
+    // Check native suggestions first
     if (identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'Macro') {
-        const suggestion = identifierAtPos.type === 'Identifier' ? nativeSuggestions[identifierAtPos.name.toLowerCase()] : nativeSuggestions[identifierAtPos.value.toLowerCase()];
+        const key = identifierAtPos.type === 'Identifier'
+            ? identifierAtPos.name.toLowerCase()
+            : identifierAtPos.value.toLowerCase();
+        const suggestion = nativeSuggestions[key];
 
         if (suggestion !== undefined) {
             return {
@@ -179,21 +183,25 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         }
     }
 
-    let identifier:
-        | AutoIt3.FormalParameter
-        | AutoIt3.FunctionDeclaration
-        | AutoIt3.VariableDeclaration
-        | AutoIt3.VariableDeclarationInWith
-        | AutoIt3.EnumDeclaration
-        | AutoIt3.EnumDeclarationInWith
-        | null
-        | undefined = null;
+    // Use the new Symbol system
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
 
-    identifier = identifier ??
-        workspace.get(hoverParams.textDocument.uri)
-            ?.getIdentifierDeclarator(identifierAtPos);
+    // Check for symbols within scopes wrapping hover position
+    let symbol = Array.from(
+        script
+            .getScope()
+            .getSubscopes()
+            .values(),
+    ).find((scope) => scope.range && PositionHelper.isPositionWithinLocationRange(hoverParams.position, scope.range))
+        ?.getSymbol(symbolKey);
 
-    if (!identifier) {
+    // If no symbol is found, find the global match
+    symbol ??= workspace.getSymbol(hoverParams.textDocument.uri, symbolKey);
+
+    const declarations = [...symbol.getDeclarations()];
+    const docblocks = symbol.getDocblocks();
+
+    if (declarations.length === 0 && docblocks.size === 0) {
         return null;
     }
 
@@ -202,50 +210,13 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         value: '',
     };
 
-    switch (identifier.type) {
-        case 'VariableDeclarator':
-        {
-            let value: string | null = null;
+    // Build hover text from declarations
+    for (const declaration of declarations) {
+        const docBlock = docblocks.get(declaration);
 
-            if (identifier.init !== null) {
-                value = Parser.AstToString(identifier.init);
-            }
-
-            const dimensions = 'dimensions' in identifier && identifier.dimensions.length > 0 ? '[' + identifier.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']' : '';
-
-            contents.value += `\`\`\`au3\n${identifierAtPos.type === 'VariableIdentifier' ? '$' : ''}${identifier.id.name}${dimensions}${value === null ? '' : ' = ' + value}\n\`\`\``;
-
-            break;
+        if (contents.value === '') {
+            contents.value += `\`\`\`au3\n${symbolKey}\n\`\`\``;
         }
-        case 'FunctionDeclaration':
-        {
-            contents.value += `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(', ')})\n\`\`\``;
-
-            break;
-        }
-        case 'Parameter':
-        {
-            let parameterValue: string | number | boolean | null | undefined;
-
-            if (identifier.init !== null) {
-                parameterValue = Parser.AstToString(identifier.init);
-            }
-
-            contents.value += `\`\`\`au3\n(parameter) $${identifier.id.name}${parameterValue === undefined ? '' : ' = ' + parameterValue}\n\`\`\``;
-
-            break;
-        }
-        default:
-            return null;
-    }
-
-    const identifierScript = workspace.get(identifier.location.source);
-
-    if (identifierScript !== undefined && (
-        identifier.type === 'FunctionDeclaration' ||
-        identifier.type === 'VariableDeclarator'
-    )) {
-        const docBlock = identifierScript.docBlocks.get(identifier);
 
         if (docBlock !== undefined) {
             contents.value += `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
@@ -272,49 +243,59 @@ function getDocumentSymbol(
         return null;
     }
 
-    return script.declarations.map((declaration) => {
-        return {
-            kind: declaration.type === 'FunctionDeclaration' ? SymbolKind.Function : SymbolKind.Variable,
-            name: declaration.id.name,
+    const scope = script.getScope();
+    const symbols: DocumentSymbol[] = [];
+
+    for (const [, symbol] of scope.getSymbols()) {
+        for (const declaration of symbol.getDeclarations()) {
+            const name = symbol.name.startsWith('$')
+                ? symbol.name.slice(1)
+                : symbol.name;
+
+            symbols.push({
+                kind: declaration.type === 'Identifier'
+                    ? SymbolKind.Function
+                    : SymbolKind.Variable,
+                name: name,
             range: PositionHelper.locationRangeToRange(
                 declaration.location,
             ),
             selectionRange: PositionHelper.locationRangeToRange(
-                declaration.id.location,
+                    declaration.location,
             ),
-        };
     });
+        }
+    }
+
+    return symbols;
 }
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
-    const nodesAt = workspace.get(params.textDocument.uri)
-        ?.getNodesAt(params.position);
-    const identifierAtPos = nodesAt?.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return [];
+    }
+
+    const nodesAt = script.getNodesAt(params.position);
+    const identifierAtPos = nodesAt.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
 
     if (identifierAtPos === undefined) {
         return [];
     }
 
-    const declarator = workspace.get(params.textDocument.uri)
-        ?.getIdentifierDeclarator(identifierAtPos);
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
+    const symbol = workspace.getSymbol(params.textDocument.uri, symbolKey);
 
-    if (declarator === null || declarator === undefined) {
-        return [];
-    }
-
-    const identifier = declarator.id;
-
-    return [
-        {
-            targetUri: declarator.location.source.toString(),
+    return [...symbol.getDeclarations()].map((declaration) => ({
+        targetUri: declaration.location.source.toString(),
             targetRange: PositionHelper.locationRangeToRange(
-                declarator.location,
+            declaration.location,
             ),
             targetSelectionRange: PositionHelper.locationRangeToRange(
-                identifier.location,
+            declaration.location,
             ),
-        },
-    ];
+    }));
 }
 
 async function getCompletionItems(
