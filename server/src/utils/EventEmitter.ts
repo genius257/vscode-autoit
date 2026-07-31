@@ -43,7 +43,7 @@ export default class EventEmitter<Events extends EventMap> {
         this.on(event, wrapper);
     }
 
-    clear<K extends keyof Events>(event?: K): void {
+    clear(event?: keyof Events): void {
         if (event) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete this.listeners[event];
