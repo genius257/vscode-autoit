@@ -6,7 +6,7 @@ import native from './native.au3?raw';
 import { isAbsolutePath } from './Path';
 import EventEmitter from '@utils/EventEmitter';
 import Symbol from './Symbol';
-import Scope from './Scope';
+import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
 
 /** The key is the script URI */
@@ -292,7 +292,7 @@ export class Workspace {
         return scopes;
     }
 
-    public getSymbol(uri: string, symbolKey: string) {
+    public getSymbol(uri: string, symbolKey: SymbolKey, position?: Position) {
         const symbol: Symbol = new Symbol(symbolKey);
 
         let scriptSymbol: Symbol | undefined;

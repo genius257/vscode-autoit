@@ -1,7 +1,7 @@
 import { AutoIt3, LocationRange } from 'autoit3-pegjs';
 import DocBlock from './docBlock/DocBlock';
 import { URI } from 'vscode-uri';
-import Scope from './Scope';
+import Scope, { SymbolKey } from './Scope';
 
 export type Node =
     AutoIt3.Macro | AutoIt3.VariableIdentifier | AutoIt3.Identifier;
@@ -20,16 +20,16 @@ export default class Symbol {
             : Symbol.getNodeName(reference);
     }
 
-    public static getNodeName(node: Node): string {
+    public static getNodeName(node: Node): SymbolKey {
         const type = node.type;
 
         switch (type) {
             case 'Identifier':
-                return node.name.toLowerCase();
+                return node.name.toLowerCase() as SymbolKey;
             case 'VariableIdentifier':
-                return '$' + node.name.toLowerCase();
+                return '$' + node.name.toLowerCase() as SymbolKey;
             case 'Macro':
-                return node.value.toLowerCase();
+                return node.value.toLowerCase() as SymbolKey;
             default:
                 throw new Error(`Unexpected node type: "${type satisfies never}" when trying to extract name for Symbol`);
         }

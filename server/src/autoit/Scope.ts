@@ -1,6 +1,9 @@
 import { LocationRange } from 'autoit3-pegjs';
 import { URI } from 'vscode-uri';
 import Symbol, { Node } from './Symbol';
+import { OpaqueType } from '@utils/OpaqueType';
+
+export type SymbolKey = OpaqueType<string, "SymbolKey">;
 
 export default class Scope {
     public readonly id: string;
@@ -50,7 +53,7 @@ export default class Scope {
         return this.symbols.delete(symbol.name);
     }
 
-    public getSymbol(symbolKey: string) {
+    public getSymbol(symbolKey: SymbolKey) {
         return this.symbols.get(symbolKey);
     }
 
