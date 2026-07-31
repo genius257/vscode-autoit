@@ -1,5 +1,5 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
@@ -183,20 +183,9 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         }
     }
 
-    // Use the new Symbol system
+    // Use the new Symbol system with position-aware scope traversal
     const symbolKey = Symbol.getNodeName(identifierAtPos);
-
-    // Check for symbols within scopes wrapping hover position
-    let symbol = Array.from(
-        script
-            .getScope()
-            .getSubscopes()
-            .values(),
-    ).find((scope) => scope.range && PositionHelper.isPositionWithinLocationRange(hoverParams.position, scope.range))
-        ?.getSymbol(symbolKey);
-
-    // If no symbol is found, find the global match
-    symbol ??= workspace.getSymbol(hoverParams.textDocument.uri, symbolKey);
+    const symbol = workspace.getSymbol(hoverParams.textDocument.uri, symbolKey, hoverParams.position);
 
     const declarations = [...symbol.getDeclarations()];
     const docblocks = symbol.getDocblocks();
@@ -285,9 +274,15 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
     }
 
     const symbolKey = Symbol.getNodeName(identifierAtPos);
-    const symbol = workspace.getSymbol(params.textDocument.uri, symbolKey);
 
-    return [...symbol.getDeclarations()].map((declaration) => ({
+    // Get declarations only from the scope where the identifier is located
+    const declarations = workspace.getDeclarationsAtPosition(
+        params.textDocument.uri,
+        symbolKey,
+        params.position,
+    );
+
+    return declarations.map((declaration) => ({
         targetUri: declaration.location.source.toString(),
         targetRange: PositionHelper.locationRangeToRange(
             declaration.location,

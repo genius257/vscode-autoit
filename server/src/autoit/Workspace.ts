@@ -8,6 +8,8 @@ import EventEmitter from '@utils/EventEmitter';
 import Symbol from './Symbol';
 import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
+import { Position } from 'vscode-languageserver';
+import { isPositionWithinLocationRange } from './PositionHelper';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -270,7 +272,7 @@ export class Workspace {
         this.activeScripts.delete(uri);
     }
 
-    public getScopes(uri: string) {
+    public getScopes(uri: string, position?: Position) {
         const scopes: Scope[] = [];
 
         let scope: Scope | undefined = this.scripts.get(uri)?.getScope();
@@ -280,6 +282,11 @@ export class Workspace {
         }
 
         scopes.push(scope);
+
+        // If position is provided, include subscopes that contain the position
+        if (position !== undefined) {
+            this.collectSubscopesAtPosition(scope, position, scopes);
+        }
 
         for (const dependency of this.dependencyGraph.resolveDependencies(uri)) {
             scope = this.scripts.get(dependency)?.getScope();
@@ -292,12 +299,27 @@ export class Workspace {
         return scopes;
     }
 
+    /**
+     * Recursively collect subscopes that contain the given position.
+     * This ensures function parameters and local variables are found
+     * when looking up symbols within a function body.
+     */
+    protected collectSubscopesAtPosition(scope: Scope, position: Position, scopes: Scope[]): void {
+        for (const subscope of scope.getSubscopes()) {
+            if (subscope.range !== undefined && isPositionWithinLocationRange(position, subscope.range)) {
+                scopes.push(subscope);
+                // Recurse into nested scopes (e.g., nested functions if supported)
+                this.collectSubscopesAtPosition(subscope, position, scopes);
+            }
+        }
+    }
+
     public getSymbol(uri: string, symbolKey: SymbolKey, position?: Position) {
         const symbol: Symbol = new Symbol(symbolKey);
 
         let scriptSymbol: Symbol | undefined;
 
-        for (const scope of this.getScopes(uri)) {
+        for (const scope of this.getScopes(uri, position)) {
             scriptSymbol = scope.getSymbol(symbolKey);
 
             if (scriptSymbol === undefined) {
@@ -308,5 +330,30 @@ export class Workspace {
         }
 
         return symbol;
+    }
+
+    /**
+     * Get declarations for a symbol only from the scope where the position is located.
+     * Walks up the scope chain from the innermost scope to find the first scope
+     * that has a declaration for the symbol.
+     */
+    public getDeclarationsAtPosition(uri: string, symbolKey: SymbolKey, position: Position) {
+        const script = this.scripts.get(uri);
+
+        if (script === undefined) {
+            return [];
+        }
+
+        // Find the innermost scope containing the position
+        const scope = script.getScopeAtPosition(position);
+
+        // Walk up the scope chain to find the symbol with declarations
+        const result = scope.getSymbolInScopeChain(symbolKey);
+
+        if (result === undefined) {
+            return [];
+        }
+
+        return [...result.symbol.getDeclarations()];
     }
 }
