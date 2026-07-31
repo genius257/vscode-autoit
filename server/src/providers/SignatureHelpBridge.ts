@@ -246,7 +246,7 @@ class CallExpressionHelper {
             }
         }
 
-        throw new UnfixableCallExpressionError('Failed to fix call expression after ' + attempts + ' attempts: ' + this.expression.location.source.toString());
+        throw new UnfixableCallExpressionError(`Failed to fix call expression after ${attempts} attempts: ${this.expression.location.source.toString()}`);
     }
 
     public getParameterLocations(): LocationRange[] {
