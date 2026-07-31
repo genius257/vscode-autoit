@@ -57,13 +57,17 @@
 		},
 		"operators": {
 			"name": "keyword.operator.au3",
-			"match": "([+\\-*\\/&<>]=|==?|<>|[&+\\-*\\/^<>]|\\b(?i:And|Or|Not)\\b)",
+			"match": "([+\\-*\\/&<>]=|==?|<>|[&+\\-*\\/^<>:?]|\\b(?i:And|Or|Not)\\b)",
 			"captures": {
 				"1": {
 					"patterns": [
 						{
 							"name": "keyword.operator.logical.au3",
 							"match": "(?i:And|Or|Not)"
+						},
+						{
+							"name": "keyword.operator.conditional.au3",
+							"match": "[:?]"
 						}
 					]
 				}
@@ -320,7 +324,7 @@
 						"2": {
 							"patterns": [
 								{
-									"match": "\\K\\s+((?<s>['\"])[^\"']+\\k<s>|\\<[^>]+\\>)(.*)",
+									"match": "\\K\\s*((?<s>['\"])[^\"']+\\k<s>|\\<[^>]+\\>)(.*)",
 									"captures": {
 										"1": {
 											"name": "string.other.include.au3"
