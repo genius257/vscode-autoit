@@ -443,6 +443,41 @@ export default class Script {
 
         AstWalker.filterNestedNodes(this.program?.body ?? [], processNode, []);
 
+        // Process references that couldn't be resolved during the initial pass.
+        // Now that all declarations have been collected, we can determine if they
+        // belong to the current scope (local) or a parent scope (global).
+        for (const { node, scope } of referencesInScope) {
+            const symbolKey = Symbol.getNodeName(node);
+
+            // Check if declaration exists in the scope chain (might have been declared later in same scope, or in parent)
+            const result = scope.getSymbolInScopeChain(symbolKey);
+
+            if (result !== undefined) {
+                // Declaration found — add as reference to that scope's symbol
+                result.symbol.addReference(node);
+            } else {
+                // No declaration found — add as reference to current scope (implicit global or undefined)
+                scope.addReference(node);
+            }
+        }
+
+        // Process assignments without explicit scope (e.g., EnumDeclaration without Local/Global).
+        // Now that all symbols are collected, we can determine if they belong to global or local scope.
+        for (const { node, scope } of assignmentsInScope) {
+            const symbolKey = Symbol.getNodeName(node.id);
+
+            // Check if declaration exists in parent scopes (global)
+            const result = scope.parent?.getSymbolInScopeChain(symbolKey);
+
+            if (result !== undefined) {
+                // Global declaration exists — this modifies the global
+                result.scope.addDeclaration(node.id);
+            } else {
+                // No global declaration — add as local declaration
+                scope.addDeclaration(node.id);
+            }
+        }
+
         // const previousIncludes = this.includes;
         const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement') as AutoIt3.IncludeStatement[] | undefined;
 
