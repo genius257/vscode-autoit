@@ -9,7 +9,7 @@ import Symbol from './Symbol';
 import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
-import { isPositionWithinLocationRange } from './PositionHelper';
+import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -355,5 +355,62 @@ export class Workspace {
         }
 
         return [...result.symbol.getDeclarations()];
+    }
+
+    /**
+     * Get the symbol for a given node, merging across scripts for global scopes.
+     * For local scopes, the symbol is returned as-is.
+     * For global scopes, a new symbol is created and merged with all matching
+     * global symbols from the script's dependencies and reverse dependencies.
+     */
+    public resolveSymbolForNode(node: AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro, symbolKey: SymbolKey): Symbol | undefined {
+        const scriptUri = node.location.source.toString();
+        const script = this.scripts.get(scriptUri);
+
+        if (script === undefined) {
+            return undefined;
+        }
+
+        // For Identifiers (function names), always use the global scope
+        // since function declarations are global and the position may fall
+        // within a function scope incorrectly
+        const scope = node.type === 'Identifier'
+            ? script.getScope()
+            : script.getScopeAtPosition(locationToPosition(node.location.start));
+
+        const symbol = scope.getSymbol(symbolKey);
+
+        if (symbol === undefined) {
+            return undefined;
+        }
+
+        // For local scopes, simply return the symbol as-is
+        if (!scope.isGlobal()) {
+            return symbol;
+        }
+
+        // For global scopes, merge all matching global symbols
+        // from dependencies and reverse dependencies
+        const mergedSymbol = new Symbol(symbolKey);
+
+        mergedSymbol.addSymbol(symbol);
+
+        for (const depUri of this.dependencyGraph.resolveDependencies(scriptUri)) {
+            const depSymbol = this.scripts.get(depUri)?.getScope()?.getSymbol(symbolKey);
+
+            if (depSymbol !== undefined) {
+                mergedSymbol.addSymbol(depSymbol);
+            }
+        }
+
+        for (const revDepUri of this.dependencyGraph.resolveReverseDependencies(scriptUri)) {
+            const revDepSymbol = this.scripts.get(revDepUri)?.getScope()?.getSymbol(symbolKey);
+
+            if (revDepSymbol !== undefined) {
+                mergedSymbol.addSymbol(revDepSymbol);
+            }
+        }
+
+        return mergedSymbol;
     }
 }

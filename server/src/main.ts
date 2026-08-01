@@ -275,14 +275,13 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
 
     const symbolKey = Symbol.getNodeName(identifierAtPos);
 
-    // Get declarations only from the scope where the identifier is located
-    const declarations = workspace.getDeclarationsAtPosition(
-        params.textDocument.uri,
-        symbolKey,
-        params.position,
-    );
+    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
 
-    return declarations.map((declaration) => ({
+    if (symbol === undefined) {
+        return [];
+    }
+
+    return [...symbol.getDeclarations()].map((declaration) => ({
         targetUri: declaration.location.source.toString(),
         targetRange: PositionHelper.locationRangeToRange(
             declaration.location,

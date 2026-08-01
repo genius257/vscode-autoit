@@ -57,6 +57,26 @@ export default class Scope {
         return this.symbols.get(symbolKey);
     }
 
+    /**
+     * Walks up the parent chain to find a symbol with at least one declaration.
+     * Returns the symbol and the scope where it was found.
+     */
+    public getSymbolInScopeChain(symbolKey: SymbolKey): { symbol: Symbol, scope: Scope } | undefined {
+        let searchScope: Scope | null = this;
+
+        while (searchScope !== null) {
+            const symbol = searchScope.getSymbol(symbolKey);
+
+            if (symbol !== undefined && symbol.getDeclarations().size > 0) {
+                return { symbol, scope: searchScope };
+            }
+
+            searchScope = searchScope.parent;
+        }
+
+        return undefined;
+    }
+
     public getSymbols(): ReadonlyMap<string, Symbol> {
         return this.symbols;
     }
