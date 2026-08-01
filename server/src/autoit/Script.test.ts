@@ -40,7 +40,7 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0];
+        const functionScope = functionScopes[0]!;
 
         expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
@@ -53,7 +53,7 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0];
+        const functionScope = functionScopes[0]!;
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
@@ -66,7 +66,7 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0];
+        const functionScope = functionScopes[0]!;
 
         expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
@@ -80,7 +80,7 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0];
+        const functionScope = functionScopes[0]!;
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(2);
         expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
