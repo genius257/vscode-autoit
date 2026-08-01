@@ -8,16 +8,15 @@ export default class DependencyGraph {
         const oldTargets = this.adjacencyList.get(source);
         const newTargets = new Set(targets);
 
-        if (oldTargets === undefined) {
-            this.adjacencyList.set(source, newTargets);
+        // Prevent self-references (a script should never depend on itself)
+        newTargets.delete(source);
 
-            return;
-        }
-
-        for (const oldTarget of oldTargets) {
-            if (!newTargets.has(oldTarget)) {
-                // Remove old reverse edges
-                this.rev.get(oldTarget)?.delete(source);
+        if (oldTargets !== undefined) {
+            for (const oldTarget of oldTargets) {
+                if (!newTargets.has(oldTarget)) {
+                    // Remove old reverse edges
+                    this.rev.get(oldTarget)?.delete(source);
+                }
             }
         }
 
