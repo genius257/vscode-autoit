@@ -77,4 +77,27 @@ export default class DependencyGraph {
 
         return Array.from(visited);
     }
+
+    /**
+     * Resolve all scripts that depend on the given script (reverse dependencies).
+     * These are scripts that include the given script, directly or transitively.
+     */
+    public resolveReverseDependencies(rootId: URI, visited = new Set<URI>()) {
+        const dependents = this.rev.get(rootId);
+
+        if (dependents === undefined) {
+            return Array.from(visited);
+        }
+
+        for (const dependent of dependents) {
+            if (visited.has(dependent)) {
+                continue;
+            }
+
+            visited.add(dependent);
+            this.resolveReverseDependencies(dependent, visited);
+        }
+
+        return Array.from(visited);
+    }
 }
