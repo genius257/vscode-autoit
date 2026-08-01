@@ -1509,4 +1509,25 @@ export default class Script {
     public getScope(): Scope {
         return this.scope;
     }
+
+    /**
+     * Find the innermost scope that contains the given position.
+     * Descends into subscopes using a while loop.
+     */
+    public getScopeAtPosition(position: Position): Scope {
+        let result = this.scope;
+
+        outer: while (true) {
+            for (const scope of result.getSubscopes()) {
+                if (scope.range !== undefined && PositionHelper.isPositionWithinLocationRange(position, scope.range)) {
+                    result = scope;
+                    continue outer;
+                }
+            }
+
+            break;
+        }
+
+        return result;
+    }
 }
