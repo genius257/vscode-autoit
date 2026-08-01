@@ -434,6 +434,7 @@ export default class Script {
             scope = functionScope;
 
             AstWalker.filterNestedNodes(node.params, processNode, []);
+            AstWalker.filterNestedNodes(node.body, processNode, []);
 
             scope = originalScope;
 
