@@ -291,22 +291,20 @@ export default class Script {
 
                     return NodeFilterAction.Skip;
                 case 'EnumDeclaration':
-                    node.declarations.forEach((enumDeclaration) => {
-                        if (scope.isGlobal()) {
-                            scope.addDeclaration(enumDeclaration.id);
-                        } else if (node.scope !== null) {
-                            (node.scope === 'local' ? scope : scope.parent!).addDeclaration(
-                                enumDeclaration.id,
-                            );
-                        } else {
-                            assignmentsInScope.push({
-                                node: enumDeclaration,
-                                scope,
-                            });
-                        }
+                    {
+                        const shouldDefer = (node.scope === 'dim' || node.scope === null) && !scope.isGlobal();
 
-                        AstWalker.filterNestedNode(enumDeclaration.init, processNode, []);
-                    });
+                        node.declarations.forEach((enumDeclaration) => {
+                            if (shouldDefer) {
+                                assignmentsInScope.push({ node: enumDeclaration, scope });
+                            } else {
+                                const variableScope = node.scope === 'local' ? scope : scope.parent ?? scope;
+                                variableScope.addDeclaration(enumDeclaration.id);
+                            }
+
+                            AstWalker.filterNestedNode(enumDeclaration.init, processNode, []);
+                        });
+                    }
 
                     relatedComments = null;
 

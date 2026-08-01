@@ -93,3 +93,65 @@ EndFunc`);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
     });
 });
+
+describe('EnumDeclaration scope handling', function () {
+    test('Local Enum $x in function declares in function scope', function () {
+        const script = new Script(`Func test()
+    Local Enum $x
+EndFunc`);
+        const globalScope = script.getScope();
+        const functionScopes = [...globalScope.getSubscopes()];
+        expect(functionScopes).toHaveLength(1);
+        const functionScope = functionScopes[0]!;
+
+        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+    });
+
+    test('Global Enum $x in function declares in global scope', function () {
+        const script = new Script(`Func test()
+    Global Enum $x
+EndFunc`);
+        const globalScope = script.getScope();
+        const functionScopes = [...globalScope.getSubscopes()];
+        expect(functionScopes).toHaveLength(1);
+        const functionScope = functionScopes[0]!;
+
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+    });
+
+    test('Dim Enum $x in function without existing global declares in function scope', function () {
+        const script = new Script(`Func test()
+    Dim Enum $x
+EndFunc`);
+        const globalScope = script.getScope();
+        const functionScopes = [...globalScope.getSubscopes()];
+        expect(functionScopes).toHaveLength(1);
+        const functionScope = functionScopes[0]!;
+
+        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+    });
+
+    test('Dim Enum $x in function with existing global declares in global scope', function () {
+        const script = new Script(`Global Enum $x
+Func test()
+    Dim Enum $x
+EndFunc`);
+        const globalScope = script.getScope();
+        const functionScopes = [...globalScope.getSubscopes()];
+        expect(functionScopes).toHaveLength(1);
+        const functionScope = functionScopes[0]!;
+
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(2);
+        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+    });
+
+    test('Enum $x at global scope declares in global scope', function () {
+        const script = new Script(`Enum $x`);
+        const globalScope = script.getScope();
+
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+    });
+});
