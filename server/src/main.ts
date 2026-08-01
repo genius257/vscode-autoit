@@ -46,6 +46,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         documentSymbolProvider: {
             workDoneProgress: false,
         },
+        referencesProvider: {
+            workDoneProgress: false,
+        },
         signatureHelpProvider: {
             triggerCharacters: [
                 '(',
@@ -96,6 +99,7 @@ connection.onDidCloseTextDocument((params) => {
 
 connection.onDocumentSymbol(getDocumentSymbol);
 connection.onDefinition(getDefinition);
+connection.onReferences(getReferences);
 connection.onCompletion(getCompletionItems);
 connection.onSignatureHelp(getSignatureHelp);
 
@@ -312,4 +316,43 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
     return signatureHelpBridge.resolveSignatureHelp(
         params,
     );
+}
+
+function getReferences(params: ReferenceParams): Location[]|null|undefined {
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return null;
+    }
+
+    const nodesAt = script.getNodesAt(params.position);
+    const identifierAtPos = nodesAt.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+
+    if (identifierAtPos === undefined) {
+        return null;
+    }
+
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
+
+    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
+
+    if (symbol === undefined) {
+        return null;
+    }
+
+    const results: Location[] = [];
+
+    if (params.context.includeDeclaration) {
+        results.push(...[...symbol.getDeclarations()].map((declaration): Location => ({
+            uri: declaration.location.source.toString(),
+            range: PositionHelper.locationRangeToRange(declaration.location),
+        })));
+    }
+
+    results.push(...[...symbol.getReferences()].map((reference): Location => ({
+        uri: reference.location.source.toString(),
+        range: PositionHelper.locationRangeToRange(reference.location),
+    })));
+
+    return results;
 }
