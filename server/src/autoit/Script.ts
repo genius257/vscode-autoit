@@ -400,6 +400,8 @@ export default class Script {
                                     break;
                             }
 
+                            (scope.parent ?? scope).addReference(node.callee);
+
                             break;
                     }
 
