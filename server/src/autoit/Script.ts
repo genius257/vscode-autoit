@@ -319,9 +319,19 @@ export default class Script {
                     // node.body
                     break;
                 case 'VariableDeclaration':
-                    node.declarations.forEach((declaration) => {
-                        scope.addDeclaration(declaration.id);
-                    });
+                    {
+                        const shouldDefer = (node.scope === 'dim' || node.scope === null) && !scope.isGlobal();
+
+                        node.declarations.forEach((declaration) => {
+                            if (shouldDefer) {
+                                assignmentsInScope.push({ node: declaration, scope });
+                                return;
+                            }
+
+                            const variableScope = node.scope === 'local' ? scope : scope.parent ?? scope;
+                            variableScope.addDeclaration(declaration.id);
+                        });
+                    }
 
                     return NodeFilterAction.Skip;
                 case 'VariableIdentifier':
