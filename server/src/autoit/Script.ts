@@ -325,7 +325,7 @@ export default class Script {
 
                     return NodeFilterAction.Skip;
                 case 'VariableIdentifier':
-                    if (scope.parent === null || scope.getSymbol(node.name)?.getDeclarations().size) {
+                    if (scope.parent === null || scope.getSymbol(Symbol.getNodeName(node))?.getDeclarations().size) {
                         scope.addReference(node);
                     } else {
                         referencesInScope.push({
