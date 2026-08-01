@@ -10,7 +10,7 @@ import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
 import MarkdownDescriptionFactory from './docBlock/DocBlock/MarkdownDescriptionFactory';
 import DocBlockFactory from './docBlock/DocBlockFactory';
 import AstWalker from './AstWalker';
-import Symbol, { Declaration } from './Symbol';
+import Symbol, { Declaration, Node as SymbolNode } from './Symbol';
 import Scope from './Scope';
 
 export type Include = {
@@ -232,8 +232,8 @@ export default class Script {
          * Variables for holding symbols that need to be processed after all symbols is collected.
          * For example: assignments without a scope. They need to be checked afterwards, to verify if they belong in a global or local scope.
          */
-        const assignmentsInScope: { node: Node, scope: Scope }[] = [];
-        const referencesInScope: { node: Node, scope: Scope }[] = [];
+        const assignmentsInScope: { node: { id: SymbolNode, location: LocationRange }, scope: Scope }[] = [];
+        const referencesInScope: { node: SymbolNode, scope: Scope }[] = [];
 
         const declarations: Declaration[] = [];
         const references: Symbol[] = [];
