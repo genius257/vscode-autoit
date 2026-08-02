@@ -300,6 +300,19 @@ export default class Script {
                             } else {
                                 const variableScope = node.scope === 'local' ? scope : scope.parent ?? scope;
                                 variableScope.addDeclaration(enumDeclaration.id);
+
+                                if (relatedComments !== null) {
+                                    if (Array.isArray(relatedComments)) {
+                                        const x = docBlockFactory.createFromLegacyComments(relatedComments);
+
+                                        if (x !== null) {
+                                            variableScope.getSymbol(Symbol.getNodeName(enumDeclaration.id))?.addDocblock(enumDeclaration.id, x);
+                                        }
+                                    } else {
+                                        const x = docBlockFactory.createFromMultilineComment(relatedComments);
+                                        variableScope.getSymbol(Symbol.getNodeName(enumDeclaration.id))?.addDocblock(enumDeclaration.id, x);
+                                    }
+                                }
                             }
 
                             AstWalker.filterNestedNode(enumDeclaration.init, processNode, []);
