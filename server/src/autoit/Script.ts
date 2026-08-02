@@ -341,6 +341,19 @@ export default class Script {
 
                             const variableScope = node.scope === 'local' ? scope : scope.parent ?? scope;
                             variableScope.addDeclaration(declaration.id);
+
+                            if (relatedComments !== null) {
+                                if (Array.isArray(relatedComments)) {
+                                    const x = docBlockFactory.createFromLegacyComments(relatedComments);
+
+                                    if (x !== null) {
+                                        variableScope.getSymbol(Symbol.getNodeName(declaration.id))?.addDocblock(declaration.id, x);
+                                    }
+                                } else {
+                                    const x = docBlockFactory.createFromMultilineComment(relatedComments);
+                                    variableScope.getSymbol(Symbol.getNodeName(declaration.id))?.addDocblock(declaration.id, x);
+                                }
+                            }
                         });
                     }
 
