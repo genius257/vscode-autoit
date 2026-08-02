@@ -66,7 +66,11 @@ export class SignatureHelpBridge {
             // Use the new Symbol system to find the function declaration
             const callee = callExpression.callee as AutoIt3.Identifier;
             const symbolKey = Symbol.getNodeName(callee);
-            const symbol = this.workpspace.getSymbol(textDocumentUri, symbolKey, position);
+            const symbol = this.workpspace.resolveSymbolForNode(callee, symbolKey);
+
+            if (symbol === undefined) {
+                return null;
+            }
 
             for (const declaration of symbol.getDeclarations()) {
                 if (
