@@ -241,9 +241,10 @@ function getDocumentSymbol(
 
     for (const [, symbol] of scope.getSymbols()) {
         for (const declaration of symbol.getDeclarations()) {
-            const name = symbol.name.startsWith('$')
-                ? symbol.name.slice(1)
-                : symbol.name;
+            const displayName = symbol.getDisplayName();
+            const name = displayName.startsWith('$')
+                ? displayName.slice(1)
+                : displayName;
 
             symbols.push({
                 kind: declaration.type === 'Identifier'

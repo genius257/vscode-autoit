@@ -59,6 +59,30 @@ export default class Symbol {
         return this.references;
     }
 
+    /**
+     * Returns the symbol name with original casing from the source code.
+     * Prefers declarations, then assignments, then references.
+     * Falls back to the lowercase key name if no nodes are available.
+     */
+    public getDisplayName(): string {
+        for (const node of [...this.declarations, ...this.assignments, ...this.references]) {
+            const type = node.type;
+
+            switch (type) {
+                case 'Identifier':
+                    return node.name;
+                case 'VariableIdentifier':
+                    return '$' + node.name;
+                case 'Macro':
+                    return node.value;
+                default:
+                    throw new Error(`Unexpected node type: "${type satisfies never}" when trying to extract display name for Symbol`);
+            }
+        }
+
+        return this.name;
+    }
+
     public addDocblock(node: Node, docblock: DocBlock) {
         this.docblocks.set(node, docblock);
     }

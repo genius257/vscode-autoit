@@ -58,7 +58,7 @@ export class CompletionItemBridge {
         }
 
         return Array.from(symbols.values()).map<CompletionItem>((symbol) => ({
-            label: symbol.name,
+            label: symbol.getDisplayName(),
             kind: this.resolveCompletionItemKind(symbol),
         }))
             .concat(this.getNativeSuggestions());
