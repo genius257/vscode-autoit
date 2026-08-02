@@ -244,9 +244,11 @@ function getDocumentSymbol(
     const symbols: DocumentSymbol[] = [];
 
     for (const [, symbol] of scope.getSymbols()) {
+        const subscopes = Array.from(scope.getSubscopes());
+
         for (const declaration of symbol.getDeclarations()) {
             const displayName = symbol.getDisplayName();
-            const name = displayName.startsWith('$')
+            const name = declaration.type === 'VariableIdentifier'
                 ? displayName.slice(1)
                 : displayName;
 
@@ -261,6 +263,36 @@ function getDocumentSymbol(
                 selectionRange: PositionHelper.locationRangeToRange(
                     declaration.location,
                 ),
+                children: declaration.type === 'Identifier'
+                    ? Array.from(
+                        subscopes
+                            .find((subscope) => subscope.range !== undefined && PositionHelper.isLocationRangeWithinLocationRange(declaration.location, subscope.range))
+                            ?.getSymbols()
+                            .values() ?? [],
+                    ).reduce<DocumentSymbol[]>((previous, childSymbol) => {
+                        for (const childDeclaration of childSymbol.getDeclarations()) {
+                            const displayName = childSymbol.getDisplayName();
+                            const name = childDeclaration.type === 'VariableIdentifier'
+                                ? displayName.slice(1)
+                                : displayName;
+
+                            previous.push({
+                                kind: childDeclaration.type === 'Identifier'
+                                    ? SymbolKind.Function
+                                    : SymbolKind.Variable,
+                                name: name,
+                                range: PositionHelper.locationRangeToRange(
+                                    childDeclaration.location,
+                                ),
+                                selectionRange: PositionHelper.locationRangeToRange(
+                                    childDeclaration.location,
+                                ),
+                            });
+                        }
+
+                        return previous;
+                    }, [])
+                    : [],
             });
         }
     }
