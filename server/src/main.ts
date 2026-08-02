@@ -189,7 +189,11 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
 
     // Use the new Symbol system with position-aware scope traversal
     const symbolKey = Symbol.getNodeName(identifierAtPos);
-    const symbol = workspace.getSymbol(hoverParams.textDocument.uri, symbolKey, hoverParams.position);
+    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
+
+    if (symbol === undefined) {
+        return null;
+    }
 
     const declarations = [...symbol.getDeclarations()];
     const docblocks = symbol.getDocblocks();
