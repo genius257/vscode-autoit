@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Document symbols for functions now include declarations within the function scope as children
+- Find All References support for variables and functions
+- DocBlock comments now attached to `VariableDeclaration` and `EnumDeclaration` symbols for non-deferred declarations
+
+### Changed
+
+- Go to declaration now shows all matching declarations across scopes and included files, instead of only the closest match
+
 ## [1.8.11] - 2026-07-08
 
 ### Changed
