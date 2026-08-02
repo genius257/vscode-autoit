@@ -243,7 +243,7 @@ function getDocumentSymbol(
     const scope = script.getScope();
     const symbols: DocumentSymbol[] = [];
 
-    for (const [, symbol] of scope.getSymbols()) {
+    for (const symbol of scope.getSymbols().values()) {
         const subscopes = Array.from(scope.getSubscopes());
 
         for (const declaration of symbol.getDeclarations()) {
