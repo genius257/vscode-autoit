@@ -5,6 +5,7 @@ import Symbol from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from './autoit/PositionHelper';
+import * as Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
 import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
@@ -212,7 +213,58 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         const docBlock = docblocks.get(declaration);
 
         if (contents.value === '') {
-            contents.value += `\`\`\`au3\n${symbolKey}\n\`\`\``;
+            const displayName = symbol.getDisplayName();
+            let header = displayName;
+
+            // Find the parent declarator node for richer hover info
+            const declarationScript = workspace.get(declaration.location.source.toString());
+
+            if (declarationScript !== undefined) {
+                const position = PositionHelper.locationToPosition(declaration.location.start);
+                const declarationNodes = declarationScript.getNodesAt(position);
+                declarationNodes.reverse();
+
+                const declarator = declarationNodes.find((node): node is AutoIt3.VariableDeclaration | AutoIt3.FunctionDeclaration | AutoIt3.FormalParameter => node.type === 'VariableDeclarator' || node.type === 'FunctionDeclaration' || node.type === 'Parameter');
+
+                if (declarator !== undefined) {
+                    switch (declarator.type) {
+                        case 'VariableDeclarator':
+                        {
+                            let value: string | null = null;
+
+                            if (declarator.init !== null) {
+                                value = Parser.AstToString(declarator.init);
+                            }
+
+                            const dimensions = 'dimensions' in declarator && declarator.dimensions.length > 0
+                                ? '[' + declarator.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']'
+                                : '';
+
+                            header = `${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${value === null ? '' : ' = ' + value}`;
+
+                            break;
+                        }
+                        case 'FunctionDeclaration':
+                        {
+                            header = `Func ${declarator.id.name}(${Parser.AstArrayToStringArray(declarator.params).join(', ')})`;
+
+                            break;
+                        }
+                        case 'Parameter':
+                        {
+                            const parameterValue = declarator.init !== null ? Parser.AstToString(declarator.init) : null;
+
+                            header = `(parameter) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}`;
+
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            contents.value += `\`\`\`au3\n${header}\n\`\`\``;
         }
 
         if (docBlock !== undefined) {
