@@ -1,5 +1,5 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
@@ -35,6 +35,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
             workDoneProgress: false,
         },
         definitionProvider: {
+            workDoneProgress: false,
+        },
+        documentHighlightProvider: {
             workDoneProgress: false,
         },
         documentLinkProvider: {
@@ -103,6 +106,7 @@ connection.onDefinition(getDefinition);
 connection.onReferences(getReferences);
 connection.onCompletion(getCompletionItems);
 connection.onSignatureHelp(getSignatureHelp);
+connection.onDocumentHighlight(getDocumentHighlight);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
     // const documentText = documents.get(params.textDocument.uri)?.getText();
@@ -444,4 +448,39 @@ function getReferences(params: ReferenceParams): Location[]|null|undefined {
     })));
 
     return results;
+}
+
+function getDocumentHighlight(params: DocumentHighlightParams): DocumentHighlight[] | null | undefined {
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return null;
+    }
+
+    const nodesAt = script.getNodesAt(params.position);
+    const identifierAtPos = nodesAt.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+
+    if (identifierAtPos === undefined) {
+        return null;
+    }
+
+    const scope = identifierAtPos.type === 'Identifier'
+        ? script.getScope()
+        : script.getScopeAtPosition(params.position);
+
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
+
+    const symbol = scope.getSymbol(symbolKey);
+
+    if (symbol === undefined) {
+        return null;
+    }
+
+    return [
+        ...symbol.getDeclarations(),
+        ...symbol.getReferences(),
+        ...symbol.getAssignments(),
+    ].map<DocumentHighlight>((node) => ({
+        range: PositionHelper.locationRangeToRange(node.location),
+    }));
 }
