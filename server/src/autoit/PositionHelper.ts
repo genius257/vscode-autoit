@@ -105,3 +105,17 @@ export function isPositionWithinLocationRange(
 export function isLocationWithinLocationRange(location: Location, locationRange: LocationRange) {
     return isPositionWithinLocationRange(locationToPosition(location), locationRange);
 }
+
+/**
+ * Returns true if the inner LocationRange is entirely contained within the outer LocationRange.
+ */
+export function isLocationRangeWithinLocationRange(
+    inner: LocationRange,
+    outer: LocationRange,
+): boolean {
+    return (
+        inner.source === outer.source &&
+        inner.start.offset >= outer.start.offset &&
+        inner.end.offset <= outer.end.offset
+    );
+}
