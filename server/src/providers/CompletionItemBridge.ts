@@ -114,6 +114,12 @@ export class CompletionItemBridge {
 
                 value = `\`\`\`au3\n${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${initValue === null ? '' : ' = ' + initValue}\n\`\`\``;
 
+                const variableDocBlock = symbol.getDocblocks().get(declaration);
+
+                if (variableDocBlock !== undefined) {
+                    value += `\n\n${variableDocBlock.summary.toString()}\n\n${variableDocBlock.description.toString()}\n\n${variableDocBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
+                }
+
                 break;
             }
             case 'FunctionDeclaration':
