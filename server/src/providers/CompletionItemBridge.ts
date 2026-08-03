@@ -1,6 +1,9 @@
-import { CompletionItem, CompletionItemKind, CompletionList, MarkupKind, Position } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, CompletionList, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
+import { type AutoIt3 } from 'autoit3-pegjs';
 import { Workspace } from '../autoit/Workspace';
 import Symbol from '../autoit/Symbol';
+import * as PositionHelper from '../autoit/PositionHelper';
+import * as Parser from '../autoit/Parser';
 import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
 
@@ -60,8 +63,87 @@ export class CompletionItemBridge {
         return Array.from(symbols.values()).map<CompletionItem>((symbol) => ({
             label: symbol.getDisplayName(),
             kind: this.resolveCompletionItemKind(symbol),
+            documentation: this.resolveCompletionItemDocumentation(symbol),
         }))
             .concat(this.getNativeSuggestions());
+    }
+
+    public resolveCompletionItemDocumentation(symbol: Symbol): MarkupContent | undefined {
+        const declarations = [...symbol.getDeclarations()];
+
+        if (declarations.length === 0) {
+            return undefined;
+        }
+
+        const declaration = declarations[0];
+
+        if (declaration === undefined) {
+            return undefined;
+        }
+
+        const declarationScript = this.workpspace.get(declaration.location.source.toString());
+
+        if (declarationScript === undefined) {
+            return undefined;
+        }
+
+        const position = PositionHelper.locationToPosition(declaration.location.start);
+        const declarationNodes = declarationScript.getNodesAt(position);
+        declarationNodes.reverse();
+
+        const declarator = declarationNodes.find((node): node is AutoIt3.VariableDeclaration | AutoIt3.FunctionDeclaration | AutoIt3.FormalParameter => node.type === 'VariableDeclarator' || node.type === 'FunctionDeclaration' || node.type === 'Parameter');
+
+        if (declarator === undefined) {
+            return undefined;
+        }
+
+        let value = '';
+
+        switch (declarator.type) {
+            case 'VariableDeclarator':
+            {
+                let initValue: string | null = null;
+
+                if (declarator.init !== null) {
+                    initValue = Parser.AstToString(declarator.init);
+                }
+
+                const dimensions = 'dimensions' in declarator && declarator.dimensions.length > 0
+                    ? '[' + declarator.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']'
+                    : '';
+
+                value = `\`\`\`au3\n${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${initValue === null ? '' : ' = ' + initValue}\n\`\`\``;
+
+                break;
+            }
+            case 'FunctionDeclaration':
+            {
+                value = `\`\`\`au3\nFunc ${declarator.id.name}(${Parser.AstArrayToStringArray(declarator.params).join(', ')})\n\`\`\``;
+
+                const docBlock = symbol.getDocblocks().get(declaration);
+
+                if (docBlock !== undefined) {
+                    value += `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
+                }
+
+                break;
+            }
+            case 'Parameter':
+            {
+                const parameterValue = declarator.init !== null ? Parser.AstToString(declarator.init) : null;
+
+                value = `\`\`\`au3\n(parameter) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}\n\`\`\``;
+
+                break;
+            }
+            default:
+                return undefined;
+        }
+
+        return {
+            kind: MarkupKind.Markdown,
+            value,
+        };
     }
 
     public resolveCompletionItemKind(symbol: Symbol): CompletionItemKind {
