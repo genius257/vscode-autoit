@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Find All References support for variables and functions
 - DocBlock comments now attached to `VariableDeclaration` and `EnumDeclaration` symbols for non-deferred declarations
 - DocBlock comments now shown in completion suggestion detail text for variables
+- Document highlight support for variables and functions
 
 ### Changed
 
