@@ -330,6 +330,8 @@ export default class Script {
                     break;
                 case 'VariableDeclaration':
                     {
+                        // FIXME: Static variables (node.static_ === true) should always be local,
+                        // but are currently deferred to assignmentsInScope like Dim. Handle Static separately.
                         const shouldDefer = (node.scope === 'dim' || node.scope === null) && !scope.isGlobal();
 
                         node.declarations.forEach((declaration) => {
