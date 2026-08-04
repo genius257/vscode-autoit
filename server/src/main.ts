@@ -378,6 +378,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
         return [];
     }
 
+    // FIXME: make showing all declarations vs closest match toggle-able via setting
     return [...symbol.getDeclarations()].map((declaration) => ({
         targetUri: declaration.location.source.toString(),
         targetRange: PositionHelper.locationRangeToRange(
