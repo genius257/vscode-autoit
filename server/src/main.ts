@@ -1,7 +1,7 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
 import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import Symbol from './autoit/Symbol';
+import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from './autoit/PositionHelper';
@@ -169,17 +169,17 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         };
     }
 
-    const identifierAtPos = nodesAt.find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const identifierAtPos = nodesAt.find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
 
     if (identifierAtPos === undefined) {
         return null;
     }
 
     // Check native suggestions first
-    if (identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'Macro') {
-        const key = identifierAtPos.type === 'Identifier'
-            ? identifierAtPos.name.toLowerCase()
-            : identifierAtPos.value.toLowerCase();
+    if (identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'Macro' || identifierAtPos.type === 'SyntheticIdentifier') {
+        const key = identifierAtPos.type === 'Macro'
+            ? identifierAtPos.value.toLowerCase()
+            : identifierAtPos.name.toLowerCase();
         const suggestion = nativeSuggestions[key];
 
         if (suggestion !== undefined) {
@@ -364,7 +364,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
     }
 
     const nodesAt = script.getNodesAt(params.position);
-    const identifierAtPos = nodesAt.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
 
     if (identifierAtPos === undefined) {
         return [];
@@ -419,7 +419,7 @@ function getReferences(params: ReferenceParams): Location[]|null|undefined {
     }
 
     const nodesAt = script.getNodesAt(params.position);
-    const identifierAtPos = nodesAt.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
 
     if (identifierAtPos === undefined) {
         return null;
@@ -458,13 +458,13 @@ function getDocumentHighlight(params: DocumentHighlightParams): DocumentHighligh
     }
 
     const nodesAt = script.getNodesAt(params.position);
-    const identifierAtPos = nodesAt.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
 
     if (identifierAtPos === undefined) {
         return null;
     }
 
-    const scope = identifierAtPos.type === 'Identifier'
+    const scope = identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'SyntheticIdentifier'
         ? script.getScope()
         : script.getScopeAtPosition(params.position);
 

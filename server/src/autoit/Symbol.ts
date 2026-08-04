@@ -3,8 +3,26 @@ import DocBlock from './docBlock/DocBlock';
 import { URI } from 'vscode-uri';
 import Scope, { SymbolKey } from './Scope';
 
+export type SyntheticIdentifier = {
+    type: 'SyntheticIdentifier',
+    name: string,
+    location: LocationRange,
+    node: AutoIt3.Literal,
+};
+
+export type SyntheticVariableIdentifier = {
+    type: 'SyntheticVariableIdentifier',
+    name: string,
+    location: LocationRange,
+    node: AutoIt3.Literal,
+};
+
 export type Node =
-    AutoIt3.Macro | AutoIt3.VariableIdentifier | AutoIt3.Identifier;
+    | AutoIt3.Macro
+    | AutoIt3.VariableIdentifier
+    | AutoIt3.Identifier
+    | SyntheticIdentifier
+    | SyntheticVariableIdentifier;
 
 export default class Symbol {
     public readonly name: string;
@@ -25,8 +43,10 @@ export default class Symbol {
 
         switch (type) {
             case 'Identifier':
+            case 'SyntheticIdentifier':
                 return node.name.toLowerCase() as SymbolKey;
             case 'VariableIdentifier':
+            case 'SyntheticVariableIdentifier':
                 return '$' + node.name.toLowerCase() as SymbolKey;
             case 'Macro':
                 return node.value.toLowerCase() as SymbolKey;
@@ -65,13 +85,19 @@ export default class Symbol {
      * Falls back to the lowercase key name if no nodes are available.
      */
     public getDisplayName(): string {
-        for (const node of [...this.declarations, ...this.assignments, ...this.references]) {
+        for (const node of [
+            ...this.declarations,
+            ...this.assignments,
+            ...this.references,
+        ]) {
             const type = node.type;
 
             switch (type) {
                 case 'Identifier':
+                case 'SyntheticIdentifier':
                     return node.name;
                 case 'VariableIdentifier':
+                case 'SyntheticVariableIdentifier':
                     return '$' + node.name;
                 case 'Macro':
                     return node.value;

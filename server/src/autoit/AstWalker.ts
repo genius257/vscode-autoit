@@ -214,6 +214,7 @@ export default class AstWalker {
 
                 return status;
             case 'Identifier':
+            case 'SyntheticIdentifier':
                 break;
             case 'IfStatement':
                 status = this.filterNestedNode(node.test, fn, matches);
@@ -383,6 +384,7 @@ export default class AstWalker {
 
                 return status;
             case 'VariableIdentifier':
+            case 'SyntheticVariableIdentifier':
                 break;
             case 'WhileStatement':
                 status = this.filterNestedNode(node.test, fn, matches);

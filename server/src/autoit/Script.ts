@@ -10,7 +10,7 @@ import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
 import MarkdownDescriptionFactory from './docBlock/DocBlock/MarkdownDescriptionFactory';
 import DocBlockFactory from './docBlock/DocBlockFactory';
 import AstWalker from './AstWalker';
-import Symbol, { Declaration, Node as SymbolNode } from './Symbol';
+import Symbol, { Declaration, Node as SymbolNode, SyntheticIdentifier, SyntheticVariableIdentifier } from './Symbol';
 import Scope from './Scope';
 
 export type Include = {
@@ -67,7 +67,9 @@ export type Node =
     | AutoIt3.ElseIfClause
     | AutoIt3.ElseIfClauseInWith
     | AutoIt3.ElseClause
-    | AutoIt3.ElseClauseInWith;
+    | AutoIt3.ElseClauseInWith
+    | SyntheticIdentifier
+    | SyntheticVariableIdentifier;
 
 export type NodeList =
     | AutoIt3.StatementList
@@ -236,7 +238,6 @@ export default class Script {
         const referencesInScope: { node: SymbolNode, scope: Scope }[] = [];
 
         const declarations: Declaration[] = [];
-        const references: Symbol[] = [];
 
         /** Holds potential docblock comment(s) between non comment nodes */
         let relatedComments: AutoIt3.MultiLineComment | AutoIt3.SingleLineComment[] | null = null;
@@ -405,10 +406,13 @@ export default class Script {
                                             break;
                                         }
 
-                                        // FIXME: scope
-                                        const reference = new Symbol(node.callee);
+                                        const isEval = node.callee.name.toLowerCase() === 'eval';
+                                        const syntheticNode = this.createSyntheticNode(arg0, isEval);
 
-                                        references.push(reference);
+                                        referencesInScope.push({
+                                            node: syntheticNode,
+                                            scope: scope,
+                                        });
                                     }
 
                                     break;
@@ -641,6 +645,36 @@ export default class Script {
         return _include;
     }
 
+    /**
+     * Creates a synthetic identifier node from a Literal node.
+     * Used for Eval and Call expressions where the symbol name is a string literal.
+     */
+    protected createSyntheticNode(
+        literal: AutoIt3.Literal,
+        isVariable: boolean,
+    ): SyntheticIdentifier | SyntheticVariableIdentifier {
+        const value = String(literal.value);
+
+        if (isVariable) {
+            // Eval argument may or may not include the $ prefix
+            const name = value.startsWith('$') ? value.slice(1) : value;
+
+            return {
+                type: 'SyntheticVariableIdentifier',
+                name,
+                location: literal.location,
+                node: literal,
+            };
+        }
+
+        return {
+            type: 'SyntheticIdentifier',
+            name: value,
+            location: literal.location,
+            node: literal,
+        };
+    }
+
     public updateContent() {
         throw new Error('Not implemented');// FIXME: implement
     }
@@ -797,6 +831,20 @@ export default class Script {
                     matches,
                 );
 
+                // Check for Eval/Call with string literal argument and produce synthetic node
+                if (node.callee.type === 'Identifier') {
+                    const calleeName = node.callee.name.toLowerCase();
+
+                    if ((calleeName === 'eval' || calleeName === 'call') && node.arguments.length > 0) {
+                        const arg0 = node.arguments[0];
+
+                        if (arg0.type === 'Literal' && typeof arg0.value === 'string' && Parser.isPositionWithinLocation(line, column, arg0.location)) {
+                            const syntheticNode = this.createSyntheticNode(arg0, calleeName === 'eval');
+                            matches.push(syntheticNode);
+                        }
+                    }
+                }
+
                 break;
             case 'ConditionalExpression':
                 this.getNestedNodesAt(node.test, line, column, matches);
@@ -902,6 +950,7 @@ export default class Script {
 
                 break;
             case 'Identifier':
+            case 'SyntheticIdentifier':
                 break;
             case 'IfStatement':
                 this.getNestedNodesAt(node.test, line, column, matches);
@@ -1041,6 +1090,7 @@ export default class Script {
 
                 break;
             case 'VariableIdentifier':
+            case 'SyntheticVariableIdentifier':
                 break;
             case 'WhileStatement':
                 this.getNestedNodesAt(node.test, line, column, matches);
@@ -1303,6 +1353,7 @@ export default class Script {
 
                 return status;
             case 'Identifier':
+            case 'SyntheticIdentifier':
                 break;
             case 'IfStatement':
                 status = this.filterNestedNode(node.test, fn, matches);
@@ -1472,6 +1523,7 @@ export default class Script {
 
                 return status;
             case 'VariableIdentifier':
+            case 'SyntheticVariableIdentifier':
                 break;
             case 'WhileStatement':
                 status = this.filterNestedNode(node.test, fn, matches);

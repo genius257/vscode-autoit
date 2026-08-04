@@ -5,7 +5,7 @@ import Script from './Script';
 import native from './native.au3?raw';
 import { isAbsolutePath } from './Path';
 import EventEmitter from '@utils/EventEmitter';
-import Symbol from './Symbol';
+import Symbol, { type Node as SymbolNode } from './Symbol';
 import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
@@ -363,7 +363,7 @@ export class Workspace {
      * For global scopes, a new symbol is created and merged with all matching
      * global symbols from the script's dependencies and reverse dependencies.
      */
-    public resolveSymbolForNode(node: AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro, symbolKey: SymbolKey): Symbol | undefined {
+    public resolveSymbolForNode(node: SymbolNode, symbolKey: SymbolKey): Symbol | undefined {
         const scriptUri = node.location.source.toString();
         const script = this.scripts.get(scriptUri);
 
@@ -371,10 +371,10 @@ export class Workspace {
             return undefined;
         }
 
-        // For Identifiers (function names), always use the global scope
-        // since function declarations are global and the position may fall
-        // within a function scope incorrectly
-        const scope = node.type === 'Identifier'
+        // For Identifiers and SyntheticIdentifiers (function names from Call),
+        // always use the global scope since function declarations are global
+        // and the position may fall within a function scope incorrectly
+        const scope = node.type === 'Identifier' || node.type === 'SyntheticIdentifier'
             ? script.getScope()
             : script.getScopeAtPosition(locationToPosition(node.location.start));
 
