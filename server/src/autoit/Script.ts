@@ -10,7 +10,7 @@ import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
 import MarkdownDescriptionFactory from './docBlock/DocBlock/MarkdownDescriptionFactory';
 import DocBlockFactory from './docBlock/DocBlockFactory';
 import AstWalker from './AstWalker';
-import Symbol, { Declaration, Node as SymbolNode, SyntheticIdentifier, SyntheticVariableIdentifier } from './Symbol';
+import Symbol, { Node as SymbolNode, SyntheticIdentifier, SyntheticVariableIdentifier } from './Symbol';
 import Scope from './Scope';
 
 export type Include = {
@@ -237,8 +237,6 @@ export default class Script {
         const assignmentsInScope: { node: { id: SymbolNode, location: LocationRange }, scope: Scope }[] = [];
         const referencesInScope: { node: SymbolNode, scope: Scope }[] = [];
 
-        const declarations: Declaration[] = [];
-
         /** Holds potential docblock comment(s) between non comment nodes */
         let relatedComments: AutoIt3.MultiLineComment | AutoIt3.SingleLineComment[] | null = null;
         let scope = new Scope(
@@ -454,15 +452,6 @@ export default class Script {
         };
 
         const processFunctionNode = (node: AutoIt3.FunctionDeclaration) => {
-            const declaration = new Declaration({
-                name: node.id.name,
-                docBlock: relatedComments === null ? undefined : Array.isArray(relatedComments) ? docBlockFactory.createFromLegacyComments(relatedComments) ?? undefined : docBlockFactory.createFromMultilineComment(relatedComments),
-                range: node.location,
-                scope: scope,
-                type: 'function',
-                uri: this.uri,
-            });
-
             const originalScope = scope;
             const functionScope = new Scope(node.location, this.uri, originalScope);
 
@@ -475,8 +464,6 @@ export default class Script {
             AstWalker.filterNestedNodes(node.body, processNode, []);
 
             scope = originalScope;
-
-            declarations.push(declaration);
         };
 
         AstWalker.filterNestedNodes(this.program?.body ?? [], processNode, []);
