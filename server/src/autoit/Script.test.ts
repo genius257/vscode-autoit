@@ -94,6 +94,81 @@ EndFunc`);
     });
 });
 
+describe('Synthetic nodes for special symbol references', function () {
+    test('getNodesAt on IsDeclared with string literal produces SyntheticVariableIdentifier', function () {
+        const script = new Script(`IsDeclared('varName')`);
+
+        // Position inside the string literal argument 'varName'
+        const result = script.getNodesAt({ character: 14, line: 0 });
+
+        const syntheticNode = result.find((node) => node.type === 'SyntheticVariableIdentifier');
+        expect(syntheticNode).toBeDefined();
+        expect(syntheticNode?.type).toBe('SyntheticVariableIdentifier');
+        expect((syntheticNode as { name: string }).name).toBe('varName');
+    });
+
+    test('getNodesAt on IsDeclared with $-prefixed string literal strips $ prefix', function () {
+        const script = new Script(`IsDeclared('$varName')`);
+
+        // Position inside the string literal argument '$varName'
+        const result = script.getNodesAt({ character: 15, line: 0 });
+
+        const syntheticNode = result.find((node) => node.type === 'SyntheticVariableIdentifier');
+        expect(syntheticNode).toBeDefined();
+        expect(syntheticNode?.type).toBe('SyntheticVariableIdentifier');
+        expect((syntheticNode as { name: string }).name).toBe('varName');
+    });
+
+    test('IsDeclared adds variable reference to scope', function () {
+        const script = new Script(`Global $myVar
+IsDeclared('myVar')`);
+        const globalScope = script.getScope();
+
+        const symbol = globalScope.getSymbol('$myvar' as SymbolKey);
+        expect(symbol).toBeDefined();
+
+        // The symbol should have references including the SyntheticVariableIdentifier from IsDeclared
+        const refNodes = [...(symbol?.getReferences() ?? [])];
+        const syntheticRef = refNodes.find((node) => node.type === 'SyntheticVariableIdentifier');
+        expect(syntheticRef).toBeDefined();
+        expect((syntheticRef as { name: string }).name).toBe('myVar');
+    });
+
+    test('getNodesAt on Eval with string literal produces SyntheticVariableIdentifier', function () {
+        const script = new Script(`Eval('varName')`);
+
+        // Position inside the string literal argument 'varName'
+        const result = script.getNodesAt({ character: 9, line: 0 });
+
+        const syntheticNode = result.find((node) => node.type === 'SyntheticVariableIdentifier');
+        expect(syntheticNode).toBeDefined();
+        expect(syntheticNode?.type).toBe('SyntheticVariableIdentifier');
+        expect((syntheticNode as { name: string }).name).toBe('varName');
+    });
+
+    test('getNodesAt on Call with string literal produces SyntheticIdentifier', function () {
+        const script = new Script(`Call('funcName')`);
+
+        // Position inside the string literal argument 'funcName'
+        const result = script.getNodesAt({ character: 10, line: 0 });
+
+        const syntheticNode = result.find((node) => node.type === 'SyntheticIdentifier');
+        expect(syntheticNode).toBeDefined();
+        expect(syntheticNode?.type).toBe('SyntheticIdentifier');
+        expect((syntheticNode as { name: string }).name).toBe('funcName');
+    });
+
+    test('getNodesAt on IsDeclared outside argument does not produce synthetic node', function () {
+        const script = new Script(`IsDeclared('varName')`);
+
+        // Position on "IsDeclared" identifier, not inside the string literal
+        const result = script.getNodesAt({ character: 2, line: 0 });
+
+        const syntheticNode = result.find((node) => node.type === 'SyntheticVariableIdentifier');
+        expect(syntheticNode).toBeUndefined();
+    });
+});
+
 describe('EnumDeclaration scope handling', function () {
     test('Local Enum $x in function declares in function scope', function () {
         const script = new Script(`Func test()

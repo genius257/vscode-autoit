@@ -395,6 +395,7 @@ export default class Script {
                                     break;
                                 case 'eval':
                                 case 'call':
+                                case 'isdeclared':
                                     {
                                         const arg0 = node.arguments[0];
 
@@ -406,8 +407,9 @@ export default class Script {
                                             break;
                                         }
 
-                                        const isEval = node.callee.name.toLowerCase() === 'eval';
-                                        const syntheticNode = this.createSyntheticNode(arg0, isEval);
+                                        const calleeName = node.callee.name.toLowerCase();
+                                        const isVariable = calleeName === 'eval' || calleeName === 'isdeclared';
+                                        const syntheticNode = this.createSyntheticNode(arg0, isVariable);
 
                                         referencesInScope.push({
                                             node: syntheticNode,
@@ -636,7 +638,7 @@ export default class Script {
 
     /**
      * Creates a synthetic identifier node from a Literal node.
-     * Used for Eval and Call expressions where the symbol name is a string literal.
+     * Used for Eval, Call and IsDeclared expressions where the symbol name is a string literal.
      */
     protected createSyntheticNode(
         literal: AutoIt3.Literal,
@@ -645,7 +647,7 @@ export default class Script {
         const value = String(literal.value);
 
         if (isVariable) {
-            // Eval argument may or may not include the $ prefix
+            // Eval/IsDeclared argument may or may not include the $ prefix
             const name = value.startsWith('$') ? value.slice(1) : value;
 
             return {
@@ -820,15 +822,16 @@ export default class Script {
                     matches,
                 );
 
-                // Check for Eval/Call with string literal argument and produce synthetic node
+                // Check for Eval/Call/IsDeclared with string literal argument and produce synthetic node
                 if (node.callee.type === 'Identifier') {
                     const calleeName = node.callee.name.toLowerCase();
 
-                    if ((calleeName === 'eval' || calleeName === 'call') && node.arguments.length > 0) {
+                    if ((calleeName === 'eval' || calleeName === 'call' || calleeName === 'isdeclared') && node.arguments.length > 0) {
                         const arg0 = node.arguments[0];
 
                         if (arg0.type === 'Literal' && typeof arg0.value === 'string' && Parser.isPositionWithinLocation(line, column, arg0.location)) {
-                            const syntheticNode = this.createSyntheticNode(arg0, calleeName === 'eval');
+                            const isVariable = calleeName === 'eval' || calleeName === 'isdeclared';
+                            const syntheticNode = this.createSyntheticNode(arg0, isVariable);
                             matches.push(syntheticNode);
                         }
                     }

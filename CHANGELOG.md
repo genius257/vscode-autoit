@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Symbol discovery support for `Eval` and `Call` expressions, enabling hover, go-to-definition, find references, and document highlight on string literal arguments
+- Symbol discovery support for `Eval`, `Call` and `IsDeclared` expressions, enabling hover, go-to-definition, find references, and document highlight on string literal arguments
 - Document symbols for functions now include declarations within the function scope as children
 - Find All References support for variables and functions
 - DocBlock comments now attached to `VariableDeclaration` and `EnumDeclaration` symbols for non-deferred declarations
