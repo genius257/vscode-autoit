@@ -11,15 +11,10 @@ export default tseslint.config({
   },
   extends: [
     eslint.configs.recommended,
-    tseslint.configs.strictTypeChecked,
-    tseslint.configs.stylisticTypeChecked,
+    tseslint.configs.strict,
+    tseslint.configs.stylistic,
     //stylistic.configs.recommended,
   ],
-  languageOptions: {
-    parserOptions: {
-      projectService: true,
-    }
-  },
   rules: {
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     "@typescript-eslint/no-inferrable-types": ["error", { ignoreParameters: true , ignoreProperties: true }],
