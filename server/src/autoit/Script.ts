@@ -5,11 +5,13 @@ import * as Parser from './Parser';
 import { Workspace } from './Workspace';
 import * as PositionHelper from './PositionHelper';
 import debounce from '@utils/debounce';
-import DocBlock from './docBlock/DocBlock';
 import FqsenResolver from './docBlock/FqsenResolver';
 import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
 import MarkdownDescriptionFactory from './docBlock/DocBlock/MarkdownDescriptionFactory';
 import DocBlockFactory from './docBlock/DocBlockFactory';
+import AstWalker from './AstWalker';
+import Symbol, { Node as SymbolNode, SyntheticIdentifier, SyntheticVariableIdentifier } from './Symbol';
+import Scope from './Scope';
 
 export type Include = {
     /** Resolved include statement URI path */
@@ -65,7 +67,9 @@ export type Node =
     | AutoIt3.ElseIfClause
     | AutoIt3.ElseIfClauseInWith
     | AutoIt3.ElseClause
-    | AutoIt3.ElseClauseInWith;
+    | AutoIt3.ElseClauseInWith
+    | SyntheticIdentifier
+    | SyntheticVariableIdentifier;
 
 export type NodeList =
     | AutoIt3.StatementList
@@ -117,6 +121,7 @@ export default class Script {
     protected uri: URI | undefined;
     protected text: string;
 
+    // Diagnostics
     protected errors: ScriptError[] = [];
     protected warnings: ScriptWarning[] = [];
     protected informations: ScriptInformation[] = [];
@@ -130,23 +135,7 @@ export default class Script {
     protected refCount: number = 1;
 
     protected program: AutoIt3.Program | undefined;
-    protected functionDeclarations = new Map<
-        string,
-        AutoIt3.FunctionDeclaration
-    >();
-    protected variableDeclarations = new Map<
-        string,
-        AutoIt3.VariableDeclaration
-    >();
-    public docBlocks = new Map<typeof this.declarations[number], DocBlock>();
-
-    public declarations: (
-        | AutoIt3.FunctionDeclaration
-        | AutoIt3.VariableDeclaration
-        | AutoIt3.VariableDeclarationInWith
-        | AutoIt3.EnumDeclaration
-        | AutoIt3.EnumDeclarationInWith
-    )[] = [];// FIXME: varaible declarations with the global scope should be added here aswell.
+    protected scope: Scope = new Scope();
 
     constructor(
         text: string,
@@ -201,7 +190,8 @@ export default class Script {
                 text,
                 { grammarSource: this.uri?.toString() },
             );
-            this.analyze();// FIXME: currently this is just to test.
+
+            this.analyze();
         } catch (e) {
             if (!Parser.isSyntaxError(e)) {
                 throw e;
@@ -240,8 +230,21 @@ export default class Script {
     }
 
     public analyze() {
-        const docBlocks = new Map<typeof this.declarations[number], DocBlock>();
-        let previousNode: Node | AutoIt3.SingleLineComment[] | null = null;
+        /*
+         * Variables for holding symbols that need to be processed after all symbols is collected.
+         * For example: assignments without a scope. They need to be checked afterwards, to verify if they belong in a global or local scope.
+         */
+        const assignmentsInScope: { node: { id: SymbolNode, location: LocationRange }, scope: Scope }[] = [];
+        const referencesInScope: { node: SymbolNode, scope: Scope }[] = [];
+
+        /** Holds potential docblock comment(s) between non comment nodes */
+        let relatedComments: AutoIt3.MultiLineComment | AutoIt3.SingleLineComment[] | null = null;
+        let scope = new Scope(
+
+            // FIXME: AutoIt.program is currently missing location property
+            PositionHelper.rangeToLocationRange({ start: { character: 0, line: 0 }, end: { character: 0, line: 0 } }),
+            this.uri,
+        );
 
         const fqsenResolver = new FqsenResolver();
         const tagFactory =
@@ -254,57 +257,264 @@ export default class Script {
                 tagFactory,
             );
 
-        this.declarations = (this.filterNodes((node) => {
-            const isDeclerator = node.type === 'FunctionDeclaration' || node.type === 'VariableDeclarator';
+        const processNode = (node: Node): NodeFilterAction => {
+            switch (node.type) {
+                case 'FunctionDeclaration':
+                    scope.addDeclaration(node.id);
 
-            if (isDeclerator) {
-                if (Array.isArray(previousNode) || previousNode?.type === 'MultiLineComment') {
-                    const docBlock = Array.isArray(previousNode)
-                        ? docBlockFactory
-                            .createFromLegacyComments(previousNode)
-                        : docBlockFactory
-                            .createFromMultilineComment(previousNode);
+                    if (relatedComments !== null) {
+                        if (Array.isArray(relatedComments)) {
+                            const x = docBlockFactory.createFromLegacyComments(relatedComments);
 
-                    if (docBlock !== null) {
-                        docBlocks.set(node, docBlock);
+                            if (x !== null) {
+                                scope.getSymbol(Symbol.getNodeName(node.id))?.addDocblock(node.id, x);
+                            }
+                        } else {
+                            const x = docBlockFactory.createFromMultilineComment(relatedComments);
+                            scope.getSymbol(Symbol.getNodeName(node.id))?.addDocblock(node.id, x);
+                        }
                     }
-                }
-            } else if (node.type === 'VariableDeclaration') {
-                if (Array.isArray(previousNode) || previousNode?.type === 'MultiLineComment') {
-                    const docBlock = Array.isArray(previousNode)
-                        ? docBlockFactory
-                            .createFromLegacyComments(previousNode)
-                        : docBlockFactory
-                            .createFromMultilineComment(previousNode);
 
-                    if (docBlock !== null) {
-                        node.declarations.forEach((declaration) => {
-                            docBlocks.set(declaration, docBlock);
+                    processFunctionNode(node);
+
+                    return NodeFilterAction.SkipAndStopPropagation;
+                case 'SingleLineComment':
+                    if (Array.isArray(relatedComments)) {
+                        relatedComments.push(node);
+                    }
+
+                    relatedComments = [node];
+
+                    return NodeFilterAction.Skip;
+                case 'MultiLineComment':
+                    relatedComments = node;
+
+                    return NodeFilterAction.Skip;
+                case 'EnumDeclaration':
+                    {
+                        const shouldDefer = (node.scope === 'dim' || node.scope === null) && !scope.isGlobal();
+
+                        node.declarations.forEach((enumDeclaration) => {
+                            if (shouldDefer) {
+                                assignmentsInScope.push({ node: enumDeclaration, scope });
+                            } else {
+                                const variableScope = node.scope === 'local' ? scope : scope.parent ?? scope;
+                                variableScope.addDeclaration(enumDeclaration.id);
+
+                                if (relatedComments !== null) {
+                                    if (Array.isArray(relatedComments)) {
+                                        const x = docBlockFactory.createFromLegacyComments(relatedComments);
+
+                                        if (x !== null) {
+                                            variableScope.getSymbol(Symbol.getNodeName(enumDeclaration.id))?.addDocblock(enumDeclaration.id, x);
+                                        }
+                                    } else {
+                                        const x = docBlockFactory.createFromMultilineComment(relatedComments);
+                                        variableScope.getSymbol(Symbol.getNodeName(enumDeclaration.id))?.addDocblock(enumDeclaration.id, x);
+                                    }
+                                }
+                            }
+
+                            AstWalker.filterNestedNode(enumDeclaration.init, processNode, []);
                         });
                     }
-                }
-            } else {
-                if (node.type === 'SingleLineComment') {
-                    if (Array.isArray(previousNode)) {
-                        previousNode.push(node);
-                    } else {
-                        previousNode = [node];
+
+                    relatedComments = null;
+
+                    return NodeFilterAction.SkipAndStopPropagation;
+                case 'Parameter':
+                    scope.addDeclaration(node.id);
+
+                    return NodeFilterAction.Skip;
+                case 'ForStatement':
+                    // node.body
+                    break;
+                case 'VariableDeclaration':
+                    {
+                        /*
+                         * FIXME: Static variables (node.static_ === true) should always be local,
+                         * but are currently deferred to assignmentsInScope like Dim. Handle Static separately.
+                         */
+                        const shouldDefer = (node.scope === 'dim' || node.scope === null) && !scope.isGlobal();
+
+                        node.declarations.forEach((declaration) => {
+                            if (shouldDefer) {
+                                assignmentsInScope.push({ node: declaration, scope });
+
+                                return;
+                            }
+
+                            const variableScope = node.scope === 'local' ? scope : scope.parent ?? scope;
+                            variableScope.addDeclaration(declaration.id);
+
+                            if (relatedComments !== null) {
+                                if (Array.isArray(relatedComments)) {
+                                    const x = docBlockFactory.createFromLegacyComments(relatedComments);
+
+                                    if (x !== null) {
+                                        variableScope.getSymbol(Symbol.getNodeName(declaration.id))?.addDocblock(declaration.id, x);
+                                    }
+                                } else {
+                                    const x = docBlockFactory.createFromMultilineComment(relatedComments);
+                                    variableScope.getSymbol(Symbol.getNodeName(declaration.id))?.addDocblock(declaration.id, x);
+                                }
+                            }
+                        });
                     }
-                } else {
-                    previousNode = node;
-                }
+
+                    return NodeFilterAction.Skip;
+                case 'VariableIdentifier':
+                    if (scope.parent === null || scope.getSymbol(Symbol.getNodeName(node))?.getDeclarations().size) {
+                        scope.addReference(node);
+                    } else {
+                        referencesInScope.push({
+                            node,
+                            scope,
+                        });
+                    }
+
+                    break;
+                case 'CallExpression':
+                    switch (node.callee.type) {
+                        case 'Identifier':
+                            switch (node.callee.name.toLowerCase()) {
+                                case 'assign':
+                                    {
+                                        const arg0 = node.arguments[0];
+
+                                        if (arg0.type !== 'Literal') {
+                                            break;
+                                        }
+
+                                        if (typeof arg0.value !== 'string') {
+                                            break;
+                                        }
+
+                                        // eslint-disable-next-line @stylistic/multiline-comment-style
+                                        // FIXME: declaration missing a symbol?
+                                        // const declaration = new Declaration(node.callee);
+
+                                        // declarations.push(declaration);
+                                    }
+
+                                    break;
+                                case 'eval':
+                                case 'call':
+                                case 'isdeclared':
+                                    {
+                                        const arg0 = node.arguments[0];
+
+                                        if (arg0.type !== 'Literal') {
+                                            break;
+                                        }
+
+                                        if (typeof arg0.value !== 'string') {
+                                            break;
+                                        }
+
+                                        const calleeName = node.callee.name.toLowerCase();
+                                        const isVariable = calleeName === 'eval' || calleeName === 'isdeclared';
+                                        const syntheticNode = this.createSyntheticNode(arg0, isVariable);
+
+                                        referencesInScope.push({
+                                            node: syntheticNode,
+                                            scope: scope,
+                                        });
+                                    }
+
+                                    break;
+                                case 'execute':
+                                    {
+                                        const arg0 = node.arguments[0];
+
+                                        if (arg0.type !== 'Literal') {
+                                            break;
+                                        }
+
+                                        if (typeof arg0.value !== 'string') {
+                                            break;
+                                        }
+
+                                        const ast = parser.parse(arg0.value);
+
+                                        AstWalker.filterNestedNodes(ast.body, processNode, []);
+                                    }
+
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            (scope.parent ?? scope).addReference(node.callee);
+
+                            break;
+                    }
+
+                    break;
+                default:
+                    break;
             }
 
-            return isDeclerator
-                ? NodeFilterAction.StopPropagation
-                : NodeFilterAction.Skip;
-        }) as unknown) as (
-            | AutoIt3.FunctionDeclaration
-            | AutoIt3.VariableDeclaration
-            | AutoIt3.EnumDeclaration
-        )[];
+            relatedComments = null;
 
-        this.docBlocks = docBlocks;
+            return NodeFilterAction.Skip;
+        };
+
+        const processFunctionNode = (node: AutoIt3.FunctionDeclaration) => {
+            const originalScope = scope;
+            const functionScope = new Scope(node.location, this.uri, originalScope);
+
+            scope.addSubscope(functionScope);
+
+            relatedComments = null;
+            scope = functionScope;
+
+            AstWalker.filterNestedNodes(node.params, processNode, []);
+            AstWalker.filterNestedNodes(node.body, processNode, []);
+
+            scope = originalScope;
+        };
+
+        AstWalker.filterNestedNodes(this.program?.body ?? [], processNode, []);
+
+        /*
+         * Process references that couldn't be resolved during the initial pass.
+         * Now that all declarations have been collected, we can determine if they
+         * belong to the current scope (local) or a parent scope (global).
+         */
+        for (const { node, scope } of referencesInScope) {
+            const symbolKey = Symbol.getNodeName(node);
+
+            // Check if declaration exists in the scope chain (might have been declared later in same scope, or in parent)
+            const result = scope.getSymbolInScopeChain(symbolKey);
+
+            if (result !== undefined) {
+                // Declaration found — add as reference to that scope's symbol
+                result.symbol.addReference(node);
+            } else {
+                // No declaration found — add as reference to current scope (implicit global or undefined)
+                scope.addReference(node);
+            }
+        }
+
+        /*
+         * Process assignments without explicit scope (e.g., EnumDeclaration without Local/Global).
+         * Now that all symbols are collected, we can determine if they belong to global or local scope.
+         */
+        for (const { node, scope } of assignmentsInScope) {
+            const symbolKey = Symbol.getNodeName(node.id);
+
+            // Check if declaration exists in parent scopes (global)
+            const result = scope.parent?.getSymbolInScopeChain(symbolKey);
+
+            if (result !== undefined) {
+                // Global declaration exists — this modifies the global
+                result.scope.addDeclaration(node.id);
+            } else {
+                // No global declaration — add as local declaration
+                scope.addDeclaration(node.id);
+            }
+        }
 
         // const previousIncludes = this.includes;
         const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement') as AutoIt3.IncludeStatement[] | undefined;
@@ -418,15 +628,7 @@ export default class Script {
              */
         }));
 
-        // TODO: This URI needs to only be declared once, and imported wherever needed.
-        const uri = URI.from({ scheme: 'autoit3doc', path: 'native.au3' }).toString();
-
-        // Adding native include at the top of the list, to make sure it is always processed first.
-        this.includes.unshift({
-            statement: { type: 'IncludeStatement', file: '', library: true, location: { source: '', start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 1, offset: 0 } } },
-            uri,
-            promise: Promise.resolve(uri),
-        });
+        this.scope = scope;
     }
 
     public createInclude(include: AutoIt3.IncludeStatement): Include {
@@ -441,6 +643,36 @@ export default class Script {
         _include.promise.then((value) => _include.uri = value);
 
         return _include;
+    }
+
+    /**
+     * Creates a synthetic identifier node from a Literal node.
+     * Used for Eval, Call and IsDeclared expressions where the symbol name is a string literal.
+     */
+    protected createSyntheticNode(
+        literal: AutoIt3.Literal,
+        isVariable: boolean,
+    ): SyntheticIdentifier | SyntheticVariableIdentifier {
+        const value = String(literal.value);
+
+        if (isVariable) {
+            // Eval/IsDeclared argument may or may not include the $ prefix
+            const name = value.startsWith('$') ? value.slice(1) : value;
+
+            return {
+                type: 'SyntheticVariableIdentifier',
+                name,
+                location: literal.location,
+                node: literal,
+            };
+        }
+
+        return {
+            type: 'SyntheticIdentifier',
+            name: value,
+            location: literal.location,
+            node: literal,
+        };
     }
 
     public updateContent() {
@@ -532,8 +764,9 @@ export default class Script {
     public getNodesAt(line: number, column: number): Node[];
     public getNodesAt(line: Position | number, column: number = 0): Node[] {
         if (typeof line !== 'number') {
-            column = line.character + 1;
-            line = line.line + 1;
+            const location = PositionHelper.positionToLocation(line);
+            column = location.column;
+            line = location.line;
         }
 
         return this.getNestedNodesAtFromArray(
@@ -597,6 +830,21 @@ export default class Script {
                     column,
                     matches,
                 );
+
+                // Check for Eval/Call/IsDeclared with string literal argument and produce synthetic node
+                if (node.callee.type === 'Identifier') {
+                    const calleeName = node.callee.name.toLowerCase();
+
+                    if ((calleeName === 'eval' || calleeName === 'call' || calleeName === 'isdeclared') && node.arguments.length > 0) {
+                        const arg0 = node.arguments[0];
+
+                        if (arg0.type === 'Literal' && typeof arg0.value === 'string' && Parser.isPositionWithinLocation(line, column, arg0.location)) {
+                            const isVariable = calleeName === 'eval' || calleeName === 'isdeclared';
+                            const syntheticNode = this.createSyntheticNode(arg0, isVariable);
+                            matches.push(syntheticNode);
+                        }
+                    }
+                }
 
                 break;
             case 'ConditionalExpression':
@@ -703,6 +951,7 @@ export default class Script {
 
                 break;
             case 'Identifier':
+            case 'SyntheticIdentifier':
                 break;
             case 'IfStatement':
                 this.getNestedNodesAt(node.test, line, column, matches);
@@ -842,6 +1091,7 @@ export default class Script {
 
                 break;
             case 'VariableIdentifier':
+            case 'SyntheticVariableIdentifier':
                 break;
             case 'WhileStatement':
                 this.getNestedNodesAt(node.test, line, column, matches);
@@ -1104,6 +1354,7 @@ export default class Script {
 
                 return status;
             case 'Identifier':
+            case 'SyntheticIdentifier':
                 break;
             case 'IfStatement':
                 status = this.filterNestedNode(node.test, fn, matches);
@@ -1273,6 +1524,7 @@ export default class Script {
 
                 return status;
             case 'VariableIdentifier':
+            case 'SyntheticVariableIdentifier':
                 break;
             case 'WhileStatement':
                 status = this.filterNestedNode(node.test, fn, matches);
@@ -1329,196 +1581,6 @@ export default class Script {
         return NodeFilterAction.Continue;
     }
 
-    /**
-     * Get the declarator for the matching identifier.
-     * @param identifier identifier to find a matching declarator for
-     * @param stack a stack of already processed uri's that will be skipped from being processed any further.
-     * @param functions Function map for fallback lookups
-     * @param depth Recursive depth tracking variable
-     */
-    public getIdentifierDeclarator(
-        identifier:
-            | AutoIt3.IdentifierName
-            | AutoIt3.VariableIdentifier
-            | AutoIt3.Macro
-            | null,
-        stack: string[] = [],
-        functions: AutoIt3.FunctionDeclaration[] = [],
-        depth: number = 0,
-    ):
-        | AutoIt3.FormalParameter
-        | AutoIt3.FunctionDeclaration
-        | AutoIt3.VariableDeclaration
-        | AutoIt3.VariableDeclarationInWith
-        | AutoIt3.EnumDeclaration
-        | AutoIt3.EnumDeclarationInWith
-        | null {
-        if (identifier === null || identifier.type === 'Macro') {
-            return null;
-        }
-
-        const uri = this.uri?.toString();
-
-        if (uri !== undefined) {
-            if (stack.includes(uri)) {
-                return null;
-            }
-
-            stack.push(uri);
-        }
-
-        let declaration:
-            | AutoIt3.FormalParameter
-            | AutoIt3.FunctionDeclaration
-            | AutoIt3.VariableDeclaration
-            | AutoIt3.VariableDeclarationInWith
-            | AutoIt3.EnumDeclaration
-            | AutoIt3.EnumDeclarationInWith
-            | undefined
-            | null;
-
-        switch (identifier.type) {
-            case 'Identifier':
-                declaration = this.declarations.find((declaration) => declaration.type === 'FunctionDeclaration' && declaration.id.name.toLowerCase() === identifier.name.toLowerCase());
-
-                if (declaration == null && this.workspace !== undefined) {
-                    for (const include of this.includes) {
-                        if (include.uri !== null) {
-                            declaration = this.workspace
-                                .get(include.uri)
-                                ?.getIdentifierDeclarator(
-                                    identifier,
-                                    stack,
-                                    functions,
-                                    depth + 1,
-                                );
-
-                            if (
-                                declaration !== null &&
-                                declaration !== undefined
-                            ) {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                break;
-            case 'VariableIdentifier':
-                if (stack.length === 1) { // if length is 1, we are in the same file, as the initial identifier
-                    const nodesAtPosition = this.getNodesAt(
-                        identifier.location.start.line,
-                        identifier.location.start.column,
-                    );
-
-                    // Check if we are within a function
-                    if (nodesAtPosition[0]?.type === 'FunctionDeclaration') {
-                        if (identifier.type === 'VariableIdentifier') {
-                            // check function parameters
-                            declaration = declaration ??
-                                nodesAtPosition[0].params.find(
-                                    (parameter) => parameter.id.name.toLowerCase() === identifier.name.toLowerCase(),
-                                );
-
-                            // check lines/column BEFORE the node
-                            if ((declaration ?? null) === null) {
-                                const matches = [];
-                                this.filterNestedNode(
-                                    nodesAtPosition[0],
-                                    // eslint-disable-next-line @stylistic/no-extra-parens
-                                    (node) => ((node.type === 'VariableDeclarator' && node.id.name.toLowerCase() === identifier.name.toLowerCase() && identifier.location.start.offset >= node.location.start.offset) ? NodeFilterAction.Stop : NodeFilterAction.Skip),
-                                    matches,
-                                );
-                                declaration = matches[0];
-                            }
-                        }
-                    }
-                }
-
-                if ((declaration ?? null) === null) {
-                    // Global lookup
-                    const matches: AutoIt3.VariableDeclaration[] = [];
-                    this.filterNestedNodes(
-                        this.program?.body ?? null,
-                        (node) => {
-                            if (node.type === 'FunctionDeclaration') {
-                                functions.push(node);
-
-                                return NodeFilterAction.SkipAndStopPropagation;
-                            }
-
-                            if (node.type === 'VariableDeclarator' && (node.location.source !== identifier.location.source || node.location.start.offset <= identifier.location.start.offset)) {
-                                if (node.id.name.toLowerCase() === identifier.name.toLowerCase()) {
-                                    return NodeFilterAction.Stop;
-                                }
-                            }
-
-                            if (node.type === 'IncludeStatement' && this.workspace !== undefined) {
-                                const uri = this.includes.find(
-                                    (include) => include.statement.file === node.file && include.statement.library === node.library,
-                                )?.uri;
-
-                                if (typeof uri === 'string') {
-                                    declaration = this.workspace.get(uri)
-                                        ?.getIdentifierDeclarator(
-                                            identifier,
-                                            stack,
-                                            functions,
-                                            depth + 1,
-                                        );
-
-                                    if ((declaration ?? null) !== null) {
-                                        return NodeFilterAction.StopAndSkip;
-                                    }
-                                }
-                            }
-
-                            return NodeFilterAction.Skip;
-                        },
-                        matches,
-                    );
-
-                    if ((declaration ?? null) === null) {
-                        declaration = matches[0];
-                    }
-
-                    if ((declaration ?? null) === null && depth === 0) {
-                        this.filterNestedNodes(functions, (node) => {
-                            switch (node.type) {
-                                case 'VariableDeclaration':
-                                    return node.scope?.toLowerCase() === 'global'
-                                        ? NodeFilterAction.Skip
-                                        : NodeFilterAction.SkipAndStopPropagation;
-                                case 'VariableDeclarator':
-                                    if (node.id.name.toLowerCase() === identifier.name.toLowerCase()) {
-                                        declaration = node;
-
-                                        return NodeFilterAction.StopAndSkip;
-                                    }
-
-                                    return NodeFilterAction.Skip;
-                                case 'FunctionDeclaration':
-                                    return NodeFilterAction.Skip;
-                                default:
-                                    return NodeFilterAction.SkipAndStopPropagation;
-                            }
-                        }, []);
-                    }
-                }
-
-                break;
-            default:
-            {
-                const exhaustiveCheck: never = identifier;
-
-                // @ts-expect-error exhaustive check, should never happen
-                throw new Error(`Unhandled identifier type: ${exhaustiveCheck?.type}`);
-            }
-        }
-
-        return declaration ?? null;
-    }
-
     public getIncludes(): readonly Include[] {
         return this.includes;
     }
@@ -1529,5 +1591,31 @@ export default class Script {
         }
 
         return this.text.slice(location.start.offset, location.end.offset);
+    }
+
+    public getScope(): Scope {
+        return this.scope;
+    }
+
+    /**
+     * Find the innermost scope that contains the given position.
+     * Descends into subscopes using a while loop.
+     */
+    public getScopeAtPosition(position: Position): Scope {
+        let result = this.scope;
+
+        outer: while (true) {
+            for (const scope of result.getSubscopes()) {
+                if (scope.range !== undefined && PositionHelper.isPositionWithinLocationRange(position, scope.range)) {
+                    result = scope;
+
+                    continue outer;
+                }
+            }
+
+            break;
+        }
+
+        return result;
     }
 }

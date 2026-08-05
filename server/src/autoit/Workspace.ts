@@ -5,6 +5,11 @@ import Script from './Script';
 import native from './native.au3?raw';
 import { isAbsolutePath } from './Path';
 import EventEmitter from '@utils/EventEmitter';
+import Symbol, { type Node as SymbolNode } from './Symbol';
+import Scope, { SymbolKey } from './Scope';
+import DependencyGraph from './DependencyGraph';
+import { Position } from 'vscode-languageserver';
+import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -31,10 +36,12 @@ export type AutoIt3Configuration = {
 
 export class Workspace {
     protected scripts: ScriptList = new Map();
+    protected activeScripts = new Set<string>();
     protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
     protected configuration: AutoIt3Configuration | null = null;
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
+    public readonly dependencyGraph = new DependencyGraph();
 
     constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -83,13 +90,36 @@ export class Workspace {
 
         if (script !== undefined) {
             script.update(text);
-
-            return script;
+        } else {
+            script = new Script(text, URI.parse(_uri), this);
+            this.add(script);
+            script.triggerDiagnostics();
         }
 
-        script = new Script(text, URI.parse(_uri), this);
-        this.add(script);
-        script.triggerDiagnostics();
+        /*
+         * Collect all include URIs and set dependencies once
+         * This ensures old edges are cleaned up via setDependencies
+         */
+        const includeUris = Promise.all(
+            script.getIncludes().map((include) => include.promise),
+        );
+
+        includeUris.then((resolvedUris) => {
+            const dependencies: string[] = [
+                URI.from({
+                    scheme: 'autoit3doc',
+                    path: 'native.au3',
+                }).toString(),
+            ];
+
+            for (const resolvedUri of resolvedUris) {
+                if (resolvedUri !== null) {
+                    dependencies.push(resolvedUri);
+                }
+            }
+
+            this.dependencyGraph.setDependencies(_uri, dependencies);
+        });
 
         return script;
     }
@@ -228,5 +258,174 @@ export class Workspace {
 
     public getConfiguration(): AutoIt3Configuration | null {
         return this.configuration;
+    }
+
+    public openScript(uri: string, text: string) {
+        this.createOrUpdate(uri, text);
+        this.activeScripts.add(uri);
+    }
+
+    public updateScript(uri: string, text: string) {
+        this.createOrUpdate(uri, text);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public saveScript(uri: string, text: string) {
+        //
+    }
+
+    public closeScript(uri: string) {
+        this.activeScripts.delete(uri);
+    }
+
+    public getScopes(uri: string, position?: Position) {
+        const scopes: Scope[] = [];
+
+        let scope: Scope | undefined = this.scripts.get(uri)?.getScope();
+
+        if (scope === undefined) {
+            return scopes;
+        }
+
+        scopes.push(scope);
+
+        // If position is provided, include subscopes that contain the position
+        if (position !== undefined) {
+            this.collectSubscopesAtPosition(scope, position, scopes);
+        }
+
+        for (const dependency of this.dependencyGraph.resolveDependencies(uri)) {
+            scope = this.scripts.get(dependency)?.getScope();
+
+            if (scope !== undefined) {
+                scopes.push(scope);
+            }
+        }
+
+        return scopes;
+    }
+
+    /**
+     * Recursively collect subscopes that contain the given position.
+     * This ensures function parameters and local variables are found
+     * when looking up symbols within a function body.
+     */
+    protected collectSubscopesAtPosition(scope: Scope, position: Position, scopes: Scope[]): void {
+        for (const subscope of scope.getSubscopes()) {
+            if (subscope.range !== undefined && isPositionWithinLocationRange(position, subscope.range)) {
+                scopes.push(subscope);
+
+                // Recurse into nested scopes (e.g., nested functions if supported)
+                this.collectSubscopesAtPosition(subscope, position, scopes);
+            }
+        }
+    }
+
+    public getSymbol(uri: string, symbolKey: SymbolKey, position?: Position) {
+        const symbol: Symbol = new Symbol(symbolKey);
+
+        let scriptSymbol: Symbol | undefined;
+
+        for (const scope of this.getScopes(uri, position)) {
+            scriptSymbol = scope.getSymbol(symbolKey);
+
+            if (scriptSymbol === undefined) {
+                continue;
+            }
+
+            symbol.addSymbol(scriptSymbol);
+        }
+
+        return symbol;
+    }
+
+    /**
+     * Get declarations for a symbol only from the scope where the position is located.
+     * Walks up the scope chain from the innermost scope to find the first scope
+     * that has a declaration for the symbol.
+     */
+    public getDeclarationsAtPosition(uri: string, symbolKey: SymbolKey, position: Position) {
+        const script = this.scripts.get(uri);
+
+        if (script === undefined) {
+            return [];
+        }
+
+        // Find the innermost scope containing the position
+        const scope = script.getScopeAtPosition(position);
+
+        // Walk up the scope chain to find the symbol with declarations
+        const result = scope.getSymbolInScopeChain(symbolKey);
+
+        if (result === undefined) {
+            return [];
+        }
+
+        return [...result.symbol.getDeclarations()];
+    }
+
+    /**
+     * Get the symbol for a given node, merging across scripts for global scopes.
+     * For local scopes, the symbol is returned as-is.
+     * For global scopes, a new symbol is created and merged with all matching
+     * global symbols from the script's dependencies and reverse dependencies.
+     */
+    public resolveSymbolForNode(node: SymbolNode, symbolKey: SymbolKey): Symbol | undefined {
+        const scriptUri = node.location.source.toString();
+        const script = this.scripts.get(scriptUri);
+
+        if (script === undefined) {
+            return undefined;
+        }
+
+        /*
+         * For Identifiers and SyntheticIdentifiers (function names from Call),
+         * always use the global scope since function declarations are global
+         * and the position may fall within a function scope incorrectly
+         */
+        const scope = node.type === 'Identifier' || node.type === 'SyntheticIdentifier'
+            ? script.getScope()
+            : script.getScopeAtPosition(locationToPosition(node.location.start));
+
+        const symbol = scope.getSymbol(symbolKey);
+
+        if (symbol === undefined) {
+            return undefined;
+        }
+
+        // For local scopes, simply return the symbol as-is
+        if (!scope.isGlobal()) {
+            return symbol;
+        }
+
+        /*
+         * For global scopes, merge all matching global symbols
+         * from dependencies and reverse dependencies
+         */
+        const mergedSymbol = new Symbol(symbolKey);
+
+        mergedSymbol.addSymbol(symbol);
+
+        for (const depUri of this.dependencyGraph.resolveDependencies(scriptUri)) {
+            const depSymbol = this.scripts.get(depUri)
+                ?.getScope()
+                ?.getSymbol(symbolKey);
+
+            if (depSymbol !== undefined) {
+                mergedSymbol.addSymbol(depSymbol);
+            }
+        }
+
+        for (const revDepUri of this.dependencyGraph.resolveReverseDependencies(scriptUri)) {
+            const revDepSymbol = this.scripts.get(revDepUri)
+                ?.getScope()
+                ?.getSymbol(symbolKey);
+
+            if (revDepSymbol !== undefined) {
+                mergedSymbol.addSymbol(revDepSymbol);
+            }
+        }
+
+        return mergedSymbol;
     }
 }

@@ -1,10 +1,11 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
+import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3 } from 'autoit3-pegjs';
-import * as Parser from './autoit/Parser';
 import * as PositionHelper from './autoit/PositionHelper';
+import * as Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
 import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
@@ -36,6 +37,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         definitionProvider: {
             workDoneProgress: false,
         },
+        documentHighlightProvider: {
+            workDoneProgress: false,
+        },
         documentLinkProvider: {
             resolveProvider: false,
             workDoneProgress: false,
@@ -44,6 +48,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
             workDoneProgress: false,
         },
         documentSymbolProvider: {
+            workDoneProgress: false,
+        },
+        referencesProvider: {
             workDoneProgress: false,
         },
         signatureHelpProvider: {
@@ -96,8 +103,10 @@ connection.onDidCloseTextDocument((params) => {
 
 connection.onDocumentSymbol(getDocumentSymbol);
 connection.onDefinition(getDefinition);
+connection.onReferences(getReferences);
 connection.onCompletion(getCompletionItems);
 connection.onSignatureHelp(getSignatureHelp);
+connection.onDocumentHighlight(getDocumentHighlight);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
     // const documentText = documents.get(params.textDocument.uri)?.getText();
@@ -160,14 +169,18 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         };
     }
 
-    const identifierAtPos = nodesAt.find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const identifierAtPos = nodesAt.find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
 
     if (identifierAtPos === undefined) {
         return null;
     }
 
-    if (identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'Macro') {
-        const suggestion = identifierAtPos.type === 'Identifier' ? nativeSuggestions[identifierAtPos.name.toLowerCase()] : nativeSuggestions[identifierAtPos.value.toLowerCase()];
+    // Check native suggestions first
+    if (identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'Macro' || identifierAtPos.type === 'SyntheticIdentifier') {
+        const key = identifierAtPos.type === 'Macro'
+            ? identifierAtPos.value.toLowerCase()
+            : identifierAtPos.name.toLowerCase();
+        const suggestion = nativeSuggestions[key];
 
         if (suggestion !== undefined) {
             return {
@@ -179,21 +192,18 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         }
     }
 
-    let identifier:
-        | AutoIt3.FormalParameter
-        | AutoIt3.FunctionDeclaration
-        | AutoIt3.VariableDeclaration
-        | AutoIt3.VariableDeclarationInWith
-        | AutoIt3.EnumDeclaration
-        | AutoIt3.EnumDeclarationInWith
-        | null
-        | undefined = null;
+    // Use the new Symbol system with position-aware scope traversal
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
+    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
 
-    identifier = identifier ??
-        workspace.get(hoverParams.textDocument.uri)
-            ?.getIdentifierDeclarator(identifierAtPos);
+    if (symbol === undefined) {
+        return null;
+    }
 
-    if (!identifier) {
+    const declarations = [...symbol.getDeclarations()];
+    const docblocks = symbol.getDocblocks();
+
+    if (declarations.length === 0 && docblocks.size === 0) {
         return null;
     }
 
@@ -202,50 +212,64 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
         value: '',
     };
 
-    switch (identifier.type) {
-        case 'VariableDeclarator':
-        {
-            let value: string | null = null;
+    // Build hover text from declarations
+    for (const declaration of declarations) {
+        const docBlock = docblocks.get(declaration);
 
-            if (identifier.init !== null) {
-                value = Parser.AstToString(identifier.init);
+        if (contents.value === '') {
+            const displayName = symbol.getDisplayName();
+            let header = displayName;
+
+            // Find the parent declarator node for richer hover info
+            const declarationScript = workspace.get(declaration.location.source.toString());
+
+            if (declarationScript !== undefined) {
+                const position = PositionHelper.locationToPosition(declaration.location.start);
+                const declarationNodes = declarationScript.getNodesAt(position);
+                declarationNodes.reverse();
+
+                const declarator = declarationNodes.find((node): node is AutoIt3.VariableDeclaration | AutoIt3.FunctionDeclaration | AutoIt3.FormalParameter => node.type === 'VariableDeclarator' || node.type === 'FunctionDeclaration' || node.type === 'Parameter');
+
+                if (declarator !== undefined) {
+                    switch (declarator.type) {
+                        case 'VariableDeclarator':
+                        {
+                            let value: string | null = null;
+
+                            if (declarator.init !== null) {
+                                value = Parser.AstToString(declarator.init);
+                            }
+
+                            const dimensions = 'dimensions' in declarator && declarator.dimensions.length > 0
+                                ? '[' + declarator.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']'
+                                : '';
+
+                            header = `${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${value === null ? '' : ' = ' + value}`;
+
+                            break;
+                        }
+                        case 'FunctionDeclaration':
+                        {
+                            header = `Func ${declarator.id.name}(${Parser.AstArrayToStringArray(declarator.params).join(', ')})`;
+
+                            break;
+                        }
+                        case 'Parameter':
+                        {
+                            const parameterValue = declarator.init !== null ? Parser.AstToString(declarator.init) : null;
+
+                            header = `(parameter) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}`;
+
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
             }
 
-            const dimensions = 'dimensions' in identifier && identifier.dimensions.length > 0 ? '[' + identifier.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']' : '';
-
-            contents.value += `\`\`\`au3\n${identifierAtPos.type === 'VariableIdentifier' ? '$' : ''}${identifier.id.name}${dimensions}${value === null ? '' : ' = ' + value}\n\`\`\``;
-
-            break;
+            contents.value += `\`\`\`au3\n${header}\n\`\`\``;
         }
-        case 'FunctionDeclaration':
-        {
-            contents.value += `\`\`\`au3\nFunc ${identifier.id.name}(${Parser.AstArrayToStringArray(identifier.params).join(', ')})\n\`\`\``;
-
-            break;
-        }
-        case 'Parameter':
-        {
-            let parameterValue: string | number | boolean | null | undefined;
-
-            if (identifier.init !== null) {
-                parameterValue = Parser.AstToString(identifier.init);
-            }
-
-            contents.value += `\`\`\`au3\n(parameter) $${identifier.id.name}${parameterValue === undefined ? '' : ' = ' + parameterValue}\n\`\`\``;
-
-            break;
-        }
-        default:
-            return null;
-    }
-
-    const identifierScript = workspace.get(identifier.location.source);
-
-    if (identifierScript !== undefined && (
-        identifier.type === 'FunctionDeclaration' ||
-        identifier.type === 'VariableDeclarator'
-    )) {
-        const docBlock = identifierScript.docBlocks.get(identifier);
 
         if (docBlock !== undefined) {
             contents.value += `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
@@ -272,49 +296,98 @@ function getDocumentSymbol(
         return null;
     }
 
-    return script.declarations.map((declaration) => {
-        return {
-            kind: declaration.type === 'FunctionDeclaration' ? SymbolKind.Function : SymbolKind.Variable,
-            name: declaration.id.name,
-            range: PositionHelper.locationRangeToRange(
-                declaration.location,
-            ),
-            selectionRange: PositionHelper.locationRangeToRange(
-                declaration.id.location,
-            ),
-        };
-    });
+    const scope = script.getScope();
+    const symbols: DocumentSymbol[] = [];
+
+    for (const symbol of scope.getSymbols().values()) {
+        const subscopes = Array.from(scope.getSubscopes());
+
+        for (const declaration of symbol.getDeclarations()) {
+            const displayName = symbol.getDisplayName();
+            const name = declaration.type === 'VariableIdentifier'
+                ? displayName.slice(1)
+                : displayName;
+
+            symbols.push({
+                kind: declaration.type === 'Identifier'
+                    ? SymbolKind.Function
+                    : SymbolKind.Variable,
+                name: name,
+                range: PositionHelper.locationRangeToRange(
+                    declaration.location,
+                ),
+                selectionRange: PositionHelper.locationRangeToRange(
+                    declaration.location,
+                ),
+                children: declaration.type === 'Identifier'
+                    ? Array.from(
+                        subscopes
+                            .find((subscope) => subscope.range !== undefined && PositionHelper.isLocationRangeWithinLocationRange(declaration.location, subscope.range))
+                            ?.getSymbols()
+                            .values() ?? [],
+                    ).reduce<DocumentSymbol[]>((previous, childSymbol) => {
+                        for (const childDeclaration of childSymbol.getDeclarations()) {
+                            const displayName = childSymbol.getDisplayName();
+                            const name = childDeclaration.type === 'VariableIdentifier'
+                                ? displayName.slice(1)
+                                : displayName;
+
+                            previous.push({
+                                kind: childDeclaration.type === 'Identifier'
+                                    ? SymbolKind.Function
+                                    : SymbolKind.Variable,
+                                name: name,
+                                range: PositionHelper.locationRangeToRange(
+                                    childDeclaration.location,
+                                ),
+                                selectionRange: PositionHelper.locationRangeToRange(
+                                    childDeclaration.location,
+                                ),
+                            });
+                        }
+
+                        return previous;
+                    }, [])
+                    : [],
+            });
+        }
+    }
+
+    return symbols;
 }
 
 function getDefinition(params: DefinitionParams): LocationLink[] {
-    const nodesAt = workspace.get(params.textDocument.uri)
-        ?.getNodesAt(params.position);
-    const identifierAtPos = nodesAt?.reverse().find((node): node is AutoIt3.Identifier | AutoIt3.VariableIdentifier | AutoIt3.Macro => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro');
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return [];
+    }
+
+    const nodesAt = script.getNodesAt(params.position);
+    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
 
     if (identifierAtPos === undefined) {
         return [];
     }
 
-    const declarator = workspace.get(params.textDocument.uri)
-        ?.getIdentifierDeclarator(identifierAtPos);
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
 
-    if (declarator === null || declarator === undefined) {
+    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
+
+    if (symbol === undefined) {
         return [];
     }
 
-    const identifier = declarator.id;
-
-    return [
-        {
-            targetUri: declarator.location.source.toString(),
-            targetRange: PositionHelper.locationRangeToRange(
-                declarator.location,
-            ),
-            targetSelectionRange: PositionHelper.locationRangeToRange(
-                identifier.location,
-            ),
-        },
-    ];
+    // FIXME: make showing all declarations vs closest match toggle-able via setting
+    return [...symbol.getDeclarations()].map((declaration) => ({
+        targetUri: declaration.location.source.toString(),
+        targetRange: PositionHelper.locationRangeToRange(
+            declaration.location,
+        ),
+        targetSelectionRange: PositionHelper.locationRangeToRange(
+            declaration.location,
+        ),
+    }));
 }
 
 async function getCompletionItems(
@@ -337,4 +410,78 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
     return signatureHelpBridge.resolveSignatureHelp(
         params,
     );
+}
+
+function getReferences(params: ReferenceParams): Location[] | null | undefined {
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return null;
+    }
+
+    const nodesAt = script.getNodesAt(params.position);
+    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
+
+    if (identifierAtPos === undefined) {
+        return null;
+    }
+
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
+
+    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
+
+    if (symbol === undefined) {
+        return null;
+    }
+
+    const results: Location[] = [];
+
+    if (params.context.includeDeclaration) {
+        results.push(...[...symbol.getDeclarations()].map((declaration): Location => ({
+            uri: declaration.location.source.toString(),
+            range: PositionHelper.locationRangeToRange(declaration.location),
+        })));
+    }
+
+    results.push(...[...symbol.getReferences()].map((reference): Location => ({
+        uri: reference.location.source.toString(),
+        range: PositionHelper.locationRangeToRange(reference.location),
+    })));
+
+    return results;
+}
+
+function getDocumentHighlight(params: DocumentHighlightParams): DocumentHighlight[] | null | undefined {
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return null;
+    }
+
+    const nodesAt = script.getNodesAt(params.position);
+    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
+
+    if (identifierAtPos === undefined) {
+        return null;
+    }
+
+    const scope = identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'SyntheticIdentifier'
+        ? script.getScope()
+        : script.getScopeAtPosition(params.position);
+
+    const symbolKey = Symbol.getNodeName(identifierAtPos);
+
+    const symbol = scope.getSymbol(symbolKey);
+
+    if (symbol === undefined) {
+        return null;
+    }
+
+    return [
+        ...symbol.getDeclarations(),
+        ...symbol.getReferences(),
+        ...symbol.getAssignments(),
+    ].map<DocumentHighlight>((node) => ({
+        range: PositionHelper.locationRangeToRange(node.location),
+    }));
 }

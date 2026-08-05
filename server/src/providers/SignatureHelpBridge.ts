@@ -5,6 +5,7 @@ import * as PositionHelper from '../autoit/PositionHelper';
 import * as Parser from '../autoit/Parser';
 import Script, { Node, NodeFilterAction } from '../autoit/Script';
 import AstWalker from '../autoit/AstWalker';
+import Symbol from '../autoit/Symbol';
 
 type WhereAstTypeEquals<T extends { type: string }, S extends string> =
     T extends { type: S } ? T : never;
@@ -38,7 +39,7 @@ export class SignatureHelpBridge {
         const hasSyntaxErrors = script.getDiagnostics().some((diagnostic) => diagnostic.severity === DiagnosticSeverity.Error && diagnostic.message.includes('Syntax error'));
 
         let callExpression: CallExpressionNode | undefined;
-        let declarator: AutoIt3.FunctionDeclaration | null | ReturnType<typeof script.getIdentifierDeclarator>;
+        let declarator: AutoIt3.FunctionDeclaration | null = null;
 
         if (params.context?.isRetrigger && this.callExpression !== null && this.declarator !== null && hasSyntaxErrors) {
             callExpression = this.callExpression;
@@ -50,7 +51,7 @@ export class SignatureHelpBridge {
                 return null;
             }
 
-            callExpression = nodesAt.reverse().find((node): node is WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'> => node.type === 'CallExpression' && PositionHelper.isPositonWithinLocationRange(position, node.location));
+            callExpression = nodesAt.reverse().find((node): node is WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'> => node.type === 'CallExpression' && PositionHelper.isPositionWithinLocationRange(position, node.location));
 
             if (callExpression === undefined) {
                 return null;
@@ -62,13 +63,50 @@ export class SignatureHelpBridge {
 
             this.callExpression = callExpression;
 
-            declarator = script.getIdentifierDeclarator(callExpression.callee);
+            // Use the new Symbol system to find the function declaration
+            const callee = callExpression.callee as AutoIt3.Identifier;
+            const symbolKey = Symbol.getNodeName(callee);
+            const symbol = this.workpspace.resolveSymbolForNode(callee, symbolKey);
 
-            if (declarator === null || declarator.type === 'VariableDeclarator' || declarator.type === 'Parameter') { // FIXME: currently we don't look for identifier in the VariableDeclarator init!
+            if (symbol === undefined) {
+                return null;
+            }
+
+            for (const declaration of symbol.getDeclarations()) {
+                if (
+                    declaration.type === 'Identifier' &&
+                    declaration.name.toLowerCase() === callee.name.toLowerCase()
+                ) {
+                    // Find the actual function declaration node from the script
+                    const functionScript = this.workpspace.get(declaration.location.source);
+
+                    if (functionScript !== undefined) {
+                        const functionNode = functionScript.getNodesAt(
+                            declaration.location.start.line,
+                            declaration.location.start.column,
+                        ).find((node): node is AutoIt3.FunctionDeclaration => {
+                            return node.type === 'FunctionDeclaration' &&
+                                node.id.name.toLowerCase() === callee.name.toLowerCase();
+                        });
+
+                        if (functionNode !== undefined) {
+                            declarator = functionNode;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            if (declarator === null) {
                 return null;
             }
 
             this.declarator = declarator;
+        }
+
+        if (callExpression === undefined || declarator === null) {
+            return null;
         }
 
         const callExpressionHelper = new CallExpressionHelper(callExpression, script);
@@ -91,9 +129,9 @@ export class SignatureHelpBridge {
             return null;
         }
 
-        callExpression = callExpressionHelper.shadowExpression ?? callExpression;
+        const resolvedExpression: CallExpressionNode = callExpressionHelper.shadowExpression ?? callExpression;
 
-        if (callExpression.callee.type !== 'Identifier') {
+        if (resolvedExpression.callee.type !== 'Identifier') {
             return null;
         }
 
@@ -105,7 +143,7 @@ export class SignatureHelpBridge {
             signatures: [
                 {
                     label: declarator.id.name + '(' + Parser.AstArrayToStringArray(declarator.params).join(', ') + ')',
-                    documentation: callExpression.callee.name,
+                    documentation: (resolvedExpression.callee as AutoIt3.Identifier).name,
                     parameters: declarator.params.map((parameter) => ({
                         label: '$' + parameter.id.name,
                         documentation: undefined,
@@ -212,7 +250,7 @@ class CallExpressionHelper {
             }
         }
 
-        throw new UnfixableCallExpressionError('Failed to fix call expression after ' + attempts + ' attempts: ' + this.expression.location.source.toString());
+        throw new UnfixableCallExpressionError(`Failed to fix call expression after ${attempts} attempts: ${this.expression.location.source.toString()}`);
     }
 
     public getParameterLocations(): LocationRange[] {
@@ -307,7 +345,7 @@ class CallExpressionHelper {
                 source: this.expression.location.source,
             };
 
-            return PositionHelper.isPositonWithinLocationRange(position, locationRange) ? 0 : -1; // If position is within the parentheses, return 0, otherwise -1
+            return PositionHelper.isPositionWithinLocationRange(position, locationRange) ? 0 : -1; // If position is within the parentheses, return 0, otherwise -1
         }
 
         // Cursor offset in the text
@@ -341,7 +379,7 @@ class CallExpressionHelper {
 
     public isPositionWithinCallExpression(position: Position): boolean {
         if (this.shadowExpression === null) {
-            return PositionHelper.isPositonWithinLocationRange(position, this.expression.location);
+            return PositionHelper.isPositionWithinLocationRange(position, this.expression.location);
         }
 
         const offset = PositionHelper.positionToOffset(position, this.script.getText());

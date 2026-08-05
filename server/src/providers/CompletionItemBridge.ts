@@ -1,12 +1,11 @@
-import { CompletionItem, CompletionItemKind, CompletionList, MarkupKind, Position } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, CompletionList, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
+import { type AutoIt3 } from 'autoit3-pegjs';
 import { Workspace } from '../autoit/Workspace';
-import { Node, NodeFilterAction } from '../autoit/Script';
-import { AutoIt3 } from 'autoit3-pegjs';
-import { AstArrayToStringArray, AstToString, isPositionWithinLocation } from '../autoit/Parser';
+import Symbol from '../autoit/Symbol';
+import * as PositionHelper from '../autoit/PositionHelper';
+import * as Parser from '../autoit/Parser';
+import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
-
-type WhereAstTypeEquals<T extends { type: string }, S extends string> =
-    T extends { type: S } ? T : never;
 
 const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
     // eslint-disable-next-line @stylistic/array-bracket-newline
@@ -40,175 +39,134 @@ export class CompletionItemBridge {
         textDocumentUri: string,
         position: Position,
     ): CompletionItem[] | CompletionList | undefined | null {
-        const script = this.workpspace.get(textDocumentUri);
+        const scopes = this.workpspace.getScopes(textDocumentUri);
+        const symbols = new Map<string, Symbol>();
 
-        if (script === undefined) {
-            return;
-        }
+        // FIXME: filter out declarations declared AFTER the position.
 
-        const includes = [textDocumentUri];
+        for (const scope of scopes) {
+            scope.getSymbols().forEach((value, key) => symbols.set(key, value));
 
-        const declarationMap = new Map<string, WhereAstTypeEquals<Node, 'FunctionDeclaration' | 'VariableDeclarator' | 'Parameter'>>();
-
-        script.declarations.forEach((declaration) => {
-            const isFunction = declaration.type === 'FunctionDeclaration';
-
-            if (
-                isFunction &&
-                isPositionWithinLocation(
-                    position.line,
-                    position.character,
-                    declaration.location,
-                )
-            ) {
-                this.getDeclarationsInFunction(declaration, position.line + 1)
-                    .forEach((declaration) => {
-                        // We do not check if the declaration name is already in the map, because this scope takes precedence over the global scope
-                        declarationMap.set(
-                            declaration.id.name.toLowerCase(),
-                            declaration,
-                        );
-                    });
-            }
-
-            const key = isFunction ? declaration.id.name.toLowerCase() : '$' + declaration.id.name.toLowerCase();
-
-            if (!declarationMap.has(key)) {
-                declarationMap.set(key, declaration);
-            }
-        });
-
-        const configuration = this.workpspace.getConfiguration();
-
-        // Add includes
-        includes.push(
-            ...script.getIncludes()
-                .map((include) => include.uri)
-                .filter((uri) => uri !== null),
-        );
-
-        for (let index = 1; index < includes.length; index++) {
-            const uri = includes[index] as string;
-            const script = this.workpspace.get(uri);
-
-            if (script === undefined) {
+            if (scope.uri?.toString() !== textDocumentUri) {
                 continue;
             }
 
-            script.declarations.forEach((declaration) => {
-                const isFunction = declaration.type === 'FunctionDeclaration';
-
-                if (configuration?.ignoreInternalInIncludes && declaration.id.name.startsWith('__')) {
-                    // If the declaration is an internal variable and the setting is true for ignoring those, we return early.
-                    return;
+            for (const subScope of scope.getSubscopes()) {
+                if (subScope.range === undefined || !isPositionWithinLocationRange(position, subScope.range)) {
+                    continue;
                 }
 
-                const key = isFunction ? declaration.id.name.toLowerCase() : '$' + declaration.id.name.toLowerCase();
-
-                if (!declarationMap.has(key)) {
-                    declarationMap.set(key, declaration);
-                }
-            });
-
-            includes.push(
-                ...script.getIncludes()
-                    .map((include) => include.uri)
-                    .filter((uri) => uri !== null)
-                    .filter((uri) => !includes.includes(uri)),
-            );
+                subScope.getSymbols().forEach((value, key) => symbols.set(key, value));
+            }
         }
 
-        return [
-            ...Array.from(declarationMap.values())
-                .map((declaration) => this.declarationToCompletionItem(declaration)),
-            ...this.getNativeSuggestions(),
-        ];
+        return Array.from(symbols.values()).map<CompletionItem>((symbol) => ({
+            label: symbol.getDisplayName(),
+            kind: this.resolveCompletionItemKind(symbol),
+            documentation: this.resolveCompletionItemDocumentation(symbol),
+        }))
+            .concat(this.getNativeSuggestions());
     }
 
-    public declarationToCompletionItem(
-        declaration: WhereAstTypeEquals<Node, 'FunctionDeclaration' | 'VariableDeclarator' | 'Parameter'>,
-    ): CompletionItem {
-        const type = declaration.type;
+    public resolveCompletionItemDocumentation(symbol: Symbol): MarkupContent | undefined {
+        const declarations = [...symbol.getDeclarations()];
 
-        const script = this.workpspace.get(declaration.location.source);
+        if (declarations.length === 0) {
+            return undefined;
+        }
 
-        const docBlock = type === 'Parameter' ? null : script?.docBlocks.get(declaration) ?? null;
+        const declaration = declarations[0];
 
-        switch (type) {
-            case 'FunctionDeclaration':
-                return {
-                    label: declaration.id.name,
-                    kind: CompletionItemKind.Function,
-                    documentation: {
-                        kind: MarkupKind.Markdown,
-                        value: '```au3\nFunc ' + declaration.id.name + '(' + AstArrayToStringArray(declaration.params) + ')\n```' + (docBlock === null ? '' : `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`),
-                    },
-                };
+        if (declaration === undefined) {
+            return undefined;
+        }
+
+        const declarationScript = this.workpspace.get(declaration.location.source.toString());
+
+        if (declarationScript === undefined) {
+            return undefined;
+        }
+
+        const position = PositionHelper.locationToPosition(declaration.location.start);
+        const declarationNodes = declarationScript.getNodesAt(position);
+        declarationNodes.reverse();
+
+        const declarator = declarationNodes.find((node): node is AutoIt3.VariableDeclaration | AutoIt3.FunctionDeclaration | AutoIt3.FormalParameter => node.type === 'VariableDeclarator' || node.type === 'FunctionDeclaration' || node.type === 'Parameter');
+
+        if (declarator === undefined) {
+            return undefined;
+        }
+
+        let value = '';
+
+        switch (declarator.type) {
             case 'VariableDeclarator':
             {
-                let value: string | null = null;
+                let initValue: string | null = null;
 
-                if (declaration.init !== null) {
-                    value = AstToString(declaration.init);
+                if (declarator.init !== null) {
+                    initValue = Parser.AstToString(declarator.init);
                 }
 
-                return {
-                    label: '$' + declaration.id.name,
-                    kind: CompletionItemKind.Variable,
-                    documentation: {
-                        kind: MarkupKind.Markdown,
-                        value: `\`\`\`au3\n$${declaration.id.name}${value === null ? '' : ' = ' + value}\n\`\`\``,
-                    },
-                };
+                const dimensions = 'dimensions' in declarator && declarator.dimensions.length > 0
+                    ? '[' + declarator.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']'
+                    : '';
+
+                value = `\`\`\`au3\n${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${initValue === null ? '' : ' = ' + initValue}\n\`\`\``;
+
+                const variableDocBlock = symbol.getDocblocks().get(declaration);
+
+                if (variableDocBlock !== undefined) {
+                    value += `\n\n${variableDocBlock.summary.toString()}\n\n${variableDocBlock.description.toString()}\n\n${variableDocBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
+                }
+
+                break;
+            }
+            case 'FunctionDeclaration':
+            {
+                value = `\`\`\`au3\nFunc ${declarator.id.name}(${Parser.AstArrayToStringArray(declarator.params).join(', ')})\n\`\`\``;
+
+                const docBlock = symbol.getDocblocks().get(declaration);
+
+                if (docBlock !== undefined) {
+                    value += `\n\n${docBlock.summary.toString()}\n\n${docBlock.description.toString()}\n\n${docBlock.tags.map((tag) => tag.render()).join('\n\n')}`;
+                }
+
+                break;
             }
             case 'Parameter':
             {
-                let parameterValue: string | number | boolean | null | undefined;
+                const parameterValue = declarator.init !== null ? Parser.AstToString(declarator.init) : null;
 
-                if (declaration.init !== null) {
-                    parameterValue = AstToString(declaration.init);
-                }
+                value = `\`\`\`au3\n(parameter) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}\n\`\`\``;
 
-                return {
-                    label: '$' + declaration.id.name,
-                    kind: CompletionItemKind.Variable,
-                    documentation: {
-                        kind: MarkupKind.Markdown,
-                        value: `\`\`\`au3\n(parameter) $${declaration.id.name}${parameterValue === undefined ? '' : ' = ' + parameterValue}\n\`\`\``,
-                    },
-                };
+                break;
             }
             default:
-                throw new Error(`Unknown declaration type: ${type satisfies never}`);
+                return undefined;
         }
+
+        return {
+            kind: MarkupKind.Markdown,
+            value,
+        };
     }
 
-    // FIXME: this should be moved to script or AST related class/file
-    public getDeclarationsInFunction(
-        declaration: AutoIt3.FunctionDeclaration,
-        line: number | null = null,
-    ) {
-        const script = this.workpspace.get(declaration.location.source);
-
-        if (script === undefined) {
-            return [];
+    public resolveCompletionItemKind(symbol: Symbol): CompletionItemKind {
+        for (const declaration of symbol.getDeclarations()) {
+            switch (declaration.type) {
+                case 'Identifier':
+                    return CompletionItemKind.Function;
+                case 'VariableIdentifier':
+                    return CompletionItemKind.Variable;
+                case 'Macro':
+                    return CompletionItemKind.Constant;
+                default:
+                    break;
+            }
         }
 
-        const declarations: WhereAstTypeEquals<Node, 'Parameter' | 'VariableDeclarator'>[] = [];
-
-        script.filterNestedNode(declaration, (node) => {
-            if (line !== null && node.location.start.line >= line) {
-                return NodeFilterAction.SkipAndStopPropagation;
-            }
-
-            if (node.type === 'Parameter' || node.type === 'VariableDeclarator') {
-                return NodeFilterAction.Continue;
-            }
-
-            return NodeFilterAction.Skip;
-        }, declarations);
-
-        return declarations;
+        return CompletionItemKind.Variable;
     }
 
     public getNativeSuggestions() {
