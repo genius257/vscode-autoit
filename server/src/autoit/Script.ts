@@ -1608,6 +1608,7 @@ export default class Script {
             for (const scope of result.getSubscopes()) {
                 if (scope.range !== undefined && PositionHelper.isPositionWithinLocationRange(position, scope.range)) {
                     result = scope;
+
                     continue outer;
                 }
             }
