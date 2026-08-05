@@ -40,9 +40,10 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
 
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        const functionScope = functionScopes[0];
+
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
@@ -53,10 +54,11 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
+
+        const functionScope = functionScopes[0];
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
     test('Dim $x in function without existing global declares in function scope', function () {
@@ -66,9 +68,10 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
 
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        const functionScope = functionScopes[0];
+
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
@@ -80,10 +83,11 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
+
+        const functionScope = functionScopes[0];
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(2);
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
     test('Dim $x at global scope declares in global scope', function () {
@@ -128,7 +132,7 @@ IsDeclared('myVar')`);
         expect(symbol).toBeDefined();
 
         // The symbol should have references including the SyntheticVariableIdentifier from IsDeclared
-        const refNodes = [...(symbol?.getReferences() ?? [])];
+        const refNodes = [...symbol?.getReferences() ?? []];
         const syntheticRef = refNodes.find((node) => node.type === 'SyntheticVariableIdentifier');
         expect(syntheticRef).toBeDefined();
         expect((syntheticRef as { name: string }).name).toBe('myVar');
@@ -177,9 +181,10 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
 
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        const functionScope = functionScopes[0];
+
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
@@ -190,10 +195,11 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
+
+        const functionScope = functionScopes[0];
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
     test('Dim Enum $x in function without existing global declares in function scope', function () {
@@ -203,9 +209,10 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
 
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        const functionScope = functionScopes[0];
+
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
@@ -217,10 +224,11 @@ EndFunc`);
         const globalScope = script.getScope();
         const functionScopes = [...globalScope.getSubscopes()];
         expect(functionScopes).toHaveLength(1);
-        const functionScope = functionScopes[0]!;
+
+        const functionScope = functionScopes[0];
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(2);
-        expect(functionScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
     });
 
     test('Enum $x at global scope declares in global scope', function () {

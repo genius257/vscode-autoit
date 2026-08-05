@@ -240,6 +240,7 @@ export default class Script {
         /** Holds potential docblock comment(s) between non comment nodes */
         let relatedComments: AutoIt3.MultiLineComment | AutoIt3.SingleLineComment[] | null = null;
         let scope = new Scope(
+
             // FIXME: AutoIt.program is currently missing location property
             PositionHelper.rangeToLocationRange({ start: { character: 0, line: 0 }, end: { character: 0, line: 0 } }),
             this.uri,
@@ -330,13 +331,16 @@ export default class Script {
                     break;
                 case 'VariableDeclaration':
                     {
-                        // FIXME: Static variables (node.static_ === true) should always be local,
-                        // but are currently deferred to assignmentsInScope like Dim. Handle Static separately.
+                        /*
+                         * FIXME: Static variables (node.static_ === true) should always be local,
+                         * but are currently deferred to assignmentsInScope like Dim. Handle Static separately.
+                         */
                         const shouldDefer = (node.scope === 'dim' || node.scope === null) && !scope.isGlobal();
 
                         node.declarations.forEach((declaration) => {
                             if (shouldDefer) {
                                 assignmentsInScope.push({ node: declaration, scope });
+
                                 return;
                             }
 
@@ -386,6 +390,7 @@ export default class Script {
                                             break;
                                         }
 
+                                        // eslint-disable-next-line @stylistic/multiline-comment-style
                                         // FIXME: declaration missing a symbol?
                                         // const declaration = new Declaration(node.callee);
 
@@ -472,9 +477,11 @@ export default class Script {
 
         AstWalker.filterNestedNodes(this.program?.body ?? [], processNode, []);
 
-        // Process references that couldn't be resolved during the initial pass.
-        // Now that all declarations have been collected, we can determine if they
-        // belong to the current scope (local) or a parent scope (global).
+        /*
+         * Process references that couldn't be resolved during the initial pass.
+         * Now that all declarations have been collected, we can determine if they
+         * belong to the current scope (local) or a parent scope (global).
+         */
         for (const { node, scope } of referencesInScope) {
             const symbolKey = Symbol.getNodeName(node);
 
@@ -490,8 +497,10 @@ export default class Script {
             }
         }
 
-        // Process assignments without explicit scope (e.g., EnumDeclaration without Local/Global).
-        // Now that all symbols are collected, we can determine if they belong to global or local scope.
+        /*
+         * Process assignments without explicit scope (e.g., EnumDeclaration without Local/Global).
+         * Now that all symbols are collected, we can determine if they belong to global or local scope.
+         */
         for (const { node, scope } of assignmentsInScope) {
             const symbolKey = Symbol.getNodeName(node.id);
 

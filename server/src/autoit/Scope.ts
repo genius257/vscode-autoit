@@ -3,7 +3,7 @@ import { URI } from 'vscode-uri';
 import Symbol, { Node } from './Symbol';
 import { OpaqueType } from '@utils/OpaqueType';
 
-export type SymbolKey = OpaqueType<string, "SymbolKey">;
+export type SymbolKey = OpaqueType<string, 'SymbolKey'>;
 
 export default class Scope {
     public readonly id: string;
@@ -62,6 +62,7 @@ export default class Scope {
      * Returns the symbol and the scope where it was found.
      */
     public getSymbolInScopeChain(symbolKey: SymbolKey): { symbol: Symbol, scope: Scope } | undefined {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let searchScope: Scope | null = this;
 
         while (searchScope !== null) {

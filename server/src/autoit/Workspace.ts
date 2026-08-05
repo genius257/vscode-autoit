@@ -96,15 +96,20 @@ export class Workspace {
             script.triggerDiagnostics();
         }
 
-        // Collect all include URIs and set dependencies once
-        // This ensures old edges are cleaned up via setDependencies
+        /*
+         * Collect all include URIs and set dependencies once
+         * This ensures old edges are cleaned up via setDependencies
+         */
         const includeUris = Promise.all(
             script.getIncludes().map((include) => include.promise),
         );
 
         includeUris.then((resolvedUris) => {
             const dependencies: string[] = [
-                URI.from({ scheme: 'autoit3doc', path: 'native.au3' }).toString(),
+                URI.from({
+                    scheme: 'autoit3doc',
+                    path: 'native.au3',
+                }).toString(),
             ];
 
             for (const resolvedUri of resolvedUris) {
@@ -264,6 +269,7 @@ export class Workspace {
         this.createOrUpdate(uri, text);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public saveScript(uri: string, text: string) {
         //
     }
@@ -308,6 +314,7 @@ export class Workspace {
         for (const subscope of scope.getSubscopes()) {
             if (subscope.range !== undefined && isPositionWithinLocationRange(position, subscope.range)) {
                 scopes.push(subscope);
+
                 // Recurse into nested scopes (e.g., nested functions if supported)
                 this.collectSubscopesAtPosition(subscope, position, scopes);
             }
@@ -371,9 +378,11 @@ export class Workspace {
             return undefined;
         }
 
-        // For Identifiers and SyntheticIdentifiers (function names from Call),
-        // always use the global scope since function declarations are global
-        // and the position may fall within a function scope incorrectly
+        /*
+         * For Identifiers and SyntheticIdentifiers (function names from Call),
+         * always use the global scope since function declarations are global
+         * and the position may fall within a function scope incorrectly
+         */
         const scope = node.type === 'Identifier' || node.type === 'SyntheticIdentifier'
             ? script.getScope()
             : script.getScopeAtPosition(locationToPosition(node.location.start));
@@ -389,14 +398,18 @@ export class Workspace {
             return symbol;
         }
 
-        // For global scopes, merge all matching global symbols
-        // from dependencies and reverse dependencies
+        /*
+         * For global scopes, merge all matching global symbols
+         * from dependencies and reverse dependencies
+         */
         const mergedSymbol = new Symbol(symbolKey);
 
         mergedSymbol.addSymbol(symbol);
 
         for (const depUri of this.dependencyGraph.resolveDependencies(scriptUri)) {
-            const depSymbol = this.scripts.get(depUri)?.getScope()?.getSymbol(symbolKey);
+            const depSymbol = this.scripts.get(depUri)
+                ?.getScope()
+                ?.getSymbol(symbolKey);
 
             if (depSymbol !== undefined) {
                 mergedSymbol.addSymbol(depSymbol);
@@ -404,7 +417,9 @@ export class Workspace {
         }
 
         for (const revDepUri of this.dependencyGraph.resolveReverseDependencies(scriptUri)) {
-            const revDepSymbol = this.scripts.get(revDepUri)?.getScope()?.getSymbol(symbolKey);
+            const revDepSymbol = this.scripts.get(revDepUri)
+                ?.getScope()
+                ?.getSymbol(symbolKey);
 
             if (revDepSymbol !== undefined) {
                 mergedSymbol.addSymbol(revDepSymbol);

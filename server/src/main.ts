@@ -412,7 +412,7 @@ function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
     );
 }
 
-function getReferences(params: ReferenceParams): Location[]|null|undefined {
+function getReferences(params: ReferenceParams): Location[] | null | undefined {
     const script = workspace.get(params.textDocument.uri);
 
     if (script === undefined) {
