@@ -54,6 +54,16 @@ export class Workspace {
         });
         this.connection?.onDidChangeConfiguration((change) => {
             this.configuration = change.settings.autoit3;
+
+            /*
+             * TODO:
+             * Compare new and old autoit3 configuration.
+             * If installDir or user defined libraries changed, then
+             * Clear each scripts include cache and re-trigger parsing.
+             *
+             * A new script method might be needed, to re-analyze the script,
+             * without re-parsing the text, since nothing changed in the AST.
+             */
         });
 
         const script = new Script(native, URI.from({ scheme: 'autoit3doc', path: 'native.au3' }));
