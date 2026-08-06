@@ -26,6 +26,7 @@ export default tseslint.config({
     "@typescript-eslint/member-ordering": ["error"],
     "@typescript-eslint/no-unnecessary-condition": ["error"],
     "@typescript-eslint/restrict-template-expressions": ["error", {allowNever: true, allowNumber: true}],
+    "@typescript-eslint/explicit-member-accessibility": "error",
     "no-warning-comments": ['error'],
 
     // stylistic
