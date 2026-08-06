@@ -179,7 +179,7 @@ export default class TypeResolver {
 
     // private validArrayKeyType(type: Type|null): boolean
 
-    private parse(tokenIterator): TypeNode {
+    private parse(tokenIterator: TokenIterator): TypeNode {
         // eslint-disable-next-line no-useless-catch
         try {
             const ast = this.typeParser.parse(tokenIterator);
