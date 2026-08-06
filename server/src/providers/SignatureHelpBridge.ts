@@ -47,7 +47,7 @@ export class SignatureHelpBridge {
         } else {
             const nodesAt = script.getNodesAt(position);
 
-            if (nodesAt === undefined) {
+            if (nodesAt.length === 0) {
                 return null;
             }
 
