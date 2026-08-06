@@ -302,12 +302,9 @@ export default class AstWalker {
             case 'PreProcStatement':
                 break;
             case 'RedimExpression':
-                // return this.filterNestedNodes(node.declarations, line, column);
-
-                // NOTE: redim ts type is not implemented as of writing this code iteration, and not needed for current intellisense anyways.
-
-                // TODO: implement at a later date, for hover support on the variables, and more.
-                break;
+                return this.filterNestedNodes(node.declarations, fn, matches);
+            case 'RedimIdentifierExpression':
+                return this.filterNestedNode(node.id, fn, matches);
             case 'ReturnStatement':
                 return this.filterNestedNode(node.value, fn, matches);
             case 'SelectCase':

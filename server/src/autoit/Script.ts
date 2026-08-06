@@ -68,6 +68,7 @@ export type Node =
     | AutoIt3.ElseIfClauseInWith
     | AutoIt3.ElseClause
     | AutoIt3.ElseClauseInWith
+    | AutoIt3.RedimIdentifierExpression
     | SyntheticIdentifier
     | SyntheticVariableIdentifier;
 
@@ -94,7 +95,8 @@ export type NodeList =
     | AutoIt3.ElseClauseInWith[]
     | (AutoIt3.ElseClause | AutoIt3.ElseIfClause)[]
     | (AutoIt3.ElseClauseInWith | AutoIt3.ElseIfClauseInWith)[]
-    | AutoIt3.FunctionDeclaration[];
+    | AutoIt3.FunctionDeclaration[]
+    | AutoIt3.RedimIdentifierExpression[];
 
 export enum NodeFilterAction {
     /** Adds the current node and continues down the branch */
@@ -966,11 +968,12 @@ export default class Script {
             case 'PreProcStatement':
                 break;
             case 'RedimExpression':
-                // return this.getNestedNodesAtFromArray(node.declarations, line, column);
+                this.getNestedNodesAtFromArray(node.declarations, line, column, matches);
 
-                // NOTE: redim ts type is not implemented as of writing this code iteration, and not needed for current intellisense anyways.
+                break;
+            case 'RedimIdentifierExpression':
+                this.getNestedNodesAt(node.id, line, column, matches);
 
-                // TODO: implement at a later date, for hover support on the variables, and more.
                 break;
             case 'ReturnStatement':
                 return this.getNestedNodesAt(node.value, line, column, matches);
@@ -1376,12 +1379,9 @@ export default class Script {
             case 'PreProcStatement':
                 break;
             case 'RedimExpression':
-                // return this.filterNestedNodes(node.declarations, line, column);
-
-                // NOTE: redim ts type is not implemented as of writing this code iteration, and not needed for current intellisense anyways.
-
-                // TODO: implement at a later date, for hover support on the variables, and more.
-                break;
+                return this.filterNestedNodes(node.declarations, fn, matches);
+            case 'RedimIdentifierExpression':
+                return this.filterNestedNode(node.id, fn, matches);
             case 'ReturnStatement':
                 return this.filterNestedNode(node.value, fn, matches);
             case 'SelectCase':
