@@ -131,7 +131,7 @@ export default class Script {
     protected hints: ScriptHint[] = [];
 
     /** A cache of all currently resolved include statements, for the current script instance */
-    protected includeCache: Include[] = [];// FIXME: if script is moved, this needs to be cleared.
+    protected includeCache: Include[] = [];
     protected includes: Include[] = [];
 
     /** Reference count */
