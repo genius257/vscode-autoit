@@ -77,6 +77,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 const workspace = new Workspace(connection);
 workspace.eventEmitter.on('diagnostics', function ({ uri, diagnostics }) {
     // connection.window.showWarningMessage("onDiagnostics");
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     connection.sendDiagnostics({
         uri,
         diagnostics,
