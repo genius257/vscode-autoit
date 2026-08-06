@@ -22,7 +22,7 @@ export default class Scope {
         this.uri = uri;
         this.range = range;
         this.parent = parent;
-        this.id = `${uri}:${range?.start.line}:${range?.start.column}`;
+        this.id = `${uri?.toString()}:${range?.start.line}:${range?.start.column}`;
     }
 
     public isDescendantOf(ancestor: Scope): boolean {
