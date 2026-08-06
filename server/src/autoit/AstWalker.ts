@@ -189,9 +189,6 @@ export default class AstWalker {
 
                 return status;
             case 'FunctionDeclaration':
-                // FIXME: the fix made here should be made for all multi property nodes cases, here and in other filter functions.
-
-                // FIXME: assert status and return the most relevant or stop when reaching stop enum values and return that?
                 status = this.filterNestedNode(node.id, fn, matches);
 
                 if (
