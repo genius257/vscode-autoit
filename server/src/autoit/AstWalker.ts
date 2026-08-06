@@ -413,6 +413,8 @@ export default class AstWalker {
 
                 return status;
             default:
+                node satisfies never;
+
                 // @ts-expect-error exhaustive check, this should never happen
                 throw new Error(`Unsupported type: ${node.type}`);
         }
