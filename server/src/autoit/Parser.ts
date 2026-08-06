@@ -96,7 +96,7 @@ export function AstToString(
         case 'EmptyStatement':
             return '';
         case 'EnumDeclaration':
-            return (ast.scope === null ? '' : ast.scope + ' ') + (ast.constant ? 'Const ' : '') + 'Enum Step ' + ast.stepoperator + ast.stepval.toString() + AstArrayToStringArray(ast.declarations);
+            return (ast.scope === null ? '' : ast.scope + ' ') + (ast.constant ? 'Const ' : '') + 'Enum Step ' + ast.stepoperator + ast.stepval.toString() + AstArrayToStringArray(ast.declarations).join(', ');
         case 'ExitLoopStatement':
             return 'ExitLoop ' + AstToString(ast.level);
         case 'ExitStatement':
@@ -126,7 +126,7 @@ export function AstToString(
 
             return JSON.stringify(ast.value);
         case 'LogicalExpression':
-            return ast.left + ' ' + ast.operator + ' ' + ast.right;
+            return AstToString(ast.left) + ' ' + ast.operator + ' ' + AstToString(ast.right);
         case 'Macro':
             return ast.value;
         case 'MemberExpression':
@@ -164,13 +164,13 @@ export function AstToString(
         case 'UnaryExpression':
             return ast.operator + AstToString(ast.argument);
         case 'VariableDeclaration':
-            return (ast.scope === null ? '' : ast.scope + ' ') + (ast.constant ? 'Const ' : '') + AstArrayToStringArray(ast.declarations);
+            return (ast.scope === null ? '' : ast.scope + ' ') + (ast.constant ? 'Const ' : '') + AstArrayToStringArray(ast.declarations).join(', ');
         case 'VariableDeclarator':
             return AstToString(ast.id) + ' = ' + AstToString(ast.init);
         case 'VariableIdentifier':
             return '$' + ast.name;
         case 'WhileStatement':
-            return 'While ' + ast.test + '\n' + AstArrayToStringArray(ast.body).join('\n') + '\nWEnd';
+            return 'While ' + AstToString(ast.test) + '\n' + AstArrayToStringArray(ast.body).join('\n') + '\nWEnd';
         case 'WithStatement':
             return 'With ' + AstToString(ast.object) + '\n' + AstArrayToStringArray(ast.body).join('\n') + '\nEndWith';
         default:
