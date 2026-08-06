@@ -27,7 +27,7 @@ export default class FqsenResolver {
             2,
         ) as [string] | [string, string];
 
-        const namespaceAliases = context.getNamespaceAliases;
+        const namespaceAliases = context.getNamespaceAliases();
 
         if (!(typeParts[0] in namespaceAliases)) {
             let namespace = context.getNamespace();
