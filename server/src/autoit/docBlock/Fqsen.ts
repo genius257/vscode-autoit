@@ -5,7 +5,6 @@ export default class Fqsen {
     /** name of the element without path. */
     private name: string;
 
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor, @typescript-eslint/no-unused-vars
     public constructor(fqsen: string) {
         const regex = /^\\([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\\]*)?(?:::\$?([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*))?(?:\(\))?$/;
 
