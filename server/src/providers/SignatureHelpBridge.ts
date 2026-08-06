@@ -32,7 +32,10 @@ export class SignatureHelpBridge {
         const script = this.workpspace.get(textDocumentUri);
 
         if (script === undefined) {
-            // todo: log error in workspace console
+            this.workpspace.getConnection()?.console.error(
+                `Could not find script for document: ${textDocumentUri}`,
+            );
+
             return null;
         }
 
