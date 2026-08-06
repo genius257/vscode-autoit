@@ -4,6 +4,7 @@ import { URI } from 'vscode-uri';
 import * as Parser from './Parser';
 import { Workspace } from './Workspace';
 import * as PositionHelper from './PositionHelper';
+import assertCannotReach from '@utils/assertCannotReach';
 import debounce from '@utils/debounce';
 import FqsenResolver from './docBlock/FqsenResolver';
 import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
@@ -662,7 +663,7 @@ export default class Script {
 
                 break;
             default:
-                this.assertCannotReach(severity, `Unsupported diagnostic severity: "${severity}"`);
+                assertCannotReach(severity, `Unsupported diagnostic severity: "${severity}"`);
         }
 
         /*
@@ -1069,7 +1070,7 @@ export default class Script {
 
                 break;
             default:
-                this.assertCannotReach(node, `Unsupported node type: "${type}"`);
+                assertCannotReach(node, `Unsupported node type: "${type}"`);
         }
 
         return matches;
@@ -1604,11 +1605,6 @@ export default class Script {
             location: literal.location,
             node: literal,
         };
-    }
-
-    // FIXME: move this to a helper file
-    protected assertCannotReach(x: never, message: string = 'Unexpected unreachable code reached.'): never {
-        throw new Error(message);
     }
 
     /** @internal */
