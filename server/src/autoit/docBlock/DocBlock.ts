@@ -20,7 +20,9 @@ export default class DocBlock {
     ) {
         this.summary = summary;
         this.description = description ?? new Description('');
-        tags.forEach((tag) => this.addTag(tag));
+        tags.forEach((tag) => {
+            this.addTag(tag);
+        });
 
         this.context = context;
         this.location = location;

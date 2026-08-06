@@ -15,16 +15,16 @@ export default class InvalidTag extends Tag {
         this.body = body;
     }
 
-    public getException(): unknown | null {
+    public static override create(body: string, name: string = ''): InvalidTag {
+        return new this(name, body);
+    }
+
+    public getException(): unknown {
         return this.throwable;
     }
 
     public getName(): string {
         return this.name;
-    }
-
-    public static override create(body: string, name: string = ''): InvalidTag {
-        return new this(name, body);
     }
 
     public withError(exception: unknown): InvalidTag {
@@ -40,9 +40,7 @@ export default class InvalidTag extends Tag {
     // private flattenArguments(value: unknown): unknown
 
     public render(formatter: Formatter | null = null): string {
-        if (formatter === null) {
-            formatter = new PassthroughFormatter();
-        }
+        formatter ??= new PassthroughFormatter();
 
         return formatter.format(this);
     }

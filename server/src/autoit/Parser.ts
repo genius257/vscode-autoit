@@ -96,7 +96,7 @@ export function AstToString(
         case 'EmptyStatement':
             return '';
         case 'EnumDeclaration':
-            return (ast.scope === null ? '' : ast.scope + ' ') + (ast.constant ? 'Const ' : '') + 'Enum Step ' + ast.stepoperator + ast.stepval + AstArrayToStringArray(ast.declarations);
+            return (ast.scope === null ? '' : ast.scope + ' ') + (ast.constant ? 'Const ' : '') + 'Enum Step ' + ast.stepoperator + ast.stepval.toString() + AstArrayToStringArray(ast.declarations);
         case 'ExitLoopStatement':
             return 'ExitLoop ' + AstToString(ast.level);
         case 'ExitStatement':

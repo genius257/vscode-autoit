@@ -68,9 +68,7 @@ export default class StandardTagFactory extends TagFactory {
     }
 
     public create(tagLine: string, context: TypeContext | null = null): Tag {
-        if (context === null) {
-            context = new TypeContext('');
-        }
+        context ??= new TypeContext('');
 
         const [
             tagName,

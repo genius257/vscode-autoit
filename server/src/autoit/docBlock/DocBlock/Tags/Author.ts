@@ -13,15 +13,7 @@ export default class Author extends BaseTag {
         this.authorEmail = authorEmail;
     }
 
-    public getAuthorName(): string {
-        return this.authorName;
-    }
-
-    public getEmail(): string {
-        return this.authorEmail;
-    }
-
-    static override create(body: string): Author | null {
+    public static override create(body: string): Author | null {
         const splitTagContent = body.match(/^([^<]*)(?:<([^>]*)>)?$/u) as null | (RegExpMatchArray & { '1': string });
 
         if (splitTagContent === null) {
@@ -32,6 +24,14 @@ export default class Author extends BaseTag {
         const authorEmail = splitTagContent[2]?.trim() ?? '';
 
         return new this(authorName, authorEmail);
+    }
+
+    public getAuthorName(): string {
+        return this.authorName;
+    }
+
+    public getEmail(): string {
+        return this.authorEmail;
     }
 
     public toString(): string {

@@ -35,25 +35,29 @@ export type AutoIt3Configuration = {
 };
 
 export class Workspace {
+    public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
+    public readonly dependencyGraph = new DependencyGraph();
     protected scripts: ScriptList = new Map();
     protected activeScripts = new Set<string>();
     protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
     protected configuration: AutoIt3Configuration | null = null;
-    public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
-    public readonly dependencyGraph = new DependencyGraph();
 
-    constructor(connection: Connection | null = null) {
+    public constructor(connection: Connection | null = null) {
         this.connection = connection;
 
         this.connection?.onInitialized(() => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.connection?.workspace.getConfiguration('autoit3').then((configuration: AutoIt3Configuration) => {
                 this.configuration = configuration;
             });
+
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.connection?.client.register(DidChangeConfigurationNotification.type, { section: 'autoit3' });
         });
         this.connection?.onDidChangeConfiguration((change) => {
-            this.configuration = change.settings.autoit3;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            this.configuration = change.settings.autoit3 as AutoIt3Configuration;
 
             /*
              * TODO:
@@ -114,6 +118,7 @@ export class Workspace {
             script.getIncludes().map((include) => include.promise),
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         includeUris.then((resolvedUris) => {
             const dependencies: string[] = [
                 URI.from({
@@ -192,80 +197,6 @@ export class Workspace {
         return promise;
     }
 
-    protected includeLibrary(
-        uri: string,
-        promise: IncludePromise,
-        configuration: AutoIt3Configuration | null,
-    ): IncludePromise {
-        return promise.then((includeResolve) => (includeResolve === null && typeof configuration?.installDir === 'string' ? this.openTextDocument(Utils.resolvePath(URI.file(configuration.installDir), 'Include', uri)) : includeResolve));
-    }
-
-    protected includeUserDefined(
-        uri: string,
-        promise: IncludePromise,
-        configuration: AutoIt3Configuration | null,
-    ): IncludePromise {
-        for (const path of configuration?.userDefinedLibraries ?? []) {
-            promise = promise.then((includeResolve) => (includeResolve === null
-                ? this.openTextDocument(Utils.resolvePath(URI.file(path), uri))
-                : includeResolve
-            ));
-        }
-
-        return promise;
-    }
-
-    protected includeLocal(
-        uri: string,
-        documentUri: GrammarSource,
-        promise: IncludePromise,
-    ): IncludePromise {
-        // If document uri starts with 'untitled:', it is not yet saved to disk
-        const isUntitled = documentUri.toString().startsWith('untitled:');
-
-        // HACK: currently i check if the documentUri startsWith 'untitled:' to detect files not yet saved to disk. I cannot find a better solution so far...
-        return promise.then((includeResolve) => (
-            includeResolve === null && !isUntitled
-                ? this.openTextDocument(isAbsolutePath(uri)
-                    ? URI.file(uri)
-                    : Utils.resolvePath(
-                        Utils.dirname(URI.parse(documentUri.toString())),
-                        uri,
-                    ))
-                : includeResolve
-        ));
-    }
-
-    protected openTextDocument(uri: URI): IncludePromise {
-        if (uri.scheme !== 'file') {
-            return Promise.resolve(null);
-        }
-
-        if (this.exists(uri)) {
-            return Promise.resolve({ uri: uri, text: null });
-        }
-
-        const resolvingInclude = this.resolvingIncludes.get(uri.toString());
-
-        if (resolvingInclude !== undefined) {
-            return resolvingInclude;
-        }
-
-        const promise = this.connection?.sendRequest<string | null>('openTextDocument', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve })) ?? Promise.resolve(null);
-
-        this.resolvingIncludes.set(uri.toString(), promise);
-
-        promise.then((value) => {
-            if (value !== null && value.text !== null) {
-                this.createOrUpdate(value.uri, value.text);
-            }
-
-            this.resolvingIncludes.delete(uri.toString());
-        });
-
-        return promise;
-    }
-
     public getConfiguration(): AutoIt3Configuration | null {
         return this.configuration;
     }
@@ -313,22 +244,6 @@ export class Workspace {
         }
 
         return scopes;
-    }
-
-    /**
-     * Recursively collect subscopes that contain the given position.
-     * This ensures function parameters and local variables are found
-     * when looking up symbols within a function body.
-     */
-    protected collectSubscopesAtPosition(scope: Scope, position: Position, scopes: Scope[]): void {
-        for (const subscope of scope.getSubscopes()) {
-            if (subscope.range !== undefined && isPositionWithinLocationRange(position, subscope.range)) {
-                scopes.push(subscope);
-
-                // Recurse into nested scopes (e.g., nested functions if supported)
-                this.collectSubscopesAtPosition(subscope, position, scopes);
-            }
-        }
     }
 
     public getSymbol(uri: string, symbolKey: SymbolKey, position?: Position) {
@@ -419,7 +334,7 @@ export class Workspace {
         for (const depUri of this.dependencyGraph.resolveDependencies(scriptUri)) {
             const depSymbol = this.scripts.get(depUri)
                 ?.getScope()
-                ?.getSymbol(symbolKey);
+                .getSymbol(symbolKey);
 
             if (depSymbol !== undefined) {
                 mergedSymbol.addSymbol(depSymbol);
@@ -429,7 +344,7 @@ export class Workspace {
         for (const revDepUri of this.dependencyGraph.resolveReverseDependencies(scriptUri)) {
             const revDepSymbol = this.scripts.get(revDepUri)
                 ?.getScope()
-                ?.getSymbol(symbolKey);
+                .getSymbol(symbolKey);
 
             if (revDepSymbol !== undefined) {
                 mergedSymbol.addSymbol(revDepSymbol);
@@ -437,5 +352,93 @@ export class Workspace {
         }
 
         return mergedSymbol;
+    }
+
+    protected includeLibrary(
+        uri: string,
+        promise: IncludePromise,
+        configuration: AutoIt3Configuration | null,
+    ): IncludePromise {
+        return promise.then((includeResolve) => (includeResolve === null && typeof configuration?.installDir === 'string' ? this.openTextDocument(Utils.resolvePath(URI.file(configuration.installDir), 'Include', uri)) : includeResolve));
+    }
+
+    protected includeUserDefined(
+        uri: string,
+        promise: IncludePromise,
+        configuration: AutoIt3Configuration | null,
+    ): IncludePromise {
+        for (const path of configuration?.userDefinedLibraries ?? []) {
+            promise = promise.then((includeResolve) => includeResolve ?? this.openTextDocument(Utils.resolvePath(URI.file(path), uri)));
+        }
+
+        return promise;
+    }
+
+    protected includeLocal(
+        uri: string,
+        documentUri: GrammarSource,
+        promise: IncludePromise,
+    ): IncludePromise {
+        // If document uri starts with 'untitled:', it is not yet saved to disk
+        const isUntitled = documentUri.toString().startsWith('untitled:');
+
+        // HACK: currently i check if the documentUri startsWith 'untitled:' to detect files not yet saved to disk. I cannot find a better solution so far...
+        return promise.then((includeResolve) => (
+            includeResolve === null && !isUntitled
+                ? this.openTextDocument(isAbsolutePath(uri)
+                    ? URI.file(uri)
+                    : Utils.resolvePath(
+                        Utils.dirname(URI.parse(documentUri.toString())),
+                        uri,
+                    ))
+                : includeResolve
+        ));
+    }
+
+    protected openTextDocument(uri: URI): IncludePromise {
+        if (uri.scheme !== 'file') {
+            return Promise.resolve(null);
+        }
+
+        if (this.exists(uri)) {
+            return Promise.resolve({ uri: uri, text: null });
+        }
+
+        const resolvingInclude = this.resolvingIncludes.get(uri.toString());
+
+        if (resolvingInclude !== undefined) {
+            return resolvingInclude;
+        }
+
+        const promise = this.connection?.sendRequest<string | null>('openTextDocument', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve })) ?? Promise.resolve(null);
+
+        this.resolvingIncludes.set(uri.toString(), promise);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        promise.then((value) => {
+            if (value !== null && value.text !== null) {
+                this.createOrUpdate(value.uri, value.text);
+            }
+
+            this.resolvingIncludes.delete(uri.toString());
+        });
+
+        return promise;
+    }
+
+    /**
+     * Recursively collect subscopes that contain the given position.
+     * This ensures function parameters and local variables are found
+     * when looking up symbols within a function body.
+     */
+    protected collectSubscopesAtPosition(scope: Scope, position: Position, scopes: Scope[]): void {
+        for (const subscope of scope.getSubscopes()) {
+            if (subscope.range !== undefined && isPositionWithinLocationRange(position, subscope.range)) {
+                scopes.push(subscope);
+
+                // Recurse into nested scopes (e.g., nested functions if supported)
+                this.collectSubscopesAtPosition(subscope, position, scopes);
+            }
+        }
     }
 }

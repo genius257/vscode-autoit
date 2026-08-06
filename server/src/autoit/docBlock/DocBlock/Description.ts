@@ -23,16 +23,14 @@ export default class Description {
 
     public render(formatter: Formatter | null = null): string {
         if (this.tags.length === 0) {
-            return vsprintf(this.bodyTemplate, []);
+            return vsprintf(this.bodyTemplate, []) as string;
         }
 
-        if (formatter === null) {
-            formatter = new PassthroughFormatter();
-        }
+        formatter ??= new PassthroughFormatter();
 
         const tags = this.tags.map((tag) => `{${formatter.format(tag)}}`);
 
-        return vsprintf(this.bodyTemplate, tags);
+        return vsprintf(this.bodyTemplate, tags) as string;
     }
 
     public toString(): string {

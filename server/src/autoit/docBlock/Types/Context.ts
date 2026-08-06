@@ -13,11 +13,11 @@ export default class Context {
             alias,
             fqnn,
         ]) => {
-            if (fqnn[0] === '\\') {
+            if (fqnn.startsWith('\\')) {
                 fqnn = fqnn.substring(1);
             }
 
-            if (fqnn[fqnn.length - 1] === '\\') {
+            if (fqnn.endsWith('\\')) {
                 fqnn = fqnn.substring(0, -1);
             }
 

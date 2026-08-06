@@ -62,10 +62,12 @@ export default class DocBlockFactory {
             ([
                 tagName,
                 tagHandler,
-            ]) => docBlockFactory.registerTagHandler(
-                tagName,
-                tagHandler,
-            ),
+            ]) => {
+                docBlockFactory.registerTagHandler(
+                    tagName,
+                    tagHandler,
+                );
+            },
         );
 
         return docBlockFactory;
@@ -100,8 +102,8 @@ export default class DocBlockFactory {
             {},
         );
 
-        const summary = dockBlockdata['description'] ?? '';
-        const description = dockBlockdata['remarks'] ?? '';
+        const summary = dockBlockdata.description ?? '';
+        const description = dockBlockdata.remarks ?? '';
 
         if (summary === '' && description === '') {
             return null;
@@ -131,9 +133,7 @@ export default class DocBlockFactory {
         context: Context | null = null,
         location: Location | null = null,
     ) {
-        if (context === null) {
-            context = new Context('');
-        }
+        context ??= new Context('');
 
         const [
             summary,
@@ -168,7 +168,7 @@ export default class DocBlockFactory {
         comment: string,
     ): [summary: string, description: string, tags: string] {
         // Performance: If the first character is an @ then only tags are included in this DocBlock.
-        if (comment[0] === '@') {
+        if (comment.startsWith('@')) {
             return [
                 '',
                 '',
@@ -212,9 +212,10 @@ export default class DocBlockFactory {
     public splitTagBlockIntoTagLines(tags: string): string[] {
         const result: string[] = [];
         tags.split('\n').forEach((tagLine: string) => {
-            if (tagLine !== '' && tagLine.indexOf('@') === 0) {
+            if (tagLine !== '' && tagLine.startsWith('@')) {
                 result.push(tagLine);
             } else {
+                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 result[result.length - 1] += '\n' + tagLine;
             }
         });
@@ -233,7 +234,7 @@ export default class DocBlockFactory {
             return null;
         }
 
-        if (tags[0] !== '@') {
+        if (!tags.startsWith('@')) {
             // This only happens if there is an error with the parsing of the DocBlock that we didn't foresee.
             throw new Error('A tag block started with text instead of an at-sign(@): ' + tags);
         }

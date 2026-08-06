@@ -77,9 +77,7 @@ export default class TypeResolver {
             throw new Error(`Attempted to resolve "${type}" but it appears to be empty`);
         }
 
-        if (context === null) {
-            context = new Context('');
-        }
+        context ??= new Context('');
 
         const tokens = this.lexer.tokenize(type);
         const tokenIterator = new TokenIterator(tokens);

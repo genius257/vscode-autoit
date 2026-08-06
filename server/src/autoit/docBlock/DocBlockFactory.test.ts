@@ -18,7 +18,7 @@ test('stripDocComment', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.MultiLineComment = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment') as AutoIt3.MultiLineComment;
+    const comment: AutoIt3.MultiLineComment | undefined = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment');
 
     if (comment === undefined) {
         throw new Error('Error generating MultiLineComment AST element');
@@ -44,7 +44,7 @@ test('createFromMultilineComment', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.MultiLineComment = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment') as AutoIt3.MultiLineComment;
+    const comment: AutoIt3.MultiLineComment | undefined = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment');
 
     if (comment === undefined) {
         throw new Error('Error generating MultiLineComment AST element');
@@ -78,7 +78,7 @@ test('createFromLegacySingleLineComments', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.SingleLineComment[] = ast.body.filter((element): element is AutoIt3.SingleLineComment => element.type === 'SingleLineComment') as AutoIt3.SingleLineComment[];
+    const comment: AutoIt3.SingleLineComment[] = ast.body.filter((element): element is AutoIt3.SingleLineComment => element.type === 'SingleLineComment');
 
     if (comment.length === 0) {
         throw new Error('Error generating SingleLineComment AST elements');
@@ -130,7 +130,7 @@ test('createFromLegacySingleLineComments edge-case#1', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.SingleLineComment[] = ast.body.filter((element): element is AutoIt3.SingleLineComment => element.type === 'SingleLineComment') as AutoIt3.SingleLineComment[];
+    const comment: AutoIt3.SingleLineComment[] = ast.body.filter((element): element is AutoIt3.SingleLineComment => element.type === 'SingleLineComment');
 
     if (comment.length === 0) {
         throw new Error('Error generating SingleLineComment AST elements');
@@ -160,7 +160,7 @@ test('author tag', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.MultiLineComment = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment') as AutoIt3.MultiLineComment;
+    const comment: AutoIt3.MultiLineComment | undefined = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment');
 
     if (comment === undefined) {
         throw new Error('Error generating MultiLineComment AST element');
@@ -184,7 +184,7 @@ test('not supported tag', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.MultiLineComment = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment') as AutoIt3.MultiLineComment;
+    const comment: AutoIt3.MultiLineComment | undefined = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment');
 
     if (comment === undefined) {
         throw new Error('Error generating MultiLineComment AST element');
@@ -211,7 +211,7 @@ test('inline tag', () => {
 
     const ast = parser.parse(s);
 
-    const comment: AutoIt3.MultiLineComment = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment') as AutoIt3.MultiLineComment;
+    const comment: AutoIt3.MultiLineComment | undefined = ast.body.find((element): element is AutoIt3.MultiLineComment => element.type === 'MultiLineComment');
 
     if (comment === undefined) {
         throw new Error('Error generating MultiLineComment AST element');

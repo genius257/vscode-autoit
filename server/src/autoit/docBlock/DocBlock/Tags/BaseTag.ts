@@ -18,9 +18,7 @@ export default abstract class BaseTag extends Tag {
     }
 
     public render(formatter: Formatter | null = null): string {
-        if (formatter === null) {
-            formatter = new PassthroughFormatter();
-        }
+        formatter ??= new PassthroughFormatter();
 
         return formatter.format(this);
     }

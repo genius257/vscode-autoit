@@ -28,7 +28,8 @@ export default class Link extends BaseTag {
         const parts = body.split(/\s+(.*)/u, 2); // Trick to match PHP preg_match with a limit of 2 https://stackoverflow.com/a/4607799 https://github.com/phpDocumentor/ReflectionDocBlock/blob/e5e784149a09bd69d9a5e3b01c5cbd2e2bd653d8/src/DocBlock/Tags/Link.php#L47
         const description =
             parts.length > 1
-                ? descriptionFactory?.create(parts[1] as string, context)
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                ? descriptionFactory.create(parts[1]!, context)
                 : null;
 
         if (parts[0] === undefined) {

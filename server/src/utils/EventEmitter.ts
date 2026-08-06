@@ -7,7 +7,7 @@ export default class EventEmitter<Events extends EventMap> {
         [K in keyof Events]?: Set<Listener<Events[K]>>;
     } = {};
 
-    on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
+    public on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
         if (!this.listeners[event]) {
             this.listeners[event] = new Set();
         }
@@ -15,7 +15,7 @@ export default class EventEmitter<Events extends EventMap> {
         this.listeners[event].add(listener);
     }
 
-    off<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
+    public off<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
         this.listeners[event]?.delete(listener);
 
         // Optional cleanup to avoid empty sets accumulating
@@ -25,13 +25,13 @@ export default class EventEmitter<Events extends EventMap> {
         }
     }
 
-    emit<K extends keyof Events>(event: K, payload: Events[K]): void {
+    public emit<K extends keyof Events>(event: K, payload: Events[K]): void {
         this.listeners[event]?.forEach((listener) => {
             listener(payload);
         });
     }
 
-    once<K extends keyof Events>(
+    public once<K extends keyof Events>(
         event: K,
         listener: Listener<Events[K]>,
     ): void {
@@ -43,7 +43,7 @@ export default class EventEmitter<Events extends EventMap> {
         this.on(event, wrapper);
     }
 
-    clear(event?: keyof Events): void {
+    public clear(event?: keyof Events): void {
         if (event) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete this.listeners[event];

@@ -31,6 +31,7 @@ export function activate(context: ExtensionContext) {
 
     const client = createWorkerLanguageClient(context, clientOptions);
 
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     client.start().then(() => {
         client.onRequest('openTextDocument', (uri: string) => {
             const file = Uri.parse(uri);
@@ -47,7 +48,7 @@ export function activate(context: ExtensionContext) {
 
     const myProvider = new class implements TextDocumentContentProvider {
         // provideTextDocumentContent(uri: Uri, token: CancellationToken): ProviderResult<string> {
-        provideTextDocumentContent(): ProviderResult<string> {
+        public provideTextDocumentContent(): ProviderResult<string> {
             return native;
         }
     }();
@@ -79,7 +80,7 @@ function createWorkerLanguageClient(
 }
 
 function statusBarStateChange(e: TextEditor | undefined): void {
-    if (e?.document?.languageId === 'au3') {
+    if (e?.document.languageId === 'au3') {
         statusBarItem.show();
     } else {
         statusBarItem.hide();

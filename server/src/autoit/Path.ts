@@ -22,6 +22,7 @@ export function removeLeadingSlash(path: string): string {
 
 // function to resolve a relative path to an absolute path, or return the original path if it is already absolute
 export function resolvePath(path: string | URI, ...paths: string[]): URI {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     if (isAbsolutePath(path.valueOf().toString())) {
         return typeof path === 'string' ? URI.file(path) : path;
     }

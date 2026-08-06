@@ -132,7 +132,7 @@ connection.onDocumentLinks((params: DocumentLinkParams) => {
 
         return Promise
             .all(includes.map((include) => include.promise))
-            .then<DocumentLink[]>(() => includes.filter((include) => !/^autoit3doc:/.test(include.uri ?? '') && include.uri !== null).map<DocumentLink>((include) => ({
+            .then<DocumentLink[]>(() => includes.filter((include) => !(include.uri ?? '').startsWith('autoit3doc:') && include.uri !== null).map<DocumentLink>((include) => ({
                 range: statementToRange(include.statement),
                 target: include.uri ?? undefined,
                 tooltip: include.uri === null
@@ -184,7 +184,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
 
         if (suggestion !== undefined) {
             return {
-                contents: { kind: MarkupKind.Markdown, value: (suggestion.detail ?? '') + '\n\n' + suggestion.documentation } satisfies MarkupContent,
+                contents: { kind: MarkupKind.Markdown, value: `${suggestion.detail ?? ''}\n\n${suggestion.documentation}` } satisfies MarkupContent,
                 range: PositionHelper.locationRangeToRange(
                     identifierAtPos.location,
                 ),
@@ -390,6 +390,7 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
     }));
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 async function getCompletionItems(
     params: CompletionParams,
 ): Promise<CompletionItem[] | CompletionList | undefined | null> {

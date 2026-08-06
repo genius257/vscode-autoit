@@ -5,9 +5,7 @@ export default class FqsenResolver {
     private static readonly OPERATOR_NAMESPACE = '\\';
 
     public resolve(fqsen: string, context: Context | null = null): Fqsen {
-        if (context === null) {
-            context = new Context('');
-        }
+        context ??= new Context('');
 
         if (this.isFqsen(fqsen)) {
             return new Fqsen(fqsen);
@@ -17,7 +15,7 @@ export default class FqsenResolver {
     }
 
     private isFqsen(type: string): boolean {
-        return type.indexOf(FqsenResolver.OPERATOR_NAMESPACE) === 0;
+        return type.startsWith(FqsenResolver.OPERATOR_NAMESPACE);
     }
 
     private resolvePartialStructuralElementName(
@@ -41,7 +39,8 @@ export default class FqsenResolver {
             return new Fqsen(`${FqsenResolver.OPERATOR_NAMESPACE}${namespace}${type}`);
         }
 
-        typeParts[0] = namespaceAliases[typeParts[0]];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        typeParts[0] = namespaceAliases[typeParts[0]]!;
 
         return new Fqsen(`${FqsenResolver.OPERATOR_NAMESPACE}${typeParts.join(FqsenResolver.OPERATOR_NAMESPACE)}`);
     }

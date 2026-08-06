@@ -23,7 +23,7 @@ export class SignatureHelpBridge {
         this.workpspace = workpspace;
     }
 
-    resolveSignatureHelp(
+    public resolveSignatureHelp(
         params: SignatureHelpParams,
     ): SignatureHelp | null {
         const textDocumentUri = params.textDocument.uri;
@@ -64,7 +64,7 @@ export class SignatureHelpBridge {
             this.callExpression = callExpression;
 
             // Use the new Symbol system to find the function declaration
-            const callee = callExpression.callee as AutoIt3.Identifier;
+            const callee = callExpression.callee;
             const symbolKey = Symbol.getNodeName(callee);
             const symbol = this.workpspace.resolveSymbolForNode(callee, symbolKey);
 
@@ -105,10 +105,6 @@ export class SignatureHelpBridge {
             this.declarator = declarator;
         }
 
-        if (callExpression === undefined || declarator === null) {
-            return null;
-        }
-
         const callExpressionHelper = new CallExpressionHelper(callExpression, script);
 
         // If there is a syntax error, we try to patch and re-parse the relevant text
@@ -125,7 +121,7 @@ export class SignatureHelpBridge {
             }
         }
 
-        if (callExpressionHelper.isPositionWithinCallExpression(position) === false) {
+        if (!callExpressionHelper.isPositionWithinCallExpression(position)) {
             return null;
         }
 
@@ -143,8 +139,8 @@ export class SignatureHelpBridge {
             signatures: [
                 {
                     label: declarator.id.name + '(' + Parser.AstArrayToStringArray(declarator.params).join(', ') + ')',
-                    documentation: (resolvedExpression.callee as AutoIt3.Identifier).name,
-                    parameters: declarator.params.map((parameter) => ({
+                    documentation: resolvedExpression.callee.name,
+                    parameters: declarator.params.map((parameter: AutoIt3.FormalParameter) => ({
                         label: '$' + parameter.id.name,
                         documentation: undefined,
                     })),
@@ -394,7 +390,7 @@ class CallExpressionHelper {
 }
 
 export class UnfixableCallExpressionError extends Error {
-    constructor(message: string) {
+    public constructor(message: string) {
         super(message);
         this.name = 'UnfixableCallExpressionError';
     }

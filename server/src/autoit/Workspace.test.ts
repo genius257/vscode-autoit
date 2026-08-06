@@ -19,6 +19,7 @@ test('get', () => {
 
 test('resolveInclude', () => {
     const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         workspace: {
             getConfiguration: (): Promise<AutoIt3Configuration> => {
                 return Promise.resolve({
@@ -44,6 +45,7 @@ test('resolveInclude', () => {
 
     const workspace = new Workspace(connection as Connection);
 
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     workspace.resolveInclude({
         file: 'D:\\users\\bob\\workspace\\one.au3',
         type: 'IncludeStatement',

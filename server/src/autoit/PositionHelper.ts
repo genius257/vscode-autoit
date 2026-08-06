@@ -63,7 +63,7 @@ export function offsetToLocation(offset: number, text: string): Location {
         column: textBeforeOffset.substring(
             lastNewLineOffset === -1 ? 0 : lastNewLineOffset + 1,
         ).length + 1,
-        line: (textBeforeOffset.match(/\n/g) || []).length + 1, // https://stackoverflow.com/a/4009768/3958400
+        line: (textBeforeOffset.match(/\n/g) ?? []).length + 1, // https://stackoverflow.com/a/4009768/3958400
         offset: offset,
     };
 }

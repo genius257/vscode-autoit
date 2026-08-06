@@ -22,7 +22,7 @@ export default class Generic extends BaseTag {
         ); // Qick fix, since the current codebase diviates from the original PHPDoc codebase.
 
         const description = body !== ''
-            ? descriptionFactory?.create(body, context)
+            ? descriptionFactory.create(body, context)
             : null;
 
         return new Generic(name, description);

@@ -414,7 +414,7 @@ export default class AstWalker {
                 return status;
             default:
                 // @ts-expect-error exhaustive check, this should never happen
-                throw new Error('Unsupported type: ' + node.type);
+                throw new Error(`Unsupported type: ${node.type}`);
         }
 
         return NodeFilterAction.Continue;

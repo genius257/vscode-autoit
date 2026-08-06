@@ -137,10 +137,12 @@ export default class Script {
     protected program: AutoIt3.Program | undefined;
     protected scope: Scope = new Scope();
 
-    constructor(
+    protected debouncedTriggerDiagnostics: (() => void) | null = null;
+
+    public constructor(
         text: string,
         uri?: URI,
-        workspace: Workspace | undefined = undefined,
+        workspace?: Workspace,
     ) {
         this.uri = uri;
         this.workspace = workspace;
@@ -166,8 +168,6 @@ export default class Script {
         this.triggerDiagnostics();
     }
 
-    protected debouncedTriggerDiagnostics: (() => void) | null = null;
-
     public triggerDiagnostics(): void {
         this.debouncedTriggerDiagnostics ??= debounce(() => {
             if (this.uri !== undefined) {
@@ -182,26 +182,6 @@ export default class Script {
         }, 100);
 
         this.debouncedTriggerDiagnostics();
-    }
-
-    protected parseText(text: string) {
-        try {
-            this.program = parser.parse(
-                text,
-                { grammarSource: this.uri?.toString() },
-            );
-
-            this.analyze();
-        } catch (e) {
-            if (!Parser.isSyntaxError(e)) {
-                throw e;
-            }
-
-            this.addError({
-                message: `Syntax error: ${e.message}`,
-                range: PositionHelper.locationRangeToRange(e.location),
-            });
-        }
     }
 
     /** Update the script text content */
@@ -517,7 +497,7 @@ export default class Script {
         }
 
         // const previousIncludes = this.includes;
-        const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement') as AutoIt3.IncludeStatement[] | undefined;
+        const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement');
 
         // function for comparing include statements
         const includeStatementComparator = (
@@ -543,6 +523,7 @@ export default class Script {
 
         // release the detached includes
         detached.forEach((include) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             include.promise.then((value) => {
                 if (value !== null) {
                     this.workspace?.get(value)?.release();
@@ -561,6 +542,7 @@ export default class Script {
             // If it is, use the cached version
             if (cached !== undefined) {
                 cached.statement = include;
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 cached.promise.then((value) => {
                     if (value !== null) {
                         this.workspace?.get(value)?.addReference();
@@ -578,55 +560,58 @@ export default class Script {
         }) ?? [];
 
         // Report includes that could not be resolved to the user
-        this.includes.forEach((include) => include.promise.then((value) => {
-            if (value === null) {
-                this.addError({
-                    message: `Could not resolve include: '${include.statement.file}'`,
-                    range: PositionHelper.locationRangeToRange(
-                        include.statement.location,
-                    ),
-                });
+        this.includes.forEach((include) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            include.promise.then((value) => {
+                if (value === null) {
+                    this.addError({
+                        message: `Could not resolve include: '${include.statement.file}'`,
+                        range: PositionHelper.locationRangeToRange(
+                            include.statement.location,
+                        ),
+                    });
 
-                // return;
-            }
+                    // return;
+                }
 
-            /*
-             * // FIXME: currently this will not trigger when opening a file with includes that have errors, since the included file is not yet parsed.
-             * // To fix this we need to subscribe to the included file's diagnostics.
-             * // This should not be implemented yet, before the parser is fully compatible with AutoIt, as it currently reports false positives for some edge cases and have not implemented the with statement yet.
-             *
-             * //@ts-expect-error
-             * const severity = this.workspace?.get(value)?.getDiagnostics().reduce((acc, diagnostic) => {
-             *     return acc === undefined || diagnostic.severity === undefined || diagnostic.severity < acc ? diagnostic.severity : acc;
-             * }, undefined);
-             *
-             * let highestSeverity: undefined | DiagnosticSeverity = undefined;
-             * const relatedDiagnostics = this.workspace?.get(value)?.getDiagnostics().filter(diagnostic => {
-             *    if (diagnostic.severity === undefined || diagnostic.severity > DiagnosticSeverity.Warning) {
-             *        return false;
-             *    }
-             *    highestSeverity = highestSeverity === undefined || diagnostic.severity < highestSeverity ? diagnostic.severity : highestSeverity;
-             *    return diagnostic.severity === highestSeverity;
-             * }) ?? [];
-             *
-             * if (highestSeverity !== undefined) {
-             *  const errorCount = relatedDiagnostics.filter(diagnostic => diagnostic.severity === DiagnosticSeverity.Error).length;
-             *  const warningCount = relatedDiagnostics.filter(diagnostic => diagnostic.severity === DiagnosticSeverity.Warning).length;
-             *    const diagnosticStrings = [errorCount > 0 ? `${errorCount} error${errorCount > 1 ? 's' : ''}` : null, warningCount > 0 ?`${warningCount} warning${warningCount > 1 ? 's' : ''}` : null].filter(value => value !== null);
-             *    this.addDiagnostic({
-             *        severity: highestSeverity,
-             *        message: `${diagnosticStrings.join(' and ')} were found in '${include.statement.file}'`,
-             *        range: PositionHelper.locationRangeToRange(include.statement.location),
-             *        relatedInformation: relatedDiagnostics.map(diagnostic => {
-             *            return {
-             *                location: {uri: value, range: diagnostic.range},
-             *                message: diagnostic.message,
-             *            };
-             *        })
-             *    });
-             * }
-             */
-        }));
+                /*
+                 * // FIXME: currently this will not trigger when opening a file with includes that have errors, since the included file is not yet parsed.
+                 * // To fix this we need to subscribe to the included file's diagnostics.
+                 * // This should not be implemented yet, before the parser is fully compatible with AutoIt, as it currently reports false positives for some edge cases and have not implemented the with statement yet.
+                 *
+                 * //@ts-expect-error
+                 * const severity = this.workspace?.get(value)?.getDiagnostics().reduce((acc, diagnostic) => {
+                 *     return acc === undefined || diagnostic.severity === undefined || diagnostic.severity < acc ? diagnostic.severity : acc;
+                 * }, undefined);
+                 *
+                 * let highestSeverity: undefined | DiagnosticSeverity = undefined;
+                 * const relatedDiagnostics = this.workspace?.get(value)?.getDiagnostics().filter(diagnostic => {
+                 *    if (diagnostic.severity === undefined || diagnostic.severity > DiagnosticSeverity.Warning) {
+                 *        return false;
+                 *    }
+                 *    highestSeverity = highestSeverity === undefined || diagnostic.severity < highestSeverity ? diagnostic.severity : highestSeverity;
+                 *    return diagnostic.severity === highestSeverity;
+                 * }) ?? [];
+                 *
+                 * if (highestSeverity !== undefined) {
+                 *  const errorCount = relatedDiagnostics.filter(diagnostic => diagnostic.severity === DiagnosticSeverity.Error).length;
+                 *  const warningCount = relatedDiagnostics.filter(diagnostic => diagnostic.severity === DiagnosticSeverity.Warning).length;
+                 *    const diagnosticStrings = [errorCount > 0 ? `${errorCount} error${errorCount > 1 ? 's' : ''}` : null, warningCount > 0 ?`${warningCount} warning${warningCount > 1 ? 's' : ''}` : null].filter(value => value !== null);
+                 *    this.addDiagnostic({
+                 *        severity: highestSeverity,
+                 *        message: `${diagnosticStrings.join(' and ')} were found in '${include.statement.file}'`,
+                 *        range: PositionHelper.locationRangeToRange(include.statement.location),
+                 *        relatedInformation: relatedDiagnostics.map(diagnostic => {
+                 *            return {
+                 *                location: {uri: value, range: diagnostic.range},
+                 *                message: diagnostic.message,
+                 *            };
+                 *        })
+                 *    });
+                 * }
+                 */
+            });
+        });
 
         this.scope = scope;
     }
@@ -640,39 +625,10 @@ export default class Script {
             ) ?? Promise.resolve(null),
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         _include.promise.then((value) => _include.uri = value);
 
         return _include;
-    }
-
-    /**
-     * Creates a synthetic identifier node from a Literal node.
-     * Used for Eval, Call and IsDeclared expressions where the symbol name is a string literal.
-     */
-    protected createSyntheticNode(
-        literal: AutoIt3.Literal,
-        isVariable: boolean,
-    ): SyntheticIdentifier | SyntheticVariableIdentifier {
-        const value = String(literal.value);
-
-        if (isVariable) {
-            // Eval/IsDeclared argument may or may not include the $ prefix
-            const name = value.startsWith('$') ? value.slice(1) : value;
-
-            return {
-                type: 'SyntheticVariableIdentifier',
-                name,
-                location: literal.location,
-                node: literal,
-            };
-        }
-
-        return {
-            type: 'SyntheticIdentifier',
-            name: value,
-            location: literal.location,
-            node: literal,
-        };
     }
 
     public updateContent() {
@@ -777,11 +733,6 @@ export default class Script {
         );
     }
 
-    // FIXME: move this to a helper file
-    protected assertCannotReach(x: never, message: string = 'Unexpected unreachable code reached.'): never {
-        throw new Error(message);
-    }
-
     /** @internal */
     public getNestedNodesAt(
         node: Node | null,
@@ -793,6 +744,7 @@ export default class Script {
             return matches;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (node.location === undefined) {
             throw new Error('location is undefined on node type: ' + node.type);
         }
@@ -1120,35 +1072,17 @@ export default class Script {
         return matches;
     }
 
-    /** @internal */
-    protected getNestedNodesAtFromArray(
-        nodeList: NodeList | null,
-        line: number,
-        column: number,
-        matches: Node[],
-    ): Node[] {
-        if (nodeList === null) {
-            return matches;
-        }
-
-        for (const node of nodeList) {
-            this.getNestedNodesAt(node, line, column, matches);
-        }
-
-        return matches;
-    }
-
     /**
      * Filter nodes and returned flattened array with results.
      */
-    filterNodes(fn: (node: Node) => NodeFilterAction | never): Node[] {
+    public filterNodes(fn: (node: Node) => NodeFilterAction | never): Node[] {
         const matches: Node[] = [];
         this.filterNestedNodes(this.program?.body ?? null, fn, matches);
 
         return matches;
     }
 
-    filterNestedNode(
+    public filterNestedNode(
         node: Node | null,
         fn: (node: Node) => NodeFilterAction | never,
         matches: Node[],
@@ -1554,13 +1488,13 @@ export default class Script {
                 return status;
             default:
                 // @ts-expect-error exhaustive check, this should never happen
-                throw new Error('Unsupported type: ' + node.type);
+                throw new Error(`Unsupported type: ${node.type}`);
         }
 
         return NodeFilterAction.Continue;
     }
 
-    filterNestedNodes(
+    public filterNestedNodes(
         nodeList: NodeList | null,
         fn: (node: Node) => NodeFilterAction | never,
         matches: Node[],
@@ -1604,6 +1538,7 @@ export default class Script {
     public getScopeAtPosition(position: Position): Scope {
         let result = this.scope;
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         outer: while (true) {
             for (const scope of result.getSubscopes()) {
                 if (scope.range !== undefined && PositionHelper.isPositionWithinLocationRange(position, scope.range)) {
@@ -1617,5 +1552,78 @@ export default class Script {
         }
 
         return result;
+    }
+
+    protected parseText(text: string) {
+        try {
+            this.program = parser.parse(
+                text,
+                { grammarSource: this.uri?.toString() },
+            );
+
+            this.analyze();
+        } catch (e) {
+            if (!Parser.isSyntaxError(e)) {
+                throw e;
+            }
+
+            this.addError({
+                message: `Syntax error: ${e.message}`,
+                range: PositionHelper.locationRangeToRange(e.location),
+            });
+        }
+    }
+
+    /**
+     * Creates a synthetic identifier node from a Literal node.
+     * Used for Eval, Call and IsDeclared expressions where the symbol name is a string literal.
+     */
+    protected createSyntheticNode(
+        literal: AutoIt3.Literal,
+        isVariable: boolean,
+    ): SyntheticIdentifier | SyntheticVariableIdentifier {
+        const value = String(literal.value);
+
+        if (isVariable) {
+            // Eval/IsDeclared argument may or may not include the $ prefix
+            const name = value.startsWith('$') ? value.slice(1) : value;
+
+            return {
+                type: 'SyntheticVariableIdentifier',
+                name,
+                location: literal.location,
+                node: literal,
+            };
+        }
+
+        return {
+            type: 'SyntheticIdentifier',
+            name: value,
+            location: literal.location,
+            node: literal,
+        };
+    }
+
+    // FIXME: move this to a helper file
+    protected assertCannotReach(x: never, message: string = 'Unexpected unreachable code reached.'): never {
+        throw new Error(message);
+    }
+
+    /** @internal */
+    protected getNestedNodesAtFromArray(
+        nodeList: NodeList | null,
+        line: number,
+        column: number,
+        matches: Node[],
+    ): Node[] {
+        if (nodeList === null) {
+            return matches;
+        }
+
+        for (const node of nodeList) {
+            this.getNestedNodesAt(node, line, column, matches);
+        }
+
+        return matches;
     }
 }
