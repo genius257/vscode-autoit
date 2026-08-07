@@ -30,6 +30,20 @@ describe('getNodesAt nested call expressions', function () {
 
         expect(result).toHaveLength(4);
     });
+
+    test('getNodesAt on member expression with call expression object', function () {
+        const script = new Script(`$obj.Method().Property`);
+
+        // Position inside $obj (the object subtree, outside the MemberExpression's own location)
+        const result = script.getNodesAt({ character: 1, line: 0 });
+
+        /*
+         * With the guard: ExpressionStatement, outer MemberExpression, CallExpression,
+         *   inner MemberExpression, VariableIdentifier = 5 nodes
+         * Without the guard: outer MemberExpression would be skipped → only 4 nodes
+         */
+        expect(result).toHaveLength(5);
+    });
 });
 
 describe('VariableDeclaration scope handling', function () {
