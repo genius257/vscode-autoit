@@ -940,7 +940,7 @@ export default class Script {
             case 'IncludeStatement':
                 break;
             case 'Keyword':
-                break;// FIXME: return keywords also?
+                break;
             case 'Literal':
                 break;
             case 'LogicalExpression':
