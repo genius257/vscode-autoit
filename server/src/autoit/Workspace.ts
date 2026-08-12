@@ -10,6 +10,7 @@ import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
 import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
+import Deprecation from './docBlock/Deprecation';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -45,6 +46,10 @@ export class Workspace {
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
+
+        if (connection !== null) {
+            Deprecation.enableWithConnection(connection);
+        }
 
         this.connection?.onInitialized(() => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises

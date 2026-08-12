@@ -1,4 +1,4 @@
-import vsprintf from 'locutus/php/strings/vsprintf';
+import { vsprintf } from 'locutus/php/strings';
 import Description from './Description';
 import Formatter from './Tags/Formatter';
 import InlineMarkdownFormatter from './Tags/Formatter/InlineMarkdownFormatter';

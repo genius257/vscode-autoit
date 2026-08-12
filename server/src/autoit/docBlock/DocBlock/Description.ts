@@ -1,7 +1,7 @@
+import { vsprintf } from 'locutus/php/strings';
 import Tag from './Tag';
 import Formatter from './Tags/Formatter';
 import PassthroughFormatter from './Tags/Formatter/PassthroughFormatter';
-import vsprintf from 'locutus/php/strings/vsprintf';
 
 export default class Description {
     private bodyTemplate: string;
@@ -23,7 +23,7 @@ export default class Description {
 
     public render(formatter: Formatter | null = null): string {
         if (this.tags.length === 0) {
-            return vsprintf(this.bodyTemplate, []) as string;
+            return vsprintf(this.bodyTemplate, []).toString();
         }
 
         formatter ??= new PassthroughFormatter();
