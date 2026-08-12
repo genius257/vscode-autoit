@@ -79,6 +79,8 @@ const serverConfig = {
 		extensions: ['.ts', '.js'], // support ts-files and js-files
 		alias: {
 			'@utils': path.resolve(__dirname, "./server/src/utils"),
+			'locutus/php/strings': path.resolve(__dirname, "node_modules/locutus/php/strings/index.js"),
+			'locutus/php/array': path.resolve(__dirname, "node_modules/locutus/php/array/index.js"),
 		},
 		fallback: {
 			//path: require.resolve("path-browserify")
