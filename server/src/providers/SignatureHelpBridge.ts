@@ -396,5 +396,9 @@ export class UnfixableCallExpressionError extends Error {
     public constructor(message: string) {
         super(message);
         this.name = 'UnfixableCallExpressionError';
+
+        // restore prototype chain
+        const actualProto = new.target.prototype;
+        Object.setPrototypeOf(this, actualProto);
     }
 }
