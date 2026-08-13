@@ -1,13 +1,9 @@
 import { TagLike } from './Tag';
 import Factory from './Tags/Factory/Factory';
 
-export default abstract class TagFactory extends Factory {
-    public abstract addParameter(name: string, value: unknown): void;
-
-    public abstract addService(service: object): void;
-
-    public abstract registerTagHandler(
-        tagName: string,
-        handler: TagLike | Factory
-    );
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export default interface TagFactory extends Factory {
+    addParameter(name: string, value: unknown): void,
+    addService(service: object): void,
+    registerTagHandler(tagName: string, handler: TagLike | Factory): void,
 }

@@ -7,10 +7,12 @@ import TypeContext from '../Types/Context';
 import InvalidTag from './Tags/InvalidTag';
 import Generic from './Tags/Generic';
 import LinkTag from './Tags/Link';
+import { InvalidArgumentException } from '../TypeResolver';
+import instanceofInterface from '../../../utils/instanceofInterface';
 
 // https://github.com/phpDocumentor/ReflectionDocBlock/blob/master/src/DocBlock/StandardTagFactory.php
 
-export default class StandardTagFactory extends TagFactory {
+export default class StandardTagFactory implements TagFactory {
     /** PCRE regular expression matching a tag name. */
     public static readonly REGEX_TAGNAME = '[\\w\\-_\\\\:]+';
 
@@ -69,8 +71,6 @@ export default class StandardTagFactory extends TagFactory {
         fqsenResolver: FqsenResolver,
         tagHandlers: Record<string, TagLike> | null = null,
     ) {
-        super();
-
         this.fqsenResolver = fqsenResolver;
 
         if (tagHandlers !== null) {
@@ -110,10 +110,10 @@ export default class StandardTagFactory extends TagFactory {
         handler: Factory | TagLike,
     ): void {
         if (tagName.includes('\\') && !tagName.startsWith('\\')) {
-            throw new Error('A namespaced tag must have a leading backslash as it must be fully qualified');
+            throw new InvalidArgumentException('A namespaced tag must have a leading backslash as it must be fully qualified');
         }
 
-        if (handler instanceof Factory) { // FIXME
+        if (instanceofInterface(handler, 'Factory')) {
             this.tagHandlerMappings[tagName] = handler;
 
             return;

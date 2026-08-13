@@ -94,6 +94,15 @@ const serverConfig = {
 				use: [
 					{
 						loader: 'ts-loader',
+						options: {
+							/**
+							 * @param {import('typescript').Program} program 
+							 * @returns 
+							 */
+							getCustomTransformers: (program) => ({
+								before: [interfaceTransformer(program)],
+							}),
+						},
 					},
 				],
 			},
@@ -113,3 +122,75 @@ const serverConfig = {
 };
 
 module.exports = [clientConfig, serverConfig];
+
+const ts = require("typescript");
+
+/**
+ * @param {ts.Program} program 
+ * @returns {ts.TransformerFactory<ts.SourceFile>}
+ */
+function interfaceTransformer(program) {
+  const checker = program.getTypeChecker();
+
+  return (/** @type {ts.TransformationContext} */ context) => (/** @type {ts.SourceFile} */ sourceFile) => {
+    /**
+     * @param {ts.Node} node
+     * @returns {ts.Node}
+     */
+    const visitor = (node) => {
+      if (ts.isClassDeclaration(node) && node.heritageClauses) {
+        /** @type {Set<string>} */
+        const interfaceNames = new Set();
+
+        /** @param {ts.Type} type */
+        const resolveInterfacesRecursive = (type) => {
+          const symbol = type.getSymbol() || type.aliasSymbol;
+          if (symbol) {
+            interfaceNames.add(symbol.getName());
+          }
+          const baseTypes = type.getBaseTypes() || [];
+          baseTypes.forEach((base) => resolveInterfacesRecursive(base));
+        };
+
+        for (const clause of node.heritageClauses) {
+          if (clause.token === ts.SyntaxKind.ImplementsKeyword) {
+            for (const typeNode of clause.types) {
+              const type = checker.getTypeAtLocation(typeNode);
+              resolveInterfacesRecursive(type);
+            }
+          }
+        }
+
+        if (interfaceNames.size > 0) {
+          const staticProp = ts.factory.createPropertyDeclaration(
+            [
+              ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
+              ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword),
+            ],
+            "__implements__",
+            undefined,
+            undefined,
+            ts.factory.createArrayLiteralExpression(
+              Array.from(interfaceNames).map((name) =>
+                ts.factory.createStringLiteral(name)
+              )
+            )
+          );
+
+          return ts.factory.updateClassDeclaration(
+            node,
+            node.modifiers,
+            node.name,
+            node.typeParameters,
+            node.heritageClauses,
+            [staticProp, ...node.members]
+          );
+        }
+      }
+      return ts.visitEachChild(node, visitor, context);
+    };
+
+    // The cast to SourceFile here resolves the type error
+    return /** @type {ts.SourceFile} */ (ts.visitNode(sourceFile, visitor));
+  };
+}
