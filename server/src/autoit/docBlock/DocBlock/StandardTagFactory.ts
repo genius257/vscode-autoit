@@ -42,7 +42,23 @@ export default class StandardTagFactory extends TagFactory {
     /** A object representing a mapping of annotation names to Tag Handler Classes */
     private annotationMappings: Record<string, TagLike> = {};
 
-    private fqsenResolver: FqsenResolver; // FIXME
+    /**
+     * FQSEN resolver ported from phpDocumentor's StandardTagFactory.
+     *
+     * In the PHP original, this resolves annotation tag names to FQCNs using
+     * namespace context (use-statement aliases + namespace declaration). For
+     * AutoIt, ContextFactory is not implemented yet, so Context is always
+     * empty and alias/namespace resolution is a no-op (the root cause of the
+     * original FIXME).
+     *
+     * This same instance is shared with TypeResolver, where it actively
+     * resolves type references in @param/@return tags.
+     *
+     * The resolve() call in findHandlerClassName() is only reached when
+     * isAnnotation() returns true — which it never does (matching the PHP
+     * original). Retained for future annotation support.
+     */
+    private fqsenResolver: FqsenResolver;
 
     /**
      * An array representing a simple Service Locator where we can store parameters and services that can be inserted into the Factory Methods of Tag Handlers.
