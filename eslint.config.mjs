@@ -30,7 +30,7 @@ export default tseslint.config({
     "no-warning-comments": ['error'],
 
     // stylistic
-    "@stylistic/array-bracket-newline": ["error", { multiline: true, minItems: 2 }], //TODO: should minItems be null or 0?
+    "@stylistic/array-bracket-newline": ["error", { multiline: true, minItems: 3 }], //TODO: should minItems be null or 0?
     "@stylistic/array-bracket-spacing": ["error", "never"],
     "@stylistic/array-element-newline": ["error", "consistent"],
     "@stylistic/arrow-parens": ["error", "always"],
