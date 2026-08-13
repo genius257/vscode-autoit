@@ -39,9 +39,9 @@ test('resolveSignatureHelp', () => {
 
     expect(signatureHelp?.signatures).toHaveLength(1);
 
-    expect(signatureHelp?.signatures[0].label).toBe('A($a, $b, $c, $d)');
+    expect(signatureHelp?.signatures[0]?.label).toBe('A($a, $b, $c, $d)');
 
-    expect(signatureHelp?.signatures[0].parameters).toHaveLength(4);
+    expect(signatureHelp?.signatures[0]?.parameters).toHaveLength(4);
 
     text = `A(1,2,3,)
     
@@ -72,9 +72,9 @@ test('resolveSignatureHelp', () => {
 
     expect(signatureHelp?.signatures).toHaveLength(1);
 
-    expect(signatureHelp?.signatures[0].label).toBe('A($a, $b, $c, $d)');
+    expect(signatureHelp?.signatures[0]?.label).toBe('A($a, $b, $c, $d)');
 
-    expect(signatureHelp?.signatures[0].parameters).toHaveLength(4);
+    expect(signatureHelp?.signatures[0]?.parameters).toHaveLength(4);
 
     text = `A(1)
     
@@ -114,8 +114,8 @@ test('resolveSignatureHelp', () => {
     expect(signatureHelp?.activeSignature).toBe(0);
     expect(signatureHelp?.activeParameter).toBe(2);
     expect(signatureHelp?.signatures).toHaveLength(1);
-    expect(signatureHelp?.signatures[0].label).toBe('A($a, $b, $c, $d)');
-    expect(signatureHelp?.signatures[0].parameters).toHaveLength(4);
+    expect(signatureHelp?.signatures[0]?.label).toBe('A($a, $b, $c, $d)');
+    expect(signatureHelp?.signatures[0]?.parameters).toHaveLength(4);
 });
 
 // MsgBox() ; Does not select parameter 1 as active parameter

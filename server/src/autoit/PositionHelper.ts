@@ -42,7 +42,7 @@ export function positionToLocation(
 }
 
 export function positionToOffset(position: Position, text: string): number {
-    const match = text.match(new RegExp(`^(?:[^\\n]*\\n){${position.line}}`));
+    const match = new RegExp(`^(?:[^\\n]*\\n){${position.line}}`).exec(text);
 
     if (match === null) {
         throw new Error(`Failed to find line #${position.line + 1} in source, when converting document position to text offset.`);

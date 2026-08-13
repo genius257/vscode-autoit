@@ -109,7 +109,7 @@ export default class StandardTagFactory extends TagFactory {
         tagName: string,
         handler: Factory | TagLike,
     ): void {
-        if (tagName.includes('\\') && tagName !== '\\') {
+        if (tagName.includes('\\') && !tagName.startsWith('\\')) {
             throw new Error('A namespaced tag must have a leading backslash as it must be fully qualified');
         }
 
