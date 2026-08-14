@@ -146,7 +146,11 @@ export default class StandardTagFactory implements TagFactory {
 
             return tag ?? InvalidTag.create(body, name);
         } catch (e) {
-            return InvalidTag.create(body, name).withError(e);
+            if (e instanceof Error) {
+                return InvalidTag.create(body, name).withError(e);
+            }
+
+            throw e;
         }
     }
 
