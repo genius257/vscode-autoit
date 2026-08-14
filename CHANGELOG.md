@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Go to declaration now shows all matching declarations across scopes and included files, instead of only the closest match
 
+### Fixed
+
+- Hover, go-to-definition, find references, and document highlight now work for expressions inside array dimensions of variable declarations
+- Hover, go-to-definition, find references, and document highlight now work for expressions inside array dimensions of ReDim expressions
+- Hover text for ReDim expressions no longer throws an error and now renders array dimensions correctly
+
 ## [1.8.11] - 2026-07-08
 
 ### Changed
