@@ -146,7 +146,7 @@ export function AstToString(
         case 'RedimExpression':
             return 'ReDim ' + AstArrayToStringArray(ast.declarations).join(',');
         case 'RedimIdentifierExpression':
-            throw new Error('Parser node not implemented correct, yet.');// FIXME
+            return AstToString(ast.id) + '[' + AstArrayToStringArray(ast.dimensions).join('][') + ']';
         case 'ReturnStatement':
             return 'Return ' + AstToString(ast.value);
         case 'SelectCase':
