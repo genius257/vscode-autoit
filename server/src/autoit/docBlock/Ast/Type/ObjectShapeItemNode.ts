@@ -19,14 +19,12 @@ export default class ObjectShapeItemNode extends derive(NodeAttributes) implemen
     }
 
     public override toString(): string {
-        if (this.keyName !== null) {
-            return sprintf(
-                '%s%s: %s',
-                this.keyName.toString(),
-                this.optional ? '?' : '',
-                this.valueType.toString(),
-            ).toString();
-        }
+        return sprintf(
+            '%s%s: %s',
+            this.keyName.toString(),
+            this.optional ? '?' : '',
+            this.valueType.toString(),
+        ).toString();
 
         return this.valueType.toString();
     }
