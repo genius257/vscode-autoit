@@ -7,7 +7,7 @@ export default class InvalidTag extends Tag {
 
     private body: string;
 
-    private throwable: unknown;// FIXME
+    private throwable: Error | null = null;
 
     private constructor(name: string, body: string) {
         super();
@@ -19,7 +19,7 @@ export default class InvalidTag extends Tag {
         return new this(name, body);
     }
 
-    public getException(): unknown {
+    public getException(): Error | null {
         return this.throwable;
     }
 
@@ -27,7 +27,7 @@ export default class InvalidTag extends Tag {
         return this.name;
     }
 
-    public withError(exception: unknown): InvalidTag {
+    public withError(exception: Error): InvalidTag {
         // this.flattenExceptionBacktrace(exception);
         const tag = new InvalidTag(this.name, this.body);
         tag.throwable = exception;
