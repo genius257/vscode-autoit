@@ -301,7 +301,16 @@ export default class AstWalker {
             case 'RedimExpression':
                 return this.filterNestedNodes(node.declarations, fn, matches);
             case 'RedimIdentifierExpression':
-                return this.filterNestedNode(node.id, fn, matches);
+                status = this.filterNestedNode(node.id, fn, matches);
+
+                if (
+                    status === NodeFilterAction.Stop ||
+                    status === NodeFilterAction.StopAndSkip
+                ) {
+                    return status;
+                }
+
+                return this.filterNestedNodes(node.dimensions, fn, matches);
             case 'ReturnStatement':
                 return this.filterNestedNode(node.value, fn, matches);
             case 'SelectCase':

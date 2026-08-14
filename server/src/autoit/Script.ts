@@ -98,6 +98,7 @@ export type NodeList =
     | (AutoIt3.ElseClauseInWith | AutoIt3.ElseIfClauseInWith)[]
     | AutoIt3.FunctionDeclaration[]
     | AutoIt3.RedimIdentifierExpression[]
+    | AutoIt3.AssignmentExpression[]
     | (AutoIt3.AssignmentExpression | null)[]
     | (AutoIt3.AssignmentExpressionInWith | null)[];
 
@@ -991,6 +992,7 @@ export default class Script {
                 break;
             case 'RedimIdentifierExpression':
                 this.getNestedNodesAt(node.id, line, column, matches);
+                this.getNestedNodesAtFromArray(node.dimensions, line, column, matches);
 
                 break;
             case 'ReturnStatement':
