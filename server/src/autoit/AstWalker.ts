@@ -374,6 +374,17 @@ export default class AstWalker {
                     return status;
                 }
 
+                if ('dimensions' in node) {
+                    status = this.filterNestedNodes(node.dimensions, fn, matches);
+
+                    if (
+                        status === NodeFilterAction.Stop ||
+                        status === NodeFilterAction.StopAndSkip
+                    ) {
+                        return status;
+                    }
+                }
+
                 status = this.filterNestedNode(node.init, fn, matches);
 
                 return status;

@@ -97,7 +97,9 @@ export type NodeList =
     | (AutoIt3.ElseClause | AutoIt3.ElseIfClause)[]
     | (AutoIt3.ElseClauseInWith | AutoIt3.ElseIfClauseInWith)[]
     | AutoIt3.FunctionDeclaration[]
-    | AutoIt3.RedimIdentifierExpression[];
+    | AutoIt3.RedimIdentifierExpression[]
+    | (AutoIt3.AssignmentExpression | null)[]
+    | (AutoIt3.AssignmentExpressionInWith | null)[];
 
 export enum NodeFilterAction {
     /** Adds the current node and continues down the branch */
@@ -1058,6 +1060,11 @@ export default class Script {
                 );
             case 'VariableDeclarator':
                 this.getNestedNodesAt(node.id, line, column, matches);
+
+                if ('dimensions' in node) {
+                    this.getNestedNodesAtFromArray(node.dimensions, line, column, matches);
+                }
+
                 this.getNestedNodesAt(node.init, line, column, matches);
 
                 break;
