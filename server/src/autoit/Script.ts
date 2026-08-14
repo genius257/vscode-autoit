@@ -635,9 +635,11 @@ export default class Script {
         return _include;
     }
 
-    public updateContent() {
-        throw new Error('Not implemented');// FIXME: implement
-    }
+    /*
+     * public updateContent() {
+     *   throw new Error('Not implemented');
+     * }
+     */
 
     /**
      * Adds diagnostic information to the current script and broadcast it to subscribers
