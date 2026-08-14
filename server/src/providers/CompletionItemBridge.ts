@@ -8,7 +8,6 @@ import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
 
 const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
-    // eslint-disable-next-line @stylistic/array-bracket-newline
     .map(([, nativeSuggestion]) => ({
         label: nativeSuggestion.title,
         kind: nativeSuggestion.kind,
