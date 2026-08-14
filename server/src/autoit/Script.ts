@@ -226,9 +226,7 @@ export default class Script {
         /** Holds potential docblock comment(s) between non comment nodes */
         let relatedComments: AutoIt3.MultiLineComment | AutoIt3.SingleLineComment[] | null = null;
         let scope = new Scope(
-
-            // FIXME: AutoIt.program is currently missing location property
-            PositionHelper.rangeToLocationRange({ start: { character: 0, line: 0 }, end: { character: 0, line: 0 } }),
+            this.program?.location,
             this.uri,
         );
 
