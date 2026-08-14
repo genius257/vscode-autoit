@@ -8,7 +8,7 @@ export default class Fqsen {
     public constructor(fqsen: string) {
         const regex = /^\\([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\\]*)?(?:::\$?([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*))?(?:\(\))?$/;
 
-        const matches = fqsen.match(regex);
+        const matches = regex.exec(fqsen);
 
         if (!matches) {
             throw new Error(`"${fqsen}" is not a valid Fqsen.`);

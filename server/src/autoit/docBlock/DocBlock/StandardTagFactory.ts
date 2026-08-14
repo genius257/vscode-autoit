@@ -123,7 +123,7 @@ export default class StandardTagFactory implements TagFactory {
     }
 
     private extractTagParts(tagLine: string): [string, string, string] {
-        const matches = tagLine.match(new RegExp(`^@(${StandardTagFactory.REGEX_TAGNAME})((?:[\\s\\(\\{])\\s*([^\\s].*)|$)`, 'us'));
+        const matches = new RegExp(`^@(${StandardTagFactory.REGEX_TAGNAME})((?:[\\s\\(\\{])\\s*([^\\s].*)|$)`, 'us').exec(tagLine);
 
         if (matches === null) {
             throw new Error(`The tag "${tagLine}" does not seem to be wellformed, please check it for errors`);
