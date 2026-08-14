@@ -1,8 +1,7 @@
 import type { Location } from 'autoit3-pegjs';
 import Description from './DocBlock/Description';
 import Tag from './DocBlock/Tag';
-
-type Context = symbol; // FIXME: currently not implemented
+import Context from './Types/Context';
 
 export default class DocBlock {
     public readonly summary: Description;
