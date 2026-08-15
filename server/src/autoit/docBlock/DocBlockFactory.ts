@@ -179,7 +179,7 @@ export default class DocBlockFactory {
         // clears all extra horizontal whitespace from the line endings to prevent parsing issues
         comment = comment.replace(/[ \t]*$/um, '');
 
-        const results = comment.match(/^(?:(?!@\p{Letter})([^\n.]+(?:(?!\.\n|\n{2})[\n.]*(?![ \t]*@\p{Letter})[^\n.]+)*\.?)?)(?:\s*(?!@\p{Letter})([^\n]+(?:\n+(?![ \t]*@\p{Letter})[^\n]+)*))?(\s+[\s\S]*)?/u);
+        const results = /^(?:(?!@\p{Letter})([^\n.]+(?:(?!\.\n|\n{2})[\n.]*(?![ \t]*@\p{Letter})[^\n.]+)*\.?)?)(?:\s*(?!@\p{Letter})([^\n]+(?:\n+(?![ \t]*@\p{Letter})[^\n]+)*))?(\s+[\s\S]*)?/u.exec(comment);
 
         if (results === null) {
             throw new Error('Failed to split DocBlock elements! RegEx failed!');
