@@ -164,7 +164,6 @@ export default class StandardTagFactory implements TagFactory {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             handlerClassName = this.tagHandlerMappings[tagName]!;
         } else if (this.isAnnotation(tagName)) {
-            // TODO: Annotation support is planned for a later stage and as such is disabled for now
             tagName = this.fqsenResolver.resolve(tagName, context).toString();
 
             if (tagName in this.annotationMappings) {
@@ -176,7 +175,9 @@ export default class StandardTagFactory implements TagFactory {
         return handlerClassName;
     }
 
-    // TODO: currently source have not implemented this, maybe remove from here?
+    /**
+     * @todo this method should be populated once we implement Annotation notation support.
+     */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private isAnnotation(tegContext: string): boolean {
         /*
