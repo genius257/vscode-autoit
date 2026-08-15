@@ -14,6 +14,7 @@ let statusBarItem: StatusBarItem;
 
 // this method is called when vs code is activated
 export function activate(context: ExtensionContext) {
+    // eslint-disable-next-line no-console
     console.log('autoit3-lsp-web-extension activated!');
 
     /*
@@ -43,6 +44,7 @@ export function activate(context: ExtensionContext) {
             });
         });
 
+        // eslint-disable-next-line no-console
         console.log('autoit3-lsp-web-extension server is ready');
     });
 
