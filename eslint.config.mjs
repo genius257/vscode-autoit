@@ -28,6 +28,7 @@ export default tseslint.config({
     "@typescript-eslint/restrict-template-expressions": ["error", {allowNever: true, allowNumber: true}],
     "@typescript-eslint/explicit-member-accessibility": "error",
     "no-warning-comments": ['error'],
+    "no-console": ['error'],
 
     // stylistic
     "@stylistic/array-bracket-newline": ["error", { multiline: true, minItems: 3 }], //TODO: should minItems be null or 0?
