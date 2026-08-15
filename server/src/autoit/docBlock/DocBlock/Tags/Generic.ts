@@ -5,7 +5,6 @@ import TypeContext from '../../Types/Context';
 import StandardTagFactory from '../StandardTagFactory';
 import FqsenResolver from '../../FqsenResolver';
 
-// FIXME: cannot currently do implements Factory\StaticMethod, due to it caintaining only a public static method, and i already extend another class (and i ain't gonna create a extends hack for this for now.)
 export default class Generic extends BaseTag {
     public constructor(name: string, description: Description | null = null) {
         super();
