@@ -25,7 +25,5 @@ export default class ObjectShapeItemNode extends derive(NodeAttributes) implemen
             this.optional ? '?' : '',
             this.valueType.toString(),
         ).toString();
-
-        return this.valueType.toString();
     }
 }
