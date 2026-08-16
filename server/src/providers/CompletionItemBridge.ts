@@ -1,5 +1,5 @@
 import { CompletionItem, CompletionItemKind, CompletionList, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
-import { type AutoIt3 } from 'autoit3-pegjs';
+import { type AutoIt3, type Location } from 'autoit3-pegjs';
 import { Workspace } from '../autoit/Workspace';
 import Symbol from '../autoit/Symbol';
 import * as PositionHelper from '../autoit/PositionHelper';
@@ -40,13 +40,23 @@ export class CompletionItemBridge {
     ): CompletionItem[] | CompletionList | undefined | null {
         const scopes = this.workpspace.getScopes(textDocumentUri);
         const symbols = new Map<string, Symbol>();
-
-        // FIXME: filter out declarations declared AFTER the position.
+        const cursorLocation = PositionHelper.positionToLocation(position);
+        const cursorScope = this.workpspace.get(textDocumentUri)?.getScopeAtPosition(position);
+        const isCursorInFunction = cursorScope !== undefined && !cursorScope.isGlobal();
 
         for (const scope of scopes) {
-            scope.getSymbols().forEach((value, key) => symbols.set(key, value));
+            const isCurrentDocument = scope.uri?.toString() === textDocumentUri;
+            const isGlobalScope = scope.isGlobal();
 
-            if (scope.uri?.toString() !== textDocumentUri) {
+            for (const [key, symbol] of scope.getSymbols()) {
+                if (isCurrentDocument && !this.isSymbolAvailableAtPosition(symbol, textDocumentUri, cursorLocation, isCursorInFunction, isGlobalScope)) {
+                    continue;
+                }
+
+                symbols.set(key, symbol);
+            }
+
+            if (!isCurrentDocument) {
                 continue;
             }
 
@@ -55,16 +65,79 @@ export class CompletionItemBridge {
                     continue;
                 }
 
-                subScope.getSymbols().forEach((value, key) => symbols.set(key, value));
+                for (const [key, symbol] of subScope.getSymbols()) {
+                    if (!this.isSymbolAvailableAtPosition(symbol, textDocumentUri, cursorLocation, isCursorInFunction, false)) {
+                        continue;
+                    }
+
+                    symbols.set(key, symbol);
+                }
             }
         }
 
-        return Array.from(symbols.values()).map<CompletionItem>((symbol) => ({
-            label: symbol.getDisplayName(),
-            kind: this.resolveCompletionItemKind(symbol),
-            documentation: this.resolveCompletionItemDocumentation(symbol),
-        }))
+        return Array.from(symbols.values())
+            .map<CompletionItem>((symbol) => ({
+                label: symbol.getDisplayName(),
+                kind: this.resolveCompletionItemKind(symbol),
+                documentation: this.resolveCompletionItemDocumentation(symbol),
+            }))
             .concat(this.getNativeSuggestions());
+    }
+
+    /**
+     * Determines whether a symbol can be offered for completion at the given position.
+     *
+     * Declarations appearing after the cursor in the same document are filtered out,
+     * except:
+     * - function declarations, which are hoisted in AutoIt and are therefore available
+     *   before their declaration, and
+     * - global declarations, which are hoisted for function bodies and are therefore
+     *   available inside a function even when declared after the cursor.
+     *
+     * Symbols without declarations in the requested document (e.g. from includes, the
+     * native library, or assignment-only symbols) are always available.
+     */
+    protected isSymbolAvailableAtPosition(
+        symbol: Symbol,
+        textDocumentUri: string,
+        cursorLocation: Location,
+        isCursorInFunction: boolean,
+        isGlobalSymbol: boolean,
+    ): boolean {
+        let foundDeclarationInDocument = false;
+
+        for (const declaration of symbol.getDeclarations()) {
+            if (declaration.location.source.toString() !== textDocumentUri) {
+                continue;
+            }
+
+            foundDeclarationInDocument = true;
+
+            // A declaration at or before the cursor makes the symbol available.
+            if (PositionHelper.isLocationBeforeOrEqual(declaration.location.start, cursorLocation)) {
+                return true;
+            }
+        }
+
+        // Symbols without declarations in the requested document are not position filtered.
+        if (!foundDeclarationInDocument) {
+            return true;
+        }
+
+        // Functions are hoisted in AutoIt, so they are available even when declared after the cursor.
+        if (this.resolveCompletionItemKind(symbol) === CompletionItemKind.Function) {
+            return true;
+        }
+
+        /*
+         * Global declarations are hoisted for function bodies: a global declared after the
+         * cursor is still available inside a function.
+         */
+        if (isCursorInFunction && isGlobalSymbol) {
+            return true;
+        }
+
+        return false;
     }
 
     public resolveCompletionItemDocumentation(symbol: Symbol): MarkupContent | undefined {

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Completion suggestions in global scope no longer include global declarations that appear after the cursor position, while functions and globals remain available inside function bodies due to AutoIt hoisting
 - Hover, go-to-definition, find references, and document highlight now work for expressions inside array dimensions of variable declarations
 - Hover, go-to-definition, find references, and document highlight now work for expressions inside array dimensions of ReDim expressions
 - Hover text for ReDim expressions no longer throws an error and now renders array dimensions correctly

@@ -107,6 +107,18 @@ export function isLocationWithinLocationRange(location: Location, locationRange:
 }
 
 /**
+ * Returns true if the first location is at or before the second location.
+ * Locations are compared by line and then by column (both 1-based in pegjs space).
+ */
+export function isLocationBeforeOrEqual(location: Location, other: Location): boolean {
+    if (location.line < other.line) {
+        return true;
+    }
+
+    return location.line === other.line && location.column <= other.column;
+}
+
+/**
  * Returns true if the inner LocationRange is entirely contained within the outer LocationRange.
  */
 export function isLocationRangeWithinLocationRange(
