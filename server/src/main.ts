@@ -10,6 +10,7 @@ import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
 import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
 
+// eslint-disable-next-line no-console
 console.log('running server autoit3-lsp-web-extension');
 
 /* browser specific setup code */
