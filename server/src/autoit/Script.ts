@@ -220,7 +220,7 @@ export default class Script {
          * Variables for holding symbols that need to be processed after all symbols is collected.
          * For example: assignments without a scope. They need to be checked afterwards, to verify if they belong in a global or local scope.
          */
-        const assignmentsInScope: { node: { id: SymbolNode, location: LocationRange }, scope: Scope }[] = [];
+        const assignmentsInScope: { node: { id: SymbolNode, location: LocationRange }, scope: Scope, declareInScope?: boolean, skipIfNotDeclared?: boolean }[] = [];
         const referencesInScope: { node: SymbolNode, scope: Scope }[] = [];
 
         /** Holds potential docblock comment(s) between non comment nodes */
@@ -361,7 +361,7 @@ export default class Script {
                 case 'CallExpression':
                     switch (node.callee.type) {
                         case 'Identifier':
-                            switch (node.callee.name.toLowerCase()) {
+                            calleeName: switch (node.callee.name.toLowerCase()) {
                                 case 'assign':
                                     {
                                         const arg0 = node.arguments[0];
@@ -374,11 +374,44 @@ export default class Script {
                                             break;
                                         }
 
-                                        // eslint-disable-next-line @stylistic/multiline-comment-style
-                                        // FIXME: declaration missing a symbol?
-                                        // const declaration = new Declaration(node.callee);
+                                        let syntheticNodeScope = scope;
 
-                                        // declarations.push(declaration);
+                                        const arg2 = node.arguments[2];
+
+                                        const syntheticNode = this.createSyntheticNode(arg0, true);
+
+                                        if (arg2 !== undefined) {
+                                            switch (arg2.type) {
+                                                case 'Literal':
+                                                    if (typeof arg2.value === 'number' && Number.isInteger(arg2.value)) {
+                                                        const assignFlags = arg2.value;
+                                                        const isExistFail = (assignFlags & 4) === 4; // ASSIGN_EXISTFAIL
+                                                        let declareInScope = false;
+
+                                                        if ((assignFlags & 2) === 2) { // Global
+                                                            declareInScope = true;
+                                                            syntheticNodeScope = scope.parent ?? scope;
+                                                        } else if ((assignFlags & 1) === 1) { // Local
+                                                            declareInScope = true;
+                                                        }
+
+                                                        assignmentsInScope.push({ node: { id: syntheticNode, location: syntheticNode.location }, scope: syntheticNodeScope, declareInScope, skipIfNotDeclared: isExistFail });
+
+                                                        break calleeName;
+                                                    }
+                                                // eslint-disable-next-line no-fallthrough
+                                                default:
+                                                    this.addDiagnostic({
+                                                        message: 'Unable to resolve flag. Scope will be resolved automatically.',
+                                                        severity: DiagnosticSeverity.Information,
+                                                        range: PositionHelper.locationRangeToRange(node.location),
+                                                    });
+
+                                                    break;
+                                            }
+                                        }
+
+                                        assignmentsInScope.push({ node: { id: syntheticNode, location: syntheticNode.location }, scope: syntheticNodeScope });
                                     }
 
                                     break;
@@ -485,8 +518,24 @@ export default class Script {
          * Process assignments without explicit scope (e.g., EnumDeclaration without Local/Global).
          * Now that all symbols are collected, we can determine if they belong to global or local scope.
          */
-        for (const { node, scope } of assignmentsInScope) {
+        for (const { node, scope, declareInScope, skipIfNotDeclared } of assignmentsInScope) {
             const symbolKey = Symbol.getNodeName(node.id);
+
+            if (declareInScope) {
+                const isDeclared = (scope.getSymbol(symbolKey)?.getDeclarations().size ?? 0) > 0;
+
+                if (skipIfNotDeclared && !isDeclared) {
+                    continue;
+                }
+
+                if (isDeclared) {
+                    scope.addAssignment(node.id);
+                } else {
+                    scope.addDeclaration(node.id);
+                }
+
+                continue;
+            }
 
             // Check if declaration exists in parent scopes (global)
             const result = scope.parent?.getSymbolInScopeChain(symbolKey);
@@ -495,6 +544,10 @@ export default class Script {
                 // Global declaration exists — this modifies the global
                 result.scope.addDeclaration(node.id);
             } else {
+                if (skipIfNotDeclared) {
+                    continue;
+                }
+
                 // No global declaration — add as local declaration
                 scope.addDeclaration(node.id);
             }
@@ -808,11 +861,11 @@ export default class Script {
                 if (node.callee.type === 'Identifier') {
                     const calleeName = node.callee.name.toLowerCase();
 
-                    if ((calleeName === 'eval' || calleeName === 'call' || calleeName === 'isdeclared') && node.arguments.length > 0) {
+                    if ((calleeName === 'eval' || calleeName === 'call' || calleeName === 'isdeclared' || calleeName === 'assign') && node.arguments.length > 0) {
                         const arg0 = node.arguments[0];
 
                         if (arg0.type === 'Literal' && typeof arg0.value === 'string' && Parser.isPositionWithinLocation(line, column, arg0.location)) {
-                            const isVariable = calleeName === 'eval' || calleeName === 'isdeclared';
+                            const isVariable = calleeName === 'eval' || calleeName === 'isdeclared' || calleeName === 'assign';
                             const syntheticNode = this.createSyntheticNode(arg0, isVariable);
                             matches.push(syntheticNode);
                         }
