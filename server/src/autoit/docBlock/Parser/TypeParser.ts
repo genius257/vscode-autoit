@@ -80,6 +80,106 @@ export default class TypeParser {
         return type;
     }
 
+    public isHtml(tokens: TokenIterator): boolean {
+        tokens.consumeTokenType(TokenType.TOKEN_OPEN_ANGLE_BRACKET);
+
+        if (!tokens.isCurrentTokenType(TokenType.TOKEN_IDENTIFIER)) {
+            return false;
+        }
+
+        const htmlTagName = tokens.currentTokenValue();
+
+        tokens.next();
+
+        if (!tokens.tryConsumeTokenType(TokenType.TOKEN_CLOSE_ANGLE_BRACKET)) {
+            return false;
+        }
+
+        const endTag = `</${htmlTagName}>`;
+        const endTagSearchOffset = -endTag.length;
+
+        while (!tokens.isCurrentTokenType(TokenType.TOKEN_END)) {
+            if (
+                // eslint-disable-next-line @stylistic/no-extra-parens
+                (
+                    tokens.tryConsumeTokenType(TokenType.TOKEN_OPEN_ANGLE_BRACKET) &&
+                    tokens.currentTokenValue().includes(`/${htmlTagName}>`)
+                ) ||
+                substr_compare(tokens.currentTokenValue(), endTag, endTagSearchOffset, 0) === 0
+            ) {
+                return true;
+            }
+
+            tokens.next();
+        }
+
+        return false;
+    }
+
+    public parseGeneric(tokens: TokenIterator, baseType: IdentifierTypeNode): GenericTypeNode {
+        tokens.consumeTokenType(TokenType.TOKEN_OPEN_ANGLE_BRACKET);
+
+        const startLine = baseType.getAttribute(Attribute.START_LINE);
+        const startIndex = baseType.getAttribute(Attribute.START_INDEX);
+        const genericTypes: TypeNode[] = [];
+        const variances: GenericTypeNodeVariance[] = [];
+
+        let isFirst = true;
+
+        while (isFirst || tokens.tryConsumeTokenType(TokenType.TOKEN_COMMA)) {
+            tokens.tryConsumeTokenType(TokenType.TOKEN_PHPDOC_EOL);
+
+            // trailing comma case
+            if (!isFirst && tokens.isCurrentTokenType(TokenType.TOKEN_CLOSE_ANGLE_BRACKET)) {
+                break;
+            }
+
+            isFirst = false;
+
+            const [genericType, variance] = this.parseGenericTypeArgument(tokens);
+            genericTypes.push(genericType);
+            variances.push(variance);
+
+            tokens.tryConsumeTokenType(TokenType.TOKEN_PHPDOC_EOL);
+        }
+
+        let type: GenericTypeNode = new GenericTypeNode(baseType, genericTypes, variances);
+
+        if (startLine !== null && startIndex !== null) {
+            type = this.enrichWithAttributes(tokens, type, startLine, startIndex);
+        }
+
+        tokens.consumeTokenType(TokenType.TOKEN_CLOSE_ANGLE_BRACKET);
+
+        return type;
+    }
+
+    public parseGenericTypeArgument(tokens: TokenIterator): [TypeNode, GenericTypeNodeVariance] {
+        const startLine = tokens.currentTokenLine();
+        const startIndex = tokens.currentTokenIndex();
+
+        if (tokens.tryConsumeTokenType(TokenType.TOKEN_WILDCARD)) {
+            return [
+                this.enrichWithAttributes(tokens, new IdentifierTypeNode('mixed'), startLine, startIndex),
+                GenericTypeNodeVariance.VARIANCE_BIVARIANT,
+            ];
+        }
+
+        let variance: GenericTypeNodeVariance;
+
+        if (tokens.tryConsumeTokenValue('contravariant')) {
+            variance = GenericTypeNodeVariance.VARIANCE_CONTRAVARIANT;
+        } else if (tokens.tryConsumeTokenValue('covariant')) {
+            variance = GenericTypeNodeVariance.VARIANCE_COVARIANT;
+        } else {
+            variance = GenericTypeNodeVariance.VARIANCE_INVARIANT;
+        }
+
+        const type = this.parse(tokens);
+
+        return [type, variance];
+    }
+
     private subParse(tokens: TokenIterator): TypeNode {
         const startLine = tokens.currentTokenLine();
         const startIndex = tokens.currentTokenIndex();
@@ -342,106 +442,6 @@ export default class TypeParser {
         const type = this.parseAtomic(tokens);
 
         return new NullableTypeNode(type);
-    }
-
-    public isHtml(tokens: TokenIterator): boolean {
-        tokens.consumeTokenType(TokenType.TOKEN_OPEN_ANGLE_BRACKET);
-
-        if (!tokens.isCurrentTokenType(TokenType.TOKEN_IDENTIFIER)) {
-            return false;
-        }
-
-        const htmlTagName = tokens.currentTokenValue();
-
-        tokens.next();
-
-        if (!tokens.tryConsumeTokenType(TokenType.TOKEN_CLOSE_ANGLE_BRACKET)) {
-            return false;
-        }
-
-        const endTag = `</${htmlTagName}>`;
-        const endTagSearchOffset = -endTag.length;
-
-        while (!tokens.isCurrentTokenType(TokenType.TOKEN_END)) {
-            if (
-                // eslint-disable-next-line @stylistic/no-extra-parens
-                (
-                    tokens.tryConsumeTokenType(TokenType.TOKEN_OPEN_ANGLE_BRACKET) &&
-                    tokens.currentTokenValue().includes(`/${htmlTagName}>`)
-                ) ||
-                substr_compare(tokens.currentTokenValue(), endTag, endTagSearchOffset, 0) === 0
-            ) {
-                return true;
-            }
-
-            tokens.next();
-        }
-
-        return false;
-    }
-
-    public parseGeneric(tokens: TokenIterator, baseType: IdentifierTypeNode): GenericTypeNode {
-        tokens.consumeTokenType(TokenType.TOKEN_OPEN_ANGLE_BRACKET);
-
-        const startLine = baseType.getAttribute(Attribute.START_LINE);
-        const startIndex = baseType.getAttribute(Attribute.START_INDEX);
-        const genericTypes: TypeNode[] = [];
-        const variances: GenericTypeNodeVariance[] = [];
-
-        let isFirst = true;
-
-        while (isFirst || tokens.tryConsumeTokenType(TokenType.TOKEN_COMMA)) {
-            tokens.tryConsumeTokenType(TokenType.TOKEN_PHPDOC_EOL);
-
-            // trailing comma case
-            if (!isFirst && tokens.isCurrentTokenType(TokenType.TOKEN_CLOSE_ANGLE_BRACKET)) {
-                break;
-            }
-
-            isFirst = false;
-
-            const [genericType, variance] = this.parseGenericTypeArgument(tokens);
-            genericTypes.push(genericType);
-            variances.push(variance);
-
-            tokens.tryConsumeTokenType(TokenType.TOKEN_PHPDOC_EOL);
-        }
-
-        let type: GenericTypeNode = new GenericTypeNode(baseType, genericTypes, variances);
-
-        if (startLine !== null && startIndex !== null) {
-            type = this.enrichWithAttributes(tokens, type, startLine, startIndex);
-        }
-
-        tokens.consumeTokenType(TokenType.TOKEN_CLOSE_ANGLE_BRACKET);
-
-        return type;
-    }
-
-    public parseGenericTypeArgument(tokens: TokenIterator): [TypeNode, GenericTypeNodeVariance] {
-        const startLine = tokens.currentTokenLine();
-        const startIndex = tokens.currentTokenIndex();
-
-        if (tokens.tryConsumeTokenType(TokenType.TOKEN_WILDCARD)) {
-            return [
-                this.enrichWithAttributes(tokens, new IdentifierTypeNode('mixed'), startLine, startIndex),
-                GenericTypeNodeVariance.VARIANCE_BIVARIANT,
-            ];
-        }
-
-        let variance: GenericTypeNodeVariance;
-
-        if (tokens.tryConsumeTokenValue('contravariant')) {
-            variance = GenericTypeNodeVariance.VARIANCE_CONTRAVARIANT;
-        } else if (tokens.tryConsumeTokenValue('covariant')) {
-            variance = GenericTypeNodeVariance.VARIANCE_COVARIANT;
-        } else {
-            variance = GenericTypeNodeVariance.VARIANCE_INVARIANT;
-        }
-
-        const type = this.parse(tokens);
-
-        return [type, variance];
     }
 
     private parseCallable(tokens: TokenIterator, identifier: IdentifierTypeNode): TypeNode {

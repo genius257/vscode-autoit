@@ -240,6 +240,23 @@ export default class ConstExprParser {
         );
     }
 
+    /**
+     * This method is supposed to be called with TokenIterator after reading TOKEN_DOUBLE_QUOTED_STRING and shifting
+     * to the next token.
+     */
+    public parseDoctrineString(text: string, tokens: TokenIterator): DoctrineConstExprStringNode {
+        /*
+         * Because of how Lexer works, a valid Doctrine string
+         * can consist of a sequence of TOKEN_DOUBLE_QUOTED_STRING and TOKEN_DOCTRINE_ANNOTATION_STRING
+         */
+        while (tokens.isCurrentTokenType(TokenType.TOKEN_DOUBLE_QUOTED_STRING, TokenType.TOKEN_DOCTRINE_ANNOTATION_STRING)) {
+            text += tokens.currentTokenValue();
+            tokens.next();
+        }
+
+        return new DoctrineConstExprStringNode(DoctrineConstExprStringNode.unescape(text));
+    }
+
     private parseArray(tokens: TokenIterator, endToken: TokenType, startIndex: number): ConstExprArrayNode {
         const items: ConstExprArrayItemNode[] = [];
 
@@ -258,23 +275,6 @@ export default class ConstExprParser {
             startLine,
             startIndex,
         );
-    }
-
-    /**
-     * This method is supposed to be called with TokenIterator after reading TOKEN_DOUBLE_QUOTED_STRING and shifting
-     * to the next token.
-     */
-    public parseDoctrineString(text: string, tokens: TokenIterator): DoctrineConstExprStringNode {
-        /*
-         * Because of how Lexer works, a valid Doctrine string
-         * can consist of a sequence of TOKEN_DOUBLE_QUOTED_STRING and TOKEN_DOCTRINE_ANNOTATION_STRING
-         */
-        while (tokens.isCurrentTokenType(TokenType.TOKEN_DOUBLE_QUOTED_STRING, TokenType.TOKEN_DOCTRINE_ANNOTATION_STRING)) {
-            text += tokens.currentTokenValue();
-            tokens.next();
-        }
-
-        return new DoctrineConstExprStringNode(DoctrineConstExprStringNode.unescape(text));
     }
 
     private parseArrayItem(tokens: TokenIterator): ConstExprArrayItemNode {

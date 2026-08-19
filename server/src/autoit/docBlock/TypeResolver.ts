@@ -259,6 +259,10 @@ export default class TypeResolver {
         }
     }
 
+    public addKeyword(keyword: string, typeClassName: Constructor<Type>): void {
+        this.keywords[keyword] = typeClassName;
+    }
+
     private createFromGeneric(type: GenericTypeNode, context: Context): Type {
         switch (strtolower(type.type.name)) {
             case 'array':
@@ -382,10 +386,6 @@ export default class TypeResolver {
                     'Unable to resolve type "' + type + '", there is no known method to resolve it',
                 );
         }
-    }
-
-    public addKeyword(keyword: string, typeClassName: Constructor<Type>): void {
-        this.keywords[keyword] = typeClassName;
     }
 
     private isKeyword(type: string): boolean {
