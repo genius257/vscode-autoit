@@ -82,6 +82,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Will ignore variables and function declarations in includes, prefixed with \"__\", indicating internal usage"
+                },
+                "autoit3.showAllDeclarations": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When enabled, go to definition shows all matching declarations across scopes and included files. When disabled, only the closest matching declaration is shown."
                 }
             }
         },

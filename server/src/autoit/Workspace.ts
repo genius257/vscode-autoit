@@ -33,6 +33,9 @@ export type AutoIt3Configuration = {
 
     /** Will ignore variables and function declarations in includes, prefixed with \"__\", indicating internal usage */
     ignoreInternalInIncludes: boolean,
+
+    /** When enabled, go to definition shows all matching declarations across scopes and included files. When disabled, only the closest matching declaration is shown. */
+    showAllDeclarations: boolean,
 };
 
 export class Workspace {

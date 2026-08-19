@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DocBlock comments now shown in completion suggestion detail text for variables
 - Document highlight support for variables and functions
 - Symbol discovery support for `Assign` expressions, enabling hover, go-to-definition, find references, and document highlight on string literal arguments, with scope resolution honoring the `Global`, `Local`, and `ExistFail` flags
+- New setting `autoit3.showAllDeclarations` to toggle between showing all matching declarations or only the closest match on go to definition
 
 ### Changed
 

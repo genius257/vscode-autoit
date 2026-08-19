@@ -380,7 +380,38 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
         return [];
     }
 
-    // FIXME: make showing all declarations vs closest match toggle-able via setting
+    const configuration = workspace.getConfiguration();
+
+    if (configuration?.showAllDeclarations === false) {
+        // Closest match mode: walk the scope chain for the nearest declaration
+        const closestDeclaration = workspace.getDeclarationsAtPosition(
+            params.textDocument.uri,
+            symbolKey,
+            params.position,
+        )[0];
+
+        /*
+         * Fall back to the first merged declaration if the closest match is empty
+         * (e.g. symbol only declared in an include)
+         */
+        const declaration = closestDeclaration ?? [...symbol.getDeclarations()][0];
+
+        if (declaration === undefined) {
+            return [];
+        }
+
+        return [declaration].map((declaration) => ({
+            targetUri: declaration.location.source.toString(),
+            targetRange: PositionHelper.locationRangeToRange(
+                declaration.location,
+            ),
+            targetSelectionRange: PositionHelper.locationRangeToRange(
+                declaration.location,
+            ),
+        }));
+    }
+
+    // All declarations mode (default)
     return [...symbol.getDeclarations()].map((declaration) => ({
         targetUri: declaration.location.source.toString(),
         targetRange: PositionHelper.locationRangeToRange(
