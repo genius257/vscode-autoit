@@ -1,5 +1,5 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
@@ -62,7 +62,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
             retriggerCharacters: [','],
             workDoneProgress: false,
         },
-        textDocumentSync: TextDocumentSyncKind.Full,
+        textDocumentSync: TextDocumentSyncKind.Incremental,
     };
 
     return { capabilities };
@@ -90,13 +90,23 @@ connection.onDidOpenTextDocument((params) => {
 });
 
 connection.onDidChangeTextDocument((params) => {
-    const content = params.contentChanges[0];
+    const firstChange = params.contentChanges[0];
 
-    if (content === undefined) {
+    if (firstChange === undefined) {
         return;
     }
 
-    workspace.createOrUpdate(params.textDocument.uri, content.text);
+    if (TextDocumentContentChangeEvent.isFull(firstChange)) {
+        workspace.createOrUpdate(params.textDocument.uri, firstChange.text);
+
+        return;
+    }
+
+    for (const contentChange of params.contentChanges) {
+        if (TextDocumentContentChangeEvent.isIncremental(contentChange)) {
+            workspace.createOrUpdate(params.textDocument.uri, contentChange);
+        }
+    }
 });
 
 connection.onDidCloseTextDocument((params) => {

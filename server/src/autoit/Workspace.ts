@@ -1,5 +1,5 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification, Range } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
@@ -106,16 +106,25 @@ export class Workspace {
         return this.scripts.has(uri.toString());
     }
 
-    public createOrUpdate(uri: uri, text: string): Script {
+    public createOrUpdate(uri: uri, change: { range: Range, rangeLength?: number, text: string }): Script | undefined;
+    public createOrUpdate(uri: uri, text: string): Script;
+    public createOrUpdate(uri: uri, text: { range: Range, rangeLength?: number, text: string } | string): Script | undefined {
         const _uri = uri.toString();
         let script = this.scripts.get(_uri);
 
         if (script !== undefined) {
             script.update(text);
-        } else {
+        } else if (typeof text === 'string') {
             script = new Script(text, URI.parse(_uri), this);
             this.add(script);
             script.triggerDiagnostics();
+        } else {
+            /*
+             * An incremental change for a document we have no snapshot of yet cannot be
+             * applied, since there is no base text to apply it to. Ignore it and wait
+             * for a full text synchronization.
+             */
+            return undefined;
         }
 
         /*
