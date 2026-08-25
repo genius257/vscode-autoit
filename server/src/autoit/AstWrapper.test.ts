@@ -1,6 +1,23 @@
 import { expect, test, describe } from 'vitest';
+import parser from 'autoit3-pegjs';
 import AstWrapper from './AstWrapper';
 import { positionToOffset } from './PositionHelper';
+
+/**
+ * Asserts the incrementally built AST is indistinguishable from a fresh parse
+ * of the wrapper's current text.
+ */
+function expectEquivalentToFreshParse(wrapper: AstWrapper): void {
+    if (!wrapper.hasProgram()) {
+        throw new Error('Expected an AST, but the document has syntax errors.');
+    }
+
+    expect(JSON.stringify(wrapper.getProgram())).toBe(JSON.stringify(parser.parse(wrapper.getText())));
+}
+
+class ZeroRegionLimitWrapper extends AstWrapper {
+    protected override readonly regionSizeLimitRatio = 0;
+}
 
 describe('AstWrapper construction', function () {
     test('parses the initial text into a program', function () {
@@ -219,5 +236,123 @@ describe('AstWrapper incremental updates (expected behavior)', function () {
 
         expect(wrapper.getText()).toBe('; world\nMsgBox(1)');
         expect(wrapper.getProgram().body).toHaveLength(2);
+    });
+
+    test('deleting a whole middle line matches a fresh parse', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2\nLocal $c = 3');
+
+        wrapper.update({
+            range: { start: { line: 1, character: 0 }, end: { line: 2, character: 0 } },
+            text: '',
+        });
+
+        expect(wrapper.getText()).toBe('Local $a = 1\nLocal $c = 3');
+        expectEquivalentToFreshParse(wrapper);
+
+        const last = wrapper.getProgram().body[1];
+
+        if (last?.type !== 'VariableDeclaration') {
+            throw new Error('Expected a VariableDeclaration');
+        }
+
+        expect(last.location.start.line).toBe(2);
+        expect(wrapper.getText(last.location)).toBe('Local $c = 3');
+    });
+
+    test('deleting the first line matches a fresh parse', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2\nLocal $c = 3');
+
+        wrapper.update({
+            range: { start: { line: 0, character: 0 }, end: { line: 1, character: 0 } },
+            text: '',
+        });
+
+        expect(wrapper.getText()).toBe('Local $b = 2\nLocal $c = 3');
+        expectEquivalentToFreshParse(wrapper);
+
+        const first = wrapper.getProgram().body[0];
+
+        if (first?.type !== 'VariableDeclaration') {
+            throw new Error('Expected a VariableDeclaration');
+        }
+
+        expect(first.location.start.line).toBe(1);
+    });
+
+    test('deleting the last line matches a fresh parse', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2\nLocal $c = 3');
+
+        wrapper.update({
+            range: { start: { line: 2, character: 0 }, end: { line: 2, character: 12 } },
+            text: '',
+        });
+
+        expect(wrapper.getText()).toBe('Local $a = 1\nLocal $b = 2\n');
+        expectEquivalentToFreshParse(wrapper);
+        expect(wrapper.getProgram().body[2]).toBeUndefined();
+    });
+
+    test('deleting multiple statements at once matches a fresh parse', function () {
+        const wrapper = new AstWrapper('MsgBox(1)\nMsgBox(2)\nMsgBox(3)\nMsgBox(4)');
+
+        wrapper.update({
+            range: { start: { line: 1, character: 0 }, end: { line: 3, character: 0 } },
+            text: '',
+        });
+
+        expect(wrapper.getText()).toBe('MsgBox(1)\nMsgBox(4)');
+        expectEquivalentToFreshParse(wrapper);
+        expect(wrapper.getProgram().body).toHaveLength(2);
+    });
+
+    test('inserting lines between statements matches a fresh parse', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2');
+
+        wrapper.update({
+            range: { start: { line: 1, character: 0 }, end: { line: 1, character: 0 } },
+            text: 'Local $middle = 3\nConsoleWrite($middle)\n',
+        });
+
+        expect(wrapper.getText()).toBe('Local $a = 1\nLocal $middle = 3\nConsoleWrite($middle)\nLocal $b = 2');
+        expectEquivalentToFreshParse(wrapper);
+        expect(wrapper.getProgram().body).toHaveLength(4);
+        expect(wrapper.getProgram().body[3]?.location.start.line).toBe(4);
+    });
+
+    test('transient syntax errors recover on repair without losing the document', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2');
+
+        // Break the document (unterminated string): Local $a = "1
+        wrapper.update({
+            range: { start: { line: 0, character: 11 }, end: { line: 0, character: 11 } },
+            text: '"',
+        });
+
+        expect(wrapper.hasProgram()).toBe(false);
+        expect(wrapper.getSyntaxError()).toBeDefined();
+        expect(wrapper.getText()).toBe('Local $a = "1\nLocal $b = 2');
+
+        // Repair it again by removing the stray quote
+        wrapper.update({
+            range: { start: { line: 0, character: 11 }, end: { line: 0, character: 12 } },
+            text: '',
+        });
+
+        expect(wrapper.hasProgram()).toBe(true);
+        expect(wrapper.getSyntaxError()).toBeUndefined();
+        expect(wrapper.getText()).toBe('Local $a = 1\nLocal $b = 2');
+        expectEquivalentToFreshParse(wrapper);
+    });
+
+    test('changes larger than the region limit fall back to a full re-parse', function () {
+        const wrapper = new ZeroRegionLimitWrapper('MsgBox(1)\nMsgBox(2)');
+
+        wrapper.update({
+            range: { start: { line: 0, character: 7 }, end: { line: 0, character: 8 } },
+            text: '3',
+        });
+
+        expect(wrapper.getText()).toBe('MsgBox(3)\nMsgBox(2)');
+        expectEquivalentToFreshParse(wrapper);
     });
 });

@@ -1,33 +1,31 @@
 import parser, { type AutoIt3, type GrammarSource, type LocationRange } from 'autoit3-pegjs';
 import { Position, Range } from 'vscode-languageserver';
 import AstWalker from './AstWalker';
-import { isRangeWithinLocationRange } from './PositionHelper';
-import { Node, NodeFilterAction } from './Script';
+import { offsetToLocation } from './PositionHelper';
+import { NodeFilterAction } from './Script';
 
 export type TextChange = string | { range: Range, text: string };
-
-type ChildSlot = {
-    parent: Record<string, unknown>,
-    key: string,
-
-    /** Index within the holding array, or -1 when held as a plain property. */
-    index: number,
-};
 
 /**
  * Wraps the document text and its parsed AST.
  *
  * Full-text changes (a plain string) replace the entire document and re-parse it.
- * Incremental changes (a range + text) re-parse only the smallest branch of the
- * AST that contains the change, rebase the fragment positions to document
- * coordinates, and leave all other branches untouched, avoiding a full re-parse
- * of large documents.
+ * Incremental changes (a range + text) resolve the smallest region of sibling
+ * statements affected by the change, re-parse only that region's text, splice the
+ * resulting nodes back into the tree, and shift the positions of following
+ * siblings — avoiding a full re-parse of large documents.
  */
 export default class AstWrapper {
     protected textContent: string;
     protected ast: AutoIt3.Program | undefined;
     protected grammarSource: GrammarSource | undefined;
     protected syntaxError: (SyntaxError & { location: LocationRange }) | undefined;
+
+    /**
+     * Region parses lose their advantage once the affected slice grows beyond
+     * this fraction of the document; such changes re-parse everything instead.
+     */
+    protected regionSizeLimitRatio = 0.35;
 
     public constructor(textContent: string, grammarSource?: GrammarSource) {
         this.textContent = textContent;
@@ -50,44 +48,146 @@ export default class AstWrapper {
         const endOffset = this.positionToOffset(change.range.end);
         const textContent = this.textContent.slice(0, startOffset) + change.text + this.textContent.slice(endOffset);
 
-        /**
-         * Collects the chain of nodes containing the change, from the outermost
-         * statement down to the smallest containing branch.
+        const ast = this.ast;
+
+        if (ast === undefined) {
+            this.applyFull(textContent);
+
+            return;
+        }
+
+        const offsetDelta = change.text.length - (endOffset - startOffset);
+        const lineIndex = this.buildLineIndex(textContent);
+
+        /*
+         * Resolve the sibling window: every top-level statement intersecting the
+         * changed range. Zero-width insertions on a seam between two statements
+         * intersect both, which keeps the inserted text attached to real content.
          */
-        if (this.ast !== undefined) {
-            const matches: Node[] = [];
-            AstWalker.filterNestedNodes(this.ast.body, (node) => (
-                isRangeWithinLocationRange(change.range, node.location)
-                    ? NodeFilterAction.Continue
-                    : NodeFilterAction.SkipAndStopPropagation
-            ), matches);
+        let firstIndex = -1;
+        let lastIndex = -1;
 
-            /*
-             * Attempt to apply the change incrementally, starting at the deepest
-             * (smallest) branch containing the change and moving outwards. A branch is
-             * usable when its text, with the change applied, parses into exactly one
-             * node of the same type as the branch itself, so it can be swapped 1:1.
-             */
-            for (let i = matches.length - 1; i >= 0; i--) {
-                const branch = matches[i];
+        for (let index = 0; index < ast.body.length; index++) {
+            const node = ast.body[index];
 
-                if (branch === undefined) {
-                    continue;
+            if (node === undefined) {
+                continue;
+            }
+
+            const { offset: nodeStart } = node.location.start;
+            const { offset: nodeEnd } = node.location.end;
+
+            if (nodeStart <= endOffset && nodeEnd >= startOffset) {
+                if (firstIndex === -1) {
+                    firstIndex = index;
                 }
 
-                const parent: object = matches[i - 1] ?? this.ast;
-
-                if (this.updateBranch(branch, parent, startOffset, endOffset, change.text, textContent)) {
-                    return;
-                }
+                lastIndex = index;
             }
         }
 
+        if (firstIndex === -1) {
+            // Edit outside any statement (leading/trailing whitespace): anchor to nearest boundary.
+            if (ast.body.length === 0) {
+                this.applyFull(textContent);
+
+                return;
+            }
+
+            firstIndex = lastIndex = endOffset <= (ast.body[0]?.location.start.offset ?? Number.POSITIVE_INFINITY) ? 0 : ast.body.length - 1;
+        }
+
+        const firstNode = ast.body[firstIndex];
+        const lastNode = ast.body[lastIndex];
+
+        if (firstNode === undefined || lastNode === undefined) {
+            this.applyFull(textContent);
+
+            return;
+        }
+
         /*
-         * The change could not be applied incrementally, or there is no AST to
-         * apply it to (previous syntax error), re-parse everything.
+         * Build the fragment from the window's outer edges with the change applied,
+         * mapped to new-text coordinates.
          */
-        this.applyFull(textContent);
+        const fragmentStartOld = Math.min(startOffset, firstNode.location.start.offset);
+        const fragmentEndOld = Math.max(endOffset, lastNode.location.end.offset);
+        const mapOffset = (offset: number): number => (offset <= startOffset ? offset : offset + offsetDelta);
+
+        /*
+         * Extend the fragment up to the start of the next surviving sibling (or
+         * EOF): the parser consumes inter-statement whitespace greedily into the
+         * preceding statement's location, so the fragment must include it for the
+         * spliced locations to match a fresh parse.
+         */
+        const nextSiblingStart = ast.body[lastIndex + 1]?.location.start.offset ?? textContent.length;
+        const fragmentStart = mapOffset(fragmentStartOld);
+        const fragmentEnd = Math.max(mapOffset(fragmentEndOld), mapOffset(nextSiblingStart), fragmentStart);
+        const fragment = textContent.slice(fragmentStart, fragmentEnd);
+
+        if (fragment.length > textContent.length * this.regionSizeLimitRatio) {
+            this.applyFull(textContent);
+
+            return;
+        }
+
+        let fragmentProgram: AutoIt3.Program;
+
+        try {
+            fragmentProgram = this.parse(fragment);
+        } catch (e) {
+            if (!AstWrapper.isSyntaxError(e)) {
+                throw e;
+            }
+
+            /*
+             * The document is currently syntactically invalid. Drop the AST and
+             * record the error; the next update re-parses the full text, which is
+             * the only reliable way forward from an invalid intermediate state.
+             */
+            this.textContent = textContent;
+            this.ast = undefined;
+            this.syntaxError = e;
+
+            return;
+        }
+
+        // Rebase the new nodes to document coordinates...
+        this.rebaseLocations(fragmentProgram, offsetToLocation(fragmentStart, textContent));
+
+        // ...splice them in place of the old window members...
+        const replacementNodes = [...fragmentProgram.body];
+        (ast.body as unknown[]).splice(firstIndex, lastIndex - firstIndex + 1, ...replacementNodes);
+
+        // ...and shift every node in the following siblings' subtrees to its post-edit position.
+        for (let index = firstIndex + replacementNodes.length; index < ast.body.length; index++) {
+            const sibling = ast.body[index];
+
+            if (sibling === undefined) {
+                continue;
+            }
+
+            AstWalker.filterNestedNodes([sibling], (node) => {
+                const { location } = node;
+
+                (node as { location: LocationRange }).location = {
+                    source: location.source,
+                    start: this.locationPointAt(location.start.offset + offsetDelta, lineIndex),
+                    end: this.locationPointAt(location.end.offset + offsetDelta, lineIndex),
+                };
+
+                return NodeFilterAction.Skip;
+            }, []);
+        }
+
+        (ast as { location: LocationRange }).location = {
+            source: ast.location.source,
+            start: this.locationPointAt(0, lineIndex),
+            end: this.locationPointAt(textContent.length, lineIndex),
+        };
+
+        this.textContent = textContent;
+        this.syntaxError = undefined;
     }
 
     /** Returns the syntax error of the most recent failed parse, if any. */
@@ -138,56 +238,6 @@ export default class AstWrapper {
     }
 
     /**
-     * Re-parses a single branch with the change applied and splices the result
-     * back into the tree, rebasing the new node's locations to document
-     * coordinates. Returns false when the branch is not incrementally updateable.
-     */
-    protected updateBranch(
-        branch: Node,
-        parent: object,
-        startOffset: number,
-        endOffset: number,
-        text: string,
-        textContent: string,
-    ): boolean {
-        const branchStart = branch.location.start.offset;
-        const branchEnd = branch.location.end.offset;
-        const branchText = this.textContent.slice(branchStart, startOffset) + text + this.textContent.slice(endOffset, branchEnd);
-
-        let program: AutoIt3.Program;
-
-        try {
-            program = this.parse(branchText);
-        } catch {
-            // The fragment is no longer valid in isolation.
-            return false;
-        }
-
-        if (program.body.length !== 1 || program.body[0]?.type !== branch.type) {
-            return false;
-        }
-
-        const slot = this.findChildSlot(parent, branch);
-
-        if (slot === null) {
-            return false;
-        }
-
-        const replacement = program.body[0];
-        this.rebaseLocations(program, branch.location.start);
-
-        if (slot.index === -1) {
-            slot.parent[slot.key] = replacement;
-        } else {
-            (slot.parent[slot.key] as unknown[])[slot.index] = replacement;
-        }
-
-        this.textContent = textContent;
-
-        return true;
-    }
-
-    /**
      * Shifts the locations of every node in the given (fragment) program so they
      * resolve against document coordinates, given the location of the fragment's
      * first character in the document.
@@ -218,8 +268,12 @@ export default class AstWrapper {
         offsetDelta: number,
     ): { line: number, column: number, offset: number } {
         return {
-            line: point.line + lineDelta,
+            /*
+             * Key order mirrors freshly parsed locations so structural
+             * comparisons against a full re-parse are stable.
+             */
             offset: point.offset + offsetDelta,
+            line: point.line + lineDelta,
 
             /*
              * Columns on fragment lines after the first are already identical to
@@ -229,25 +283,46 @@ export default class AstWrapper {
         };
     }
 
-    /** Locates the property or array entry of {@link parent} holding {@link node}. */
-    protected findChildSlot(parent: object, node: object): ChildSlot | null {
-        const record = parent as Record<string, unknown>;
+    /** Offsets at which each line of {@link text} starts. */
+    protected buildLineIndex(text: string): number[] {
+        const lineIndex = [0];
 
-        for (const key of Object.keys(record)) {
-            const value = record[key];
-
-            if (Array.isArray(value)) {
-                const index = value.indexOf(node);
-
-                if (index !== -1) {
-                    return { parent: record, key, index };
-                }
-            } else if (value === node) {
-                return { parent: record, key, index: -1 };
+        for (let offset = 0; offset < text.length; offset++) {
+            if (text[offset] === '\n') {
+                lineIndex.push(offset + 1);
             }
         }
 
-        return null;
+        return lineIndex;
+    }
+
+    /** Converts an offset in the new text to a zero-based line/character position. */
+    protected positionAtOffset(lineIndex: number[], offset: number): Position {
+        let low = 0;
+        let high = lineIndex.length - 1;
+
+        while (low < high) {
+            const mid = Math.ceil((low + high) / 2);
+            const midStart = lineIndex[mid];
+
+            if (midStart === undefined || midStart > offset) {
+                high = mid - 1;
+            } else {
+                low = mid;
+            }
+        }
+
+        const lineStart = lineIndex[low] ?? 0;
+
+        return { line: low, character: offset - lineStart };
+    }
+
+    /** Builds a location point at an offset in the new text. */
+    protected locationPointAt(offset: number, lineIndex: number[]): { line: number, column: number, offset: number } {
+        const position = this.positionAtOffset(lineIndex, offset);
+
+        // Key order mirrors freshly parsed locations (see rebaseLocationPoint).
+        return { offset, line: position.line + 1, column: position.character + 1 };
     }
 
     protected positionToOffset(position: Position): number {
