@@ -1,4 +1,4 @@
-import { DiagnosticSeverity, Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
+import { Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
 import { Workspace } from '../autoit/Workspace';
 import { LocationRange, SyntaxError, type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from '../autoit/PositionHelper';
@@ -39,7 +39,7 @@ export class SignatureHelpBridge {
             return null;
         }
 
-        const hasSyntaxErrors = script.getDiagnostics().some((diagnostic) => diagnostic.severity === DiagnosticSeverity.Error && diagnostic.message.includes('Syntax error'));
+        const hasSyntaxErrors = script.hasSyntaxErrors();
 
         let callExpression: CallExpressionNode | undefined;
         let declarator: AutoIt3.FunctionDeclaration | null = null;

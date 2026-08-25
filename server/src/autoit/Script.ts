@@ -131,6 +131,13 @@ export default class Script {
     protected astWrapper: AstWrapper;
 
     /**
+     * Monotonic counter bumped on every update, regardless of whether the
+     * resulting document parses. Consumers caching AST nodes across requests
+     * can use it to detect that their cached nodes may be stale.
+     */
+    protected revision = 0;
+
+    /**
      * The most recently parsed program. Kept even when later edits introduce
      * syntax errors, so language features keep working off the last valid AST.
      */
@@ -149,7 +156,6 @@ export default class Script {
     /** Reference count */
     protected refCount: number = 1;
 
-    protected program: AutoIt3.Program | undefined;
     protected scope: Scope = new Scope();
 
     protected debouncedTriggerDiagnostics: (() => void) | null = null;
@@ -203,11 +209,22 @@ export default class Script {
 
     /** Update the script content, re-parsing only the affected branch when possible */
     public update(change: TextChange) {
+        this.revision++;
         this.resetDiagnostics();
         this.astWrapper.update(change);
         this.refreshProgram();
         this.reportSyntaxError();
         this.analyze();
+    }
+
+    /** Monotonic counter bumped on every update; used to detect stale cached AST nodes */
+    public getRevision(): number {
+        return this.revision;
+    }
+
+    /** Whether the current document text failed to parse */
+    public hasSyntaxErrors(): boolean {
+        return this.astWrapper.getSyntaxError() !== undefined;
     }
 
     public addReference(): number {
