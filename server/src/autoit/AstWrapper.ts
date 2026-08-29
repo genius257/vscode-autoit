@@ -159,10 +159,12 @@ export default class AstWrapper {
              * The document is currently syntactically invalid. Drop the AST and
              * record the error; the next update re-parses the full text, which is
              * the only reliable way forward from an invalid intermediate state.
+             * The error location arrives in fragment coordinates and is rebased
+             * to document coordinates to match applyFull's contract.
              */
             this.textContent = textContent;
             this.ast = undefined;
-            this.syntaxError = e;
+            this.syntaxError = this.rebaseSyntaxErrorLocation(e, offsetToLocation(fragmentStart, textContent));
 
             return;
         }
@@ -250,6 +252,28 @@ export default class AstWrapper {
             this.ast = undefined;
             this.syntaxError = e;
         }
+    }
+
+    /**
+     * Rebases a syntax error caught during fragment parsing from fragment
+     * coordinates to document coordinates, matching applyFull's contract.
+     */
+    protected rebaseSyntaxErrorLocation(
+        e: SyntaxError & { location: LocationRange },
+        origin: { line: number, column: number, offset: number },
+    ): SyntaxError & { location: LocationRange } {
+        const lineDelta = origin.line - 1;
+        const columnDelta = origin.column - 1;
+        const offsetDelta = origin.offset;
+
+        // The caught error instance is owned by the wrapper, so its location is rebased in place.
+        (e as { location: LocationRange }).location = {
+            source: e.location.source,
+            start: this.rebaseLocationPoint(e.location.start, lineDelta, columnDelta, offsetDelta),
+            end: this.rebaseLocationPoint(e.location.end, lineDelta, columnDelta, offsetDelta),
+        };
+
+        return e;
     }
 
     /**

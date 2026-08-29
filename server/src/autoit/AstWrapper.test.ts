@@ -344,6 +344,33 @@ describe('AstWrapper incremental updates (expected behavior)', function () {
         expectEquivalentToFreshParse(wrapper);
     });
 
+    test('syntax errors in non-leading statements report document coordinates', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2\nLocal $c = 3');
+
+        // Break the second statement (unterminated string): Local $b = "2
+        wrapper.update({
+            range: { start: { line: 1, character: 11 }, end: { line: 1, character: 11 } },
+            text: '"',
+        });
+
+        expect(wrapper.hasProgram()).toBe(false);
+
+        const syntaxError = wrapper.getSyntaxError();
+
+        expect(syntaxError).toBeDefined();
+
+        /*
+         * The error location must be rebased to document coordinates: the
+         * fragment starts on document line 2, so a fragment-relative line 1
+         * report would be wrong.
+         */
+        expect(syntaxError?.location.start.line).toBe(2);
+        expect(syntaxError?.location.start.offset).toBeGreaterThanOrEqual(
+            positionToOffset({ line: 1, character: 0 }, wrapper.getText()),
+        );
+        expect(syntaxError?.location.end.line).toBeGreaterThanOrEqual(2);
+    });
+
     test('changes larger than the region limit fall back to a full re-parse', function () {
         const wrapper = new ZeroRegionLimitWrapper('MsgBox(1)\nMsgBox(2)');
 
