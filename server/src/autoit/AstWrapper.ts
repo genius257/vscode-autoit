@@ -87,14 +87,29 @@ export default class AstWrapper {
         }
 
         if (firstIndex === -1) {
-            // Edit outside any statement (leading/trailing whitespace): anchor to nearest boundary.
+            /*
+             * Edit outside any statement (whitespace in an inter-statement gap,
+             * or leading/trailing whitespace). Anchor to the nearest preceding
+             * sibling — the gap's whitespace is part of its trailing location —
+             * so later statements are never reparsed for such edits.
+             */
             if (ast.body.length === 0) {
                 this.applyFull(textContent);
 
                 return;
             }
 
-            firstIndex = lastIndex = endOffset <= (ast.body[0]?.location.start.offset ?? Number.POSITIVE_INFINITY) ? 0 : ast.body.length - 1;
+            firstIndex = lastIndex = 0;
+
+            for (let index = ast.body.length - 1; index >= 0; index--) {
+                const node = ast.body[index];
+
+                if (node !== undefined && node.location.end.offset <= startOffset) {
+                    firstIndex = lastIndex = index;
+
+                    break;
+                }
+            }
         }
 
         const firstNode = ast.body[firstIndex];

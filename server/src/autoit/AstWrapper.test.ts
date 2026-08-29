@@ -355,4 +355,40 @@ describe('AstWrapper incremental updates (expected behavior)', function () {
         expect(wrapper.getText()).toBe('MsgBox(3)\nMsgBox(2)');
         expectEquivalentToFreshParse(wrapper);
     });
+
+    test('whitespace edits in inter-statement gaps anchor to the preceding sibling', function () {
+        const wrapper = new AstWrapper('Local $a = 1\n\n\nLocal $b = 2');
+
+        // Statement B keeps its identity: only statement A's region is reparsed.
+        const statementB = wrapper.getProgram().body[wrapper.getProgram().body.length - 1];
+
+        wrapper.update({
+            range: { start: { line: 2, character: 0 }, end: { line: 2, character: 0 } },
+            text: ' ',
+        });
+
+        expect(wrapper.getText()).toBe('Local $a = 1\n\n \nLocal $b = 2');
+        expectEquivalentToFreshParse(wrapper);
+
+        const body = wrapper.getProgram().body;
+
+        // The gap now parses into EmptyStatements, but B itself is untouched.
+        expect(body).toHaveLength(4);
+        expect(body).toContain(statementB);
+        expect(body.indexOf(statementB)).toBe(3);
+        expect(statementB.location.start.line).toBe(4);
+    });
+
+    test('whitespace edits after the last statement anchor to the preceding sibling', function () {
+        const wrapper = new AstWrapper('Local $a = 1\nLocal $b = 2\n');
+
+        wrapper.update({
+            range: { start: { line: 2, character: 0 }, end: { line: 2, character: 0 } },
+            text: '   ',
+        });
+
+        expect(wrapper.getText()).toBe('Local $a = 1\nLocal $b = 2\n   ');
+        expectEquivalentToFreshParse(wrapper);
+        expect(wrapper.getProgram().body).toHaveLength(2);
+    });
 });
