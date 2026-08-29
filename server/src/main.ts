@@ -90,7 +90,13 @@ connection.onDidOpenTextDocument((params) => {
 });
 
 connection.onDidChangeTextDocument((params) => {
-    const firstChange = params.contentChanges[0];
+    const changes = params.contentChanges;
+
+    if (changes.length === 0) {
+        return;
+    }
+
+    const firstChange = changes[0];
 
     if (firstChange === undefined) {
         return;
@@ -102,10 +108,16 @@ connection.onDidChangeTextDocument((params) => {
         return;
     }
 
-    for (const contentChange of params.contentChanges) {
-        if (TextDocumentContentChangeEvent.isIncremental(contentChange)) {
-            workspace.createOrUpdate(params.textDocument.uri, contentChange);
-        }
+    /*
+     * Batch all incremental changes of the notification into a single update,
+     * so Script.updateAll(), analyze() and dependency recomputation run once.
+     */
+    const incrementalChanges = changes
+        .filter(TextDocumentContentChangeEvent.isIncremental)
+        .map((contentChange) => contentChange);
+
+    if (incrementalChanges.length > 0) {
+        workspace.createOrUpdate(params.textDocument.uri, incrementalChanges);
     }
 });
 

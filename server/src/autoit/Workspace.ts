@@ -106,14 +106,18 @@ export class Workspace {
         return this.scripts.has(uri.toString());
     }
 
-    public createOrUpdate(uri: uri, change: { range: Range, rangeLength?: number, text: string }): Script | undefined;
+    public createOrUpdate(uri: uri, change: { range: Range, rangeLength?: number, text: string } | { range: Range, rangeLength?: number, text: string }[]): Script | undefined;
     public createOrUpdate(uri: uri, text: string): Script;
-    public createOrUpdate(uri: uri, text: { range: Range, rangeLength?: number, text: string } | string): Script | undefined {
+    public createOrUpdate(uri: uri, text: { range: Range, rangeLength?: number, text: string }[] | { range: Range, rangeLength?: number, text: string } | string): Script | undefined {
         const _uri = uri.toString();
         let script = this.scripts.get(_uri);
 
         if (script !== undefined) {
-            script.update(text);
+            if (Array.isArray(text)) {
+                script.updateAll(text);
+            } else {
+                script.update(text);
+            }
         } else if (typeof text === 'string') {
             script = new Script(text, URI.parse(_uri), this);
             this.add(script);

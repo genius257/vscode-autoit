@@ -217,6 +217,28 @@ export default class Script {
         this.analyze();
     }
 
+    /**
+     * Applies multiple content changes as a single update: text and AST are
+     * updated for each change, while diagnostics, analysis and dependency
+     * recomputation run only once for the whole batch.
+     */
+    public updateAll(changes: TextChange[]) {
+        if (changes.length === 0) {
+            return;
+        }
+
+        this.revision++;
+        this.resetDiagnostics();
+
+        for (const change of changes) {
+            this.astWrapper.update(change);
+        }
+
+        this.refreshProgram();
+        this.reportSyntaxError();
+        this.analyze();
+    }
+
     /** Monotonic counter bumped on every update; used to detect stale cached AST nodes */
     public getRevision(): number {
         return this.revision;
