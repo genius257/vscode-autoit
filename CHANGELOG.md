@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incremental updates to the AST are now supported, reducing latency when working with big files
 - Go to declaration now shows all matching declarations across scopes and included files, instead of only the closest match
+- Include files are now read directly from disk instead of opened as text documents, improving resolution performance
+- Include files that are unreadable or not valid UTF-8 now surface a user-visible error message instead of failing silently, while resolution continues with the remaining include locations
 
 ### Fixed
 

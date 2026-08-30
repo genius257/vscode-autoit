@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------
  */
 
-import { /* CancellationToken,*/ ExtensionContext, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
+import { /* CancellationToken,*/ ExtensionContext, FileSystemError, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
 import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
 import native from '../../server/src/autoit/native.au3?raw';
 import { LanguageClient } from 'vscode-languageclient/browser';
@@ -34,14 +34,30 @@ export function activate(context: ExtensionContext) {
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     client.start().then(() => {
-        client.onRequest('openTextDocument', (uri: string) => {
+        client.onRequest<string | null, [string]>('fs/readFile', async (uri: string) => {
             const file = Uri.parse(uri);
 
-            return workspace.openTextDocument(file).then((textDocument) => {
-                return textDocument.getText();
-            }, () => {
-                return null;
-            });
+            let content: Uint8Array;
+
+            try {
+                content = await workspace.fs.readFile(file);
+            } catch (error) {
+                /*
+                 * File does not exist is an expected outcome during include resolution,
+                 * so it is reported as null, letting the server try fallback locations.
+                 */
+                if (error instanceof FileSystemError && error.code === 'FileNotFound') {
+                    return null;
+                }
+
+                throw error;
+            }
+
+            try {
+                return new TextDecoder('utf-8', { fatal: true }).decode(content);
+            } catch {
+                throw new Error(`Failed to decode file as UTF-8: ${uri}`);
+            }
         });
 
         // eslint-disable-next-line no-console

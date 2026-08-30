@@ -431,7 +431,12 @@ export class Workspace {
             return resolvingInclude;
         }
 
-        const promise = this.connection?.sendRequest<string | null>('openTextDocument', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve })) ?? Promise.resolve(null);
+        const promise = this.connection?.sendRequest<string | null>('fs/readFile', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve }))
+            .catch((error: unknown) => {
+                this.connection?.window.showErrorMessage(`AutoIt3: failed to read include "${uri.toString()}": ${error instanceof Error ? error.message : String(error)}`);
+
+                return null;
+            }) ?? Promise.resolve(null);
 
         this.resolvingIncludes.set(uri.toString(), promise);
 
