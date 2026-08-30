@@ -1,8 +1,8 @@
-import parser, { type AutoIt3, type LocationRange, type SyntaxError } from 'autoit3-pegjs';
+import parser, { type AutoIt3, type GrammarSource, type LocationRange, type SyntaxError } from 'autoit3-pegjs';
 
 export function parse(
     input: string,
-    grammarSource: string | undefined,
+    grammarSource: GrammarSource | undefined,
 ): AutoIt3.Program {
     return parser.parse(input, { grammarSource: grammarSource });
 }

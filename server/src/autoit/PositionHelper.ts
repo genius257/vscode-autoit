@@ -68,6 +68,49 @@ export function offsetToLocation(offset: number, text: string): Location {
     };
 }
 
+/**
+ * Recursively remaps all LocationRange objects within a parsed AST (or any
+ * nested structure) onto the coordinates of an enclosing document.
+ *
+ * Locations are rewritten by translating their offsets by `offsetDelta` and
+ * recomputing line/column from the enclosing document's text.
+ *
+ * @param node Structure to remap in place (typically a parsed AST body).
+ * @param offsetDelta Absolute offset in the document where the parsed input begins.
+ * @param text The enclosing document's text.
+ */
+export function remapLocations(node: unknown, offsetDelta: number, text: string): void {
+    if (node === null || typeof node !== 'object') {
+        return;
+    }
+
+    for (const value of Object.values(node)) {
+        if (value === null || typeof value !== 'object') {
+            continue;
+        }
+
+        const { start, end } = value as { start?: unknown, end?: unknown };
+
+        if (
+            typeof start === 'object' && start !== null && typeof (start as { offset?: unknown }).offset === 'number' &&
+            typeof end === 'object' && end !== null && typeof (end as { offset?: unknown }).offset === 'number'
+        ) {
+            (value as { start: Location, end: Location }).start = offsetToLocation(
+                offsetDelta + (start as { offset: number }).offset,
+                text,
+            );
+            (value as { start: Location, end: Location }).end = offsetToLocation(
+                offsetDelta + (end as { offset: number }).offset,
+                text,
+            );
+
+            continue;
+        }
+
+        remapLocations(value, offsetDelta, text);
+    }
+}
+
 export function isPositionWithinLocationRange(
     position: Position,
     locationRange: LocationRange,

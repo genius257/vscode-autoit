@@ -165,6 +165,31 @@ IsDeclared('myVar')`);
         expect((syntheticNode as { name: string }).name).toBe('varName');
     });
 
+    test('getNodesAt within Execute() string finds parsed nodes at document positions', function () {
+        const script = new Script(`Global $abc = 123
+Execute('$abc')`);
+
+        // Position inside $abc within the Execute string (line 2, column 10, 1-based)
+        const result = script.getNodesAt({ line: 1, character: 10 });
+
+        const variableNode = result.find((node) => node.type === 'VariableIdentifier');
+        expect(variableNode).toBeDefined();
+        expect((variableNode as { location: { start: { line: number, column: number } } }).location.start.line).toBe(2);
+        expect((variableNode as { location: { start: { line: number, column: number } } }).location.start.column).toBe(10);
+    });
+
+    test('getNodesAt within Execute() string produces synthetic nodes from the parsed content', function () {
+        const script = new Script(`Global $abc = 123
+Execute("IsDeclared('abc')")`);
+
+        // Position inside 'abc' within the nested IsDeclared call in the Execute string
+        const result = script.getNodesAt({ line: 1, character: 21 });
+
+        const syntheticNode = result.find((node) => node.type === 'SyntheticVariableIdentifier');
+        expect(syntheticNode).toBeDefined();
+        expect((syntheticNode as { name: string }).name).toBe('abc');
+    });
+
     test('getNodesAt on Call with string literal produces SyntheticIdentifier', function () {
         const script = new Script(`Call('funcName')`);
 
@@ -287,6 +312,33 @@ describe('References location source', function () {
 
         return bad;
     }
+
+    test('Execute() string references map to document positions', function () {
+        const script = new Script(`Global $abc = 123
+Execute('$abc')`, URI.file('/exec2.au3'));
+
+        type ReferenceNode = { location: { start: { line: number, column: number } } };
+        type ScopeLike = {
+            getSymbols(): Map<string, { getReferences(): Set<ReferenceNode> }>,
+            getSubscopes(): unknown[],
+        };
+
+        const walk = (s: ScopeLike, depth: number): ReferenceNode[] => {
+            if (depth > 10) {
+                return [];
+            }
+
+            return [
+                ...[...s.getSymbols().values()].flatMap((symbol) => [...symbol.getReferences()]),
+                ...[...s.getSubscopes() as Iterable<ScopeLike>].flatMap((subscope) => walk(subscope, depth + 1)),
+            ];
+        };
+
+        const inString = walk(script.getScope() as unknown as ScopeLike, 0)
+            .find((r) => r.location.start.line === 2 && r.location.start.column === 10);
+
+        expect(inString).toBeDefined(); // $abc inside the Execute string
+    });
 
     test('references from Execute() strings keep the document source', function () {
         const script = new Script(`Global $abc = 123

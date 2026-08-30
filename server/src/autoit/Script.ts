@@ -509,11 +509,19 @@ export default class Script {
                                         }
 
                                         /*
-                                         * Parse using the enclosing document's source, so nodes
-                                         * inside the executed string keep a valid location.source
-                                         * (they are resolved against the document's text).
+                                         * Parse using the enclosing document's source, then remap
+                                         * every node location onto the document's coordinates,
+                                         * so positions inside the executed string point at the
+                                         * string contents in the document itself.
+                                         *
+                                         * NOTE: the grammar reports locations via Peggy's `location()`
+                                         * builtin, which does not apply `grammarSource.offset()`, so a
+                                         * post-parse remap is required.
                                          */
+                                        const stringContentStart = arg0.location.start.offset + 1; // skip opening quote
                                         const ast = parser.parse(arg0.value, { grammarSource: arg0.location.source });
+
+                                        PositionHelper.remapLocations(ast.body, stringContentStart, this.getText());
 
                                         AstWalker.filterNestedNodes(ast.body, processNode, []);
                                     }
@@ -929,6 +937,22 @@ export default class Script {
                             const isVariable = calleeName === 'eval' || calleeName === 'isdeclared' || calleeName === 'assign';
                             const syntheticNode = this.createSyntheticNode(arg0, isVariable);
                             matches.push(syntheticNode);
+                        }
+                    }
+
+                    // Look for nodes at the position within Execute()'s parsed string content
+                    if (calleeName === 'execute' && node.arguments.length > 0) {
+                        const arg0 = node.arguments[0];
+
+                        if (arg0.type === 'Literal' && typeof arg0.value === 'string' && Parser.isPositionWithinLocation(line, column, arg0.location)) {
+                            const stringContentStart = arg0.location.start.offset + 1; // skip opening quote
+                            const ast = Parser.parse(arg0.value, arg0.location.source);
+
+                            PositionHelper.remapLocations(ast.body, stringContentStart, this.getText());
+
+                            for (const statement of ast.body) {
+                                this.getNestedNodesAt(statement, line, column, matches);
+                            }
                         }
                     }
                 }
