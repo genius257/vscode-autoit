@@ -1683,16 +1683,16 @@ export default class Script {
         return result;
     }
 
+    /** Returns the current program, or undefined when no valid parse has happened yet */
+    public getProgram(): AutoIt3.Program | undefined {
+        return this.program;
+    }
+
     /** Caches the wrapper's program as the last known good program */
     protected refreshProgram(): void {
         if (this.astWrapper.hasProgram()) {
             this.program = this.astWrapper.getProgram();
         }
-    }
-
-    /** Returns the current program, or undefined when no valid parse has happened yet */
-    protected getProgram(): AutoIt3.Program | undefined {
-        return this.program;
     }
 
     /** Reports a pending syntax error from the AST wrapper as a diagnostic, if any */

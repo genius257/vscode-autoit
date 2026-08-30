@@ -267,7 +267,7 @@ describe('Batched updates', function () {
         expect(script.getRevision()).toBe(revisionBefore + 1);
         expect(script.getText()).toBe('Local $a = 123\nLocal $c = 3\nLocal $b = 2');
 
-        const third = script.getProgram().body[1];
+        const third = script.getProgram()?.body[1];
 
         if (third?.type !== 'VariableDeclaration') {
             throw new Error('Expected a VariableDeclaration');
