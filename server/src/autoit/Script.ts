@@ -295,6 +295,10 @@ export default class Script {
 
         const processNode = (node: Node): NodeFilterAction => {
             switch (node.type) {
+                case 'Identifier':
+                    (scope.parent ?? scope).addReference(node);
+
+                    break;
                 case 'FunctionDeclaration':
                     scope.addDeclaration(node.id);
 
