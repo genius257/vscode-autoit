@@ -402,3 +402,38 @@ export class UnfixableCallExpressionError extends Error {
         Object.setPrototypeOf(this, actualProto);
     }
 }
+
+export type CachedSignatureHelpBridge = {
+    bridge: SignatureHelpBridge,
+    uri: string,
+
+    /** Script revision the cached bridge was created against */
+    revision: number | undefined,
+
+    /** Whether the document had syntax errors when the cache was filled */
+    hasSyntaxErrors: boolean,
+};
+
+/**
+ * Determines whether a cached bridge may be reused for this request.
+ *
+ * The cached bridge holds AST nodes that may have been replaced by an
+ * incremental update. It may only be reused while it is known to be fresh
+ * (same document, no edits since), or while the document is in a syntax
+ * error state, where serving the last valid parse is intentional.
+ */
+export function canReuseSignatureHelpCache(
+    cached: CachedSignatureHelpBridge | undefined,
+    uri: string,
+    revision: number | undefined,
+    hasSyntaxErrors: boolean,
+    isRetrigger: boolean,
+): boolean {
+    if (!isRetrigger || cached?.uri !== uri) {
+        return false;
+    }
+
+    const staleIsAcceptable = hasSyntaxErrors && cached.hasSyntaxErrors;
+
+    return cached.revision === revision || staleIsAcceptable;
+}

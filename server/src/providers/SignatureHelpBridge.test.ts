@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest';
-import { SignatureHelpBridge } from './SignatureHelpBridge';
+import { describe, expect, test } from 'vitest';
+import { canReuseSignatureHelpCache, SignatureHelpBridge } from './SignatureHelpBridge';
 import { Workspace } from '../autoit/Workspace';
 import { URI } from 'vscode-uri';
 import { SignatureHelpTriggerKind } from 'vscode-languageserver';
@@ -149,9 +149,11 @@ test('retrigger after an incremental edit serves the updated document', () => {
     /*
      * A retriggering request after an edit must not reuse AST nodes captured
      * from the pre-edit document (they were replaced by the branch splice).
+     * The same bridge instance is deliberately reused, matching how main.ts
+     * serves retrigger requests from its cache: since the document is valid,
+     * the bridge must re-resolve instead of serving stale nodes.
      */
-    const secondBridge = new SignatureHelpBridge(workspace);
-    const secondHelp = secondBridge.resolveSignatureHelp({
+    const secondHelp = firstBridge.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
         position: { line: 0, character: 6 },
         context: {
@@ -163,4 +165,43 @@ test('retrigger after an incremental edit serves the updated document', () => {
     expect(secondHelp).not.toBeNull();
     expect(secondHelp?.activeParameter).toBe(2);
     expect(secondHelp?.signatures[0]?.label).toBe('A($a, $b, $c)');
+});
+
+describe('canReuseSignatureHelpCache', () => {
+    const cached = (overrides: Partial<{ uri: string, revision: number | undefined, hasSyntaxErrors: boolean }> = {}) => ({
+        bridge: new SignatureHelpBridge(new Workspace()),
+        uri: '/cached.au3',
+        revision: 1,
+        hasSyntaxErrors: false,
+        ...overrides,
+    });
+
+    test('reuses the cache when retriggering an unchanged document', () => {
+        expect(canReuseSignatureHelpCache(cached(), '/cached.au3', 1, false, true)).toBe(true);
+    });
+
+    test('does not reuse the cache without a retrigger', () => {
+        expect(canReuseSignatureHelpCache(cached(), '/cached.au3', 1, false, false)).toBe(false);
+    });
+
+    test('does not reuse the cache for a different document', () => {
+        expect(canReuseSignatureHelpCache(cached(), '/other.au3', 1, false, true)).toBe(false);
+    });
+
+    test('does not reuse the cache when the document was edited and is valid', () => {
+        // Post-edit case: cached AST nodes must not be served.
+        expect(canReuseSignatureHelpCache(cached(), '/cached.au3', 2, false, true)).toBe(false);
+    });
+
+    test('reuses the cache while the document stays in a syntax error state', () => {
+        expect(canReuseSignatureHelpCache(cached({ hasSyntaxErrors: true }), '/cached.au3', 2, true, true)).toBe(true);
+    });
+
+    test('does not reuse the cache when syntax errors were repaired', () => {
+        expect(canReuseSignatureHelpCache(cached({ hasSyntaxErrors: true }), '/cached.au3', 2, false, true)).toBe(false);
+    });
+
+    test('does not reuse an empty cache', () => {
+        expect(canReuseSignatureHelpCache(undefined, '/cached.au3', 1, false, true)).toBe(false);
+    });
 });

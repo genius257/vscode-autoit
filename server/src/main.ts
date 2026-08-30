@@ -8,7 +8,7 @@ import * as PositionHelper from './autoit/PositionHelper';
 import * as Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
-import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
+import { canReuseSignatureHelpCache, type CachedSignatureHelpBridge, SignatureHelpBridge } from './providers/SignatureHelpBridge';
 
 // eslint-disable-next-line no-console
 console.log('running server autoit3-lsp-web-extension');
@@ -457,42 +457,7 @@ async function getCompletionItems(
     );
 }
 
-type CachedSignatureHelpBridge = {
-    bridge: SignatureHelpBridge,
-    uri: string,
-
-    /** Script revision the cached bridge was created against */
-    revision: number | undefined,
-
-    /** Whether the document had syntax errors when the cache was filled */
-    hasSyntaxErrors: boolean,
-};
-
 let lastSignatureHelp: CachedSignatureHelpBridge | undefined;
-
-/**
- * Determines whether the cached bridge may be reused for this request.
- *
- * The cached bridge holds AST nodes that may have been replaced by an
- * incremental update. It may only be reused while it is known to be fresh
- * (same document, no edits since), or while the document is in a syntax
- * error state, where serving the last valid parse is intentional.
- */
-function canReuseSignatureHelpCache(
-    cached: CachedSignatureHelpBridge | undefined,
-    uri: string,
-    revision: number | undefined,
-    hasSyntaxErrors: boolean,
-    isRetrigger: boolean,
-): boolean {
-    if (!isRetrigger || cached?.uri !== uri) {
-        return false;
-    }
-
-    const staleIsAcceptable = hasSyntaxErrors && cached.hasSyntaxErrors;
-
-    return cached.revision === revision || staleIsAcceptable;
-}
 
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
     const uri = params.textDocument.uri;

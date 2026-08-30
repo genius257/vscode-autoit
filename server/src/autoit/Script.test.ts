@@ -1,4 +1,5 @@
 import { expect, test, describe } from 'vitest';
+import { URI } from 'vscode-uri';
 import Script from './Script';
 import type { SymbolKey } from './Scope';
 
