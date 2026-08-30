@@ -508,7 +508,12 @@ export default class Script {
                                             break;
                                         }
 
-                                        const ast = parser.parse(arg0.value);
+                                        /*
+                                         * Parse using the enclosing document's source, so nodes
+                                         * inside the executed string keep a valid location.source
+                                         * (they are resolved against the document's text).
+                                         */
+                                        const ast = parser.parse(arg0.value, { grammarSource: arg0.location.source });
 
                                         AstWalker.filterNestedNodes(ast.body, processNode, []);
                                     }

@@ -254,6 +254,68 @@ EndFunc`);
     });
 });
 
+describe('References location source', function () {
+    function findReferencesWithMissingSource(script: Script): unknown[] {
+        const bad: unknown[] = [];
+        const scope = script.getScope();
+
+        type ScopeLike = {
+            getSymbols(): Map<string, { getReferences(): Set<{ type: string, location: { source?: unknown } }> }>,
+            getSubscopes(): unknown[],
+        };
+
+        const walk = (s: ScopeLike, depth: number): void => {
+            if (depth > 10) {
+                return;
+            }
+
+            for (const [, symbol] of s.getSymbols().entries()) {
+                for (const reference of symbol.getReferences()) {
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                    if (reference.location?.source === undefined) {
+                        bad.push(reference);
+                    }
+                }
+            }
+
+            for (const subscope of s.getSubscopes()) {
+                walk(subscope as ScopeLike, depth + 1);
+            }
+        };
+
+        walk(scope as unknown as ScopeLike, 0);
+
+        return bad;
+    }
+
+    test('references from Execute() strings keep the document source', function () {
+        const script = new Script(`Global $abc = 123
+Execute('$abc')
+$abc`, URI.file('/execute.au3'));
+
+        expect(findReferencesWithMissingSource(script)).toEqual([]);
+    });
+
+    test('all references have a location source on a mixed document', function () {
+        const script = new Script(`Global $abc = 123
+
+Func x($a)
+    Local $abc
+    $abc
+    IsDeclared('abc')
+EndFunc
+
+x()
+$abc
+Call('x')
+Eval('abc')
+Assign('abc', '', "a")
+Execute('$abc')`, URI.file('/mixed.au3'));
+
+        expect(findReferencesWithMissingSource(script)).toEqual([]);
+    });
+});
+
 describe('Batched updates', function () {
     test('updateAll applies a batch of changes as a single revision', function () {
         const script = new Script('Local $a = 1\nLocal $b = 2', URI.file('/batch.au3'));
