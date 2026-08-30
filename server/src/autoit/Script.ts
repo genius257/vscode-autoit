@@ -519,7 +519,26 @@ export default class Script {
                                          * post-parse remap is required.
                                          */
                                         const stringContentStart = arg0.location.start.offset + 1; // skip opening quote
-                                        const ast = parser.parse(arg0.value, { grammarSource: arg0.location.source });
+                                        let ast: AutoIt3.Program;
+
+                                        try {
+                                            ast = parser.parse(arg0.value, { grammarSource: arg0.location.source });
+                                        } catch (e) {
+                                            if (Parser.isSyntaxError(e)) {
+                                                const location = structuredClone(e.location);
+
+                                                PositionHelper.remapLocations([location], stringContentStart, this.getText());
+
+                                                this.addError({
+                                                    message: `Syntax error: ${e.message}`,
+                                                    range: PositionHelper.locationRangeToRange(location),
+                                                });
+                                            } else {
+                                                throw e;
+                                            }
+
+                                            break;
+                                        }
 
                                         PositionHelper.remapLocations(ast.body, stringContentStart, this.getText());
 
@@ -946,7 +965,14 @@ export default class Script {
 
                         if (arg0.type === 'Literal' && typeof arg0.value === 'string' && Parser.isPositionWithinLocation(line, column, arg0.location)) {
                             const stringContentStart = arg0.location.start.offset + 1; // skip opening quote
-                            const ast = Parser.parse(arg0.value, arg0.location.source);
+                            let ast: AutoIt3.Program;
+
+                            // A broken Execute() string should not break lookup for the rest of the document
+                            try {
+                                ast = Parser.parse(arg0.value, arg0.location.source);
+                            } catch {
+                                break;
+                            }
 
                             PositionHelper.remapLocations(ast.body, stringContentStart, this.getText());
 

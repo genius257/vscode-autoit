@@ -1,4 +1,5 @@
 import { expect, test, describe } from 'vitest';
+import { DiagnosticSeverity } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Script from './Script';
 import type { SymbolKey } from './Scope';
@@ -338,6 +339,42 @@ Execute('$abc')`, URI.file('/exec2.au3'));
             .find((r) => r.location.start.line === 2 && r.location.start.column === 10);
 
         expect(inString).toBeDefined(); // $abc inside the Execute string
+    });
+
+    test('syntax errors within Execute() strings produce an error diagnostic at document positions', function () {
+        const script = new Script(`Global $abc = 123
+Execute('$abc =')`, URI.file('/exec-error.au3'));
+
+        const errors = script.getDiagnostics().filter((d) => d.severity === DiagnosticSeverity.Error);
+
+        expect(errors.length).toBeGreaterThan(0);
+
+        const executeError = errors.find((d) => d.message.startsWith('Syntax error:'));
+        expect(executeError).toBeDefined();
+        expect(executeError?.range.start.line).toBe(1); // inside the string on document line 2
+        expect(executeError?.range.start.character).toBeGreaterThanOrEqual(9);
+    });
+
+    test('syntax errors within Execute() strings do not abort analysis of the rest of the document', function () {
+        const script = new Script(`Global $abc = 123
+Execute('$abc =')
+Global $def = 456`, URI.file('/exec-error2.au3'));
+
+        const errors = script.getDiagnostics().filter((d) => d.severity === DiagnosticSeverity.Error);
+        expect(errors.some((d) => d.message.startsWith('Syntax error:'))).toBe(true);
+
+        // The document's own symbols are still resolved despite the broken Execute string
+        const symbols = script.getScope().getSymbols();
+        expect(symbols.has('$def')).toBe(true);
+    });
+
+    test('getNodesAt on a document with a broken Execute() string still works outside the string', function () {
+        const script = new Script(`Global $abc = 123
+Execute('$abc =')`);
+
+        const result = script.getNodesAt({ line: 0, character: 9 });
+
+        expect(result.find((node) => node.type === 'VariableIdentifier')).toBeDefined();
     });
 
     test('references from Execute() strings keep the document source', function () {
