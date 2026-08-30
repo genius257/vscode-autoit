@@ -1,4 +1,5 @@
 import { expect, test, describe } from 'vitest';
+import { URI } from 'vscode-uri';
 import Script from './Script';
 import type { SymbolKey } from './Scope';
 
@@ -250,5 +251,38 @@ EndFunc`);
         const globalScope = script.getScope();
 
         expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+    });
+});
+
+describe('Batched updates', function () {
+    test('updateAll applies a batch of changes as a single revision', function () {
+        const script = new Script('Local $a = 1\nLocal $b = 2', URI.file('/batch.au3'));
+        const revisionBefore = script.getRevision();
+
+        script.updateAll([
+            { range: { start: { line: 0, character: 12 }, end: { line: 0, character: 12 } }, text: '23' },
+            { range: { start: { line: 1, character: 0 }, end: { line: 1, character: 0 } }, text: 'Local $c = 3\n' },
+        ]);
+
+        expect(script.getRevision()).toBe(revisionBefore + 1);
+        expect(script.getText()).toBe('Local $a = 123\nLocal $c = 3\nLocal $b = 2');
+
+        const third = script.getProgram()?.body[1];
+
+        if (third?.type !== 'VariableDeclaration') {
+            throw new Error('Expected a VariableDeclaration');
+        }
+
+        expect(third.location.start.line).toBe(2);
+    });
+
+    test('updateAll with no changes is a no-op', function () {
+        const script = new Script('Local $a = 1', URI.file('/batch-empty.au3'));
+        const revisionBefore = script.getRevision();
+
+        script.updateAll([]);
+
+        expect(script.getRevision()).toBe(revisionBefore);
+        expect(script.getText()).toBe('Local $a = 1');
     });
 });

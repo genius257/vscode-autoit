@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Incremental updates to the AST are now supported, reducing latency when working with big files
 - Go to declaration now shows all matching declarations across scopes and included files, instead of only the closest match
 
 ### Fixed

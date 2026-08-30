@@ -11,6 +11,7 @@ import StandardTagFactory from './docBlock/DocBlock/StandardTagFactory';
 import MarkdownDescriptionFactory from './docBlock/DocBlock/MarkdownDescriptionFactory';
 import DocBlockFactory from './docBlock/DocBlockFactory';
 import AstWalker from './AstWalker';
+import AstWrapper, { TextChange } from './AstWrapper';
 import Symbol, { Node as SymbolNode, SyntheticIdentifier, SyntheticVariableIdentifier } from './Symbol';
 import Scope from './Scope';
 
@@ -125,7 +126,22 @@ export enum NodeFilterAction {
 export default class Script {
     public workspace: Workspace | undefined;
     protected uri: URI | undefined;
-    protected text: string;
+
+    /** Wraps the document text and its (incrementally updated) AST */
+    protected astWrapper: AstWrapper;
+
+    /**
+     * Monotonic counter bumped on every update, regardless of whether the
+     * resulting document parses. Consumers caching AST nodes across requests
+     * can use it to detect that their cached nodes may be stale.
+     */
+    protected revision = 0;
+
+    /**
+     * The most recently parsed program. Kept even when later edits introduce
+     * syntax errors, so language features keep working off the last valid AST.
+     */
+    protected program: AutoIt3.Program | undefined;
 
     // Diagnostics
     protected errors: ScriptError[] = [];
@@ -140,7 +156,6 @@ export default class Script {
     /** Reference count */
     protected refCount: number = 1;
 
-    protected program: AutoIt3.Program | undefined;
     protected scope: Scope = new Scope();
 
     protected debouncedTriggerDiagnostics: (() => void) | null = null;
@@ -152,8 +167,10 @@ export default class Script {
     ) {
         this.uri = uri;
         this.workspace = workspace;
-        this.text = text;
-        this.parseText(text);
+        this.astWrapper = new AstWrapper(text, this.uri?.toString());
+        this.refreshProgram();
+        this.reportSyntaxError();
+        this.analyze();
     }
 
     public getDiagnostics(): Diagnostic[] {
@@ -190,11 +207,46 @@ export default class Script {
         this.debouncedTriggerDiagnostics();
     }
 
-    /** Update the script text content */
-    public update(text: string) {
-        this.text = text;
+    /** Update the script content, re-parsing only the affected branch when possible */
+    public update(change: TextChange) {
+        this.revision++;
         this.resetDiagnostics();
-        this.parseText(text);
+        this.astWrapper.update(change);
+        this.refreshProgram();
+        this.reportSyntaxError();
+        this.analyze();
+    }
+
+    /**
+     * Applies multiple content changes as a single update: text and AST are
+     * updated for each change, while diagnostics, analysis and dependency
+     * recomputation run only once for the whole batch.
+     */
+    public updateAll(changes: TextChange[]) {
+        if (changes.length === 0) {
+            return;
+        }
+
+        this.revision++;
+        this.resetDiagnostics();
+
+        for (const change of changes) {
+            this.astWrapper.update(change);
+        }
+
+        this.refreshProgram();
+        this.reportSyntaxError();
+        this.analyze();
+    }
+
+    /** Monotonic counter bumped on every update; used to detect stale cached AST nodes */
+    public getRevision(): number {
+        return this.revision;
+    }
+
+    /** Whether the current document text failed to parse */
+    public hasSyntaxErrors(): boolean {
+        return this.astWrapper.getSyntaxError() !== undefined;
     }
 
     public addReference(): number {
@@ -226,7 +278,7 @@ export default class Script {
         /** Holds potential docblock comment(s) between non comment nodes */
         let relatedComments: AutoIt3.MultiLineComment | AutoIt3.SingleLineComment[] | null = null;
         let scope = new Scope(
-            this.program?.location,
+            this.getProgram()?.location,
             this.uri,
         );
 
@@ -492,7 +544,7 @@ export default class Script {
             scope = originalScope;
         };
 
-        AstWalker.filterNestedNodes(this.program?.body ?? [], processNode, []);
+        AstWalker.filterNestedNodes(this.getProgram()?.body ?? [], processNode, []);
 
         /*
          * Process references that couldn't be resolved during the initial pass.
@@ -554,7 +606,7 @@ export default class Script {
         }
 
         // const previousIncludes = this.includes;
-        const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.program?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement');
+        const currrentIncludes: AutoIt3.IncludeStatement[] | undefined = this.getProgram()?.body.filter((node): node is AutoIt3.IncludeStatement => node.type === 'IncludeStatement');
 
         // function for comparing include statements
         const includeStatementComparator = (
@@ -785,7 +837,7 @@ export default class Script {
         }
 
         return this.getNestedNodesAtFromArray(
-            this.program?.body ?? null,
+            this.getProgram()?.body ?? null,
             line,
             column,
             [],
@@ -1158,7 +1210,7 @@ export default class Script {
      */
     public filterNodes(fn: (node: Node) => NodeFilterAction | never): Node[] {
         const matches: Node[] = [];
-        this.filterNestedNodes(this.program?.body ?? null, fn, matches);
+        this.filterNestedNodes(this.getProgram()?.body ?? null, fn, matches);
 
         return matches;
     }
@@ -1598,10 +1650,10 @@ export default class Script {
 
     public getText(location?: LocationRange): string {
         if (location === undefined) {
-            return this.text;
+            return this.astWrapper.getText();
         }
 
-        return this.text.slice(location.start.offset, location.end.offset);
+        return this.astWrapper.getText(location);
     }
 
     public getScope(): Scope {
@@ -1631,22 +1683,26 @@ export default class Script {
         return result;
     }
 
-    protected parseText(text: string) {
-        try {
-            this.program = parser.parse(
-                text,
-                { grammarSource: this.uri?.toString() },
-            );
+    /** Returns the current program, or undefined when no valid parse has happened yet */
+    public getProgram(): AutoIt3.Program | undefined {
+        return this.program;
+    }
 
-            this.analyze();
-        } catch (e) {
-            if (!Parser.isSyntaxError(e)) {
-                throw e;
-            }
+    /** Caches the wrapper's program as the last known good program */
+    protected refreshProgram(): void {
+        if (this.astWrapper.hasProgram()) {
+            this.program = this.astWrapper.getProgram();
+        }
+    }
 
+    /** Reports a pending syntax error from the AST wrapper as a diagnostic, if any */
+    protected reportSyntaxError() {
+        const syntaxError = this.astWrapper.getSyntaxError();
+
+        if (syntaxError !== undefined) {
             this.addError({
-                message: `Syntax error: ${e.message}`,
-                range: PositionHelper.locationRangeToRange(e.location),
+                message: `Syntax error: ${syntaxError.message}`,
+                range: PositionHelper.locationRangeToRange(syntaxError.location),
             });
         }
     }

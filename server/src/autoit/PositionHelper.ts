@@ -131,3 +131,23 @@ export function isLocationRangeWithinLocationRange(
         inner.end.offset <= outer.end.offset
     );
 }
+
+export function isRangeWithinLocationRange(
+    inner: Range,
+    outer: LocationRange,
+): boolean {
+    const outerRange = locationRangeToRange(outer);
+
+    return (
+        isPositionBeforeOrEqual(outerRange.start, inner.start) &&
+        isPositionBeforeOrEqual(inner.end, outerRange.end)
+    );
+}
+
+export function isPositionBeforeOrEqual(position: Position, other: Position): boolean {
+    if (position.line < other.line) {
+        return true;
+    }
+
+    return position.line === other.line && position.character <= other.character;
+}

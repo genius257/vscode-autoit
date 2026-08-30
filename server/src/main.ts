@@ -1,5 +1,5 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
 import nativeSuggestions from './autoit/internal';
@@ -8,7 +8,7 @@ import * as PositionHelper from './autoit/PositionHelper';
 import * as Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
-import { SignatureHelpBridge } from './providers/SignatureHelpBridge';
+import { canReuseSignatureHelpCache, type CachedSignatureHelpBridge, SignatureHelpBridge } from './providers/SignatureHelpBridge';
 
 // eslint-disable-next-line no-console
 console.log('running server autoit3-lsp-web-extension');
@@ -62,7 +62,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
             retriggerCharacters: [','],
             workDoneProgress: false,
         },
-        textDocumentSync: TextDocumentSyncKind.Full,
+        textDocumentSync: TextDocumentSyncKind.Incremental,
     };
 
     return { capabilities };
@@ -90,13 +90,35 @@ connection.onDidOpenTextDocument((params) => {
 });
 
 connection.onDidChangeTextDocument((params) => {
-    const content = params.contentChanges[0];
+    const changes = params.contentChanges;
 
-    if (content === undefined) {
+    if (changes.length === 0) {
         return;
     }
 
-    workspace.createOrUpdate(params.textDocument.uri, content.text);
+    const firstChange = changes[0];
+
+    if (firstChange === undefined) {
+        return;
+    }
+
+    if (TextDocumentContentChangeEvent.isFull(firstChange)) {
+        workspace.createOrUpdate(params.textDocument.uri, firstChange.text);
+
+        return;
+    }
+
+    /*
+     * Batch all incremental changes of the notification into a single update,
+     * so Script.updateAll(), analyze() and dependency recomputation run once.
+     */
+    const incrementalChanges = changes
+        .filter(TextDocumentContentChangeEvent.isIncremental)
+        .map((contentChange) => contentChange);
+
+    if (incrementalChanges.length > 0) {
+        workspace.createOrUpdate(params.textDocument.uri, incrementalChanges);
+    }
 });
 
 connection.onDidCloseTextDocument((params) => {
@@ -435,11 +457,27 @@ async function getCompletionItems(
     );
 }
 
-let lastSignatureHelpBridge: SignatureHelpBridge | undefined;
+let lastSignatureHelp: CachedSignatureHelpBridge | undefined;
 
 function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
-    const signatureHelpBridge = params.context?.isRetrigger && lastSignatureHelpBridge !== undefined ? lastSignatureHelpBridge : new SignatureHelpBridge(workspace);
-    lastSignatureHelpBridge = signatureHelpBridge;
+    const uri = params.textDocument.uri;
+    const script = workspace.get(uri);
+    const revision = script?.getRevision();
+    const hasSyntaxErrors = script?.hasSyntaxErrors() ?? false;
+
+    let signatureHelpBridge = new SignatureHelpBridge(workspace);
+    const canReuse = canReuseSignatureHelpCache(lastSignatureHelp, uri, revision, hasSyntaxErrors, params.context?.isRetrigger === true);
+
+    if (canReuse && lastSignatureHelp !== undefined) {
+        signatureHelpBridge = lastSignatureHelp.bridge;
+    }
+
+    lastSignatureHelp = {
+        bridge: signatureHelpBridge,
+        uri,
+        revision,
+        hasSyntaxErrors,
+    };
 
     return signatureHelpBridge.resolveSignatureHelp(
         params,

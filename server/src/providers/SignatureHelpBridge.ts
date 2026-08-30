@@ -1,4 +1,4 @@
-import { DiagnosticSeverity, Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
+import { Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
 import { Workspace } from '../autoit/Workspace';
 import { LocationRange, SyntaxError, type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from '../autoit/PositionHelper';
@@ -39,7 +39,7 @@ export class SignatureHelpBridge {
             return null;
         }
 
-        const hasSyntaxErrors = script.getDiagnostics().some((diagnostic) => diagnostic.severity === DiagnosticSeverity.Error && diagnostic.message.includes('Syntax error'));
+        const hasSyntaxErrors = script.hasSyntaxErrors();
 
         let callExpression: CallExpressionNode | undefined;
         let declarator: AutoIt3.FunctionDeclaration | null = null;
@@ -401,4 +401,39 @@ export class UnfixableCallExpressionError extends Error {
         const actualProto = new.target.prototype;
         Object.setPrototypeOf(this, actualProto);
     }
+}
+
+export type CachedSignatureHelpBridge = {
+    bridge: SignatureHelpBridge,
+    uri: string,
+
+    /** Script revision the cached bridge was created against */
+    revision: number | undefined,
+
+    /** Whether the document had syntax errors when the cache was filled */
+    hasSyntaxErrors: boolean,
+};
+
+/**
+ * Determines whether a cached bridge may be reused for this request.
+ *
+ * The cached bridge holds AST nodes that may have been replaced by an
+ * incremental update. It may only be reused while it is known to be fresh
+ * (same document, no edits since), or while the document is in a syntax
+ * error state, where serving the last valid parse is intentional.
+ */
+export function canReuseSignatureHelpCache(
+    cached: CachedSignatureHelpBridge | undefined,
+    uri: string,
+    revision: number | undefined,
+    hasSyntaxErrors: boolean,
+    isRetrigger: boolean,
+): boolean {
+    if (!isRetrigger || cached?.uri !== uri) {
+        return false;
+    }
+
+    const staleIsAcceptable = hasSyntaxErrors && cached.hasSyntaxErrors;
+
+    return cached.revision === revision || staleIsAcceptable;
 }
