@@ -162,12 +162,24 @@ export class Workspace {
 
         const uri = scriptUri.toString();
 
+        // Capture the current includes array, so we can detect if it is replaced while resolving
+        const includes = script.getIncludes();
+
         const includeUris = Promise.all(
-            script.getIncludes().map((include) => include.promise),
+            includes.map((include) => include.promise),
         );
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         includeUris.then((resolvedUris) => {
+            /*
+             * If the script's includes have been replaced while resolving (e.g. by
+             * refreshIncludes() after a configuration change), a newer updateDependencies
+             * call owns the dependency edges, and these results are stale.
+             */
+            if (script.getIncludes() !== includes) {
+                return;
+            }
+
             const dependencies: string[] = [
                 URI.from({
                     scheme: 'autoit3doc',

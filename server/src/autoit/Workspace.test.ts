@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest';
-import Script from './Script';
+import Script, { type Include } from './Script';
 import { AutoIt3Configuration, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
 import { Connection /* , RemoteConsole*/ } from 'vscode-languageserver';
@@ -169,6 +169,55 @@ test('onDidChangeConfiguration refreshes includes when userDefinedLibraries chan
     expect(spy).toHaveBeenCalledTimes(1);
 });
 
+test('updateDependencies ignores stale include results after includes are replaced', async () => {
+    const workspace = new Workspace();
+
+    const script = new Script('#include <One.au3>', URI.file('/main.au3'), workspace);
+    workspace.add(script);
+
+    const staleUri = URI.file('/stale.au3').toString();
+    const freshUri = URI.file('/fresh.au3').toString();
+
+    const createInclude = (uri: string, delay = 0): Include => ({
+        statement: {
+            file: uri,
+            type: 'IncludeStatement',
+            library: false,
+            location: {
+                start: { column: 1, line: 1, offset: 0 },
+                end: { column: 1, line: 1, offset: 0 },
+                source: '',
+            },
+        },
+        uri: uri,
+        promise: new Promise((resolve) => setTimeout(() => {
+            resolve(uri);
+        }, delay)),
+    });
+
+    // The stale include resolves late, so it would overwrite fresh edges last without the guard
+    const staleIncludes = [createInclude(staleUri, 20)];
+    const freshIncludes = [createInclude(freshUri)];
+
+    const getIncludesSpy = vi.spyOn(script, 'getIncludes');
+    getIncludesSpy.mockReturnValue(staleIncludes);
+
+    // Start resolving the stale includes (promise not yet settled)
+    workspace.updateDependencies(script);
+
+    // Simulate a refresh replacing the includes before the stale promises resolve
+    getIncludesSpy.mockReturnValue(freshIncludes);
+
+    workspace.updateDependencies(script);
+
+    // Allow both include promise chains to settle (the stale one resolves after 20ms)
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const dependencies = workspace.dependencyGraph.resolveDependencies('file:///main.au3');
+
+    expect(dependencies).toContain(freshUri);
+    expect(dependencies).not.toContain(staleUri);
+});
 test('showAllDeclarations setting toggles between all declarations and closest match', () => {
     const workspace = new Workspace();
 
