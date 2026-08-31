@@ -6,6 +6,7 @@ import * as PositionHelper from '../autoit/PositionHelper';
 import * as Parser from '../autoit/Parser';
 import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
+import { getScopeLabel } from '../autoit/DeclarationScope';
 
 const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
     .map(([, nativeSuggestion]) => ({
@@ -128,7 +129,9 @@ export class CompletionItemBridge {
                     ? '[' + declarator.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']'
                     : '';
 
-                value = `\`\`\`au3\n${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${initValue === null ? '' : ' = ' + initValue}\n\`\`\``;
+                const scopeLabel = getScopeLabel(declarationScript, declaration);
+
+                value = `\`\`\`au3\n${scopeLabel === undefined ? '' : `(${scopeLabel}) `}${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${initValue === null ? '' : ' = ' + initValue}\n\`\`\``;
 
                 const variableDocBlock = symbol.getDocblocks().get(declaration);
 
@@ -153,8 +156,9 @@ export class CompletionItemBridge {
             case 'Parameter':
             {
                 const parameterValue = declarator.init !== null ? Parser.AstToString(declarator.init) : null;
+                const scopeLabel = getScopeLabel(declarationScript, declaration);
 
-                value = `\`\`\`au3\n(parameter) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}\n\`\`\``;
+                value = `\`\`\`au3\n(parameter${scopeLabel === undefined ? '' : ', ' + scopeLabel}) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}\n\`\`\``;
 
                 break;
             }

@@ -2,6 +2,7 @@ import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vs
 import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
+import { getScopeLabel } from './autoit/DeclarationScope';
 import nativeSuggestions from './autoit/internal';
 import { type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from './autoit/PositionHelper';
@@ -268,7 +269,9 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                                 ? '[' + declarator.dimensions.map((dimension) => Parser.AstToString(dimension)).join('][') + ']'
                                 : '';
 
-                            header = `${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${value === null ? '' : ' = ' + value}`;
+                            const scopeLabel = getScopeLabel(declarationScript, declaration);
+
+                            header = `${scopeLabel === undefined ? '' : `(${scopeLabel}) `}${declaration.type === 'VariableIdentifier' ? '$' : ''}${declarator.id.name}${dimensions}${value === null ? '' : ' = ' + value}`;
 
                             break;
                         }
@@ -281,8 +284,9 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                         case 'Parameter':
                         {
                             const parameterValue = declarator.init !== null ? Parser.AstToString(declarator.init) : null;
+                            const scopeLabel = getScopeLabel(declarationScript, declaration);
 
-                            header = `(parameter) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}`;
+                            header = `(parameter${scopeLabel === undefined ? '' : ', ' + scopeLabel}) $${declarator.id.name}${parameterValue === null ? '' : ' = ' + parameterValue}`;
 
                             break;
                         }
