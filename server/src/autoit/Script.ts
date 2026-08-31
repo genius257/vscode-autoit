@@ -793,8 +793,14 @@ export default class Script {
         // Clear the cache, forcing analyze() to re-resolve every include against the current configuration
         this.includeCache = [];
 
+        // Clear existing diagnostics, so resolved include errors from the previous configuration disappear
+        this.resetDiagnostics();
+
         this.analyze();
         this.triggerDiagnostics();
+
+        // Restore syntax diagnostics, which are unaffected by the configuration change
+        this.reportSyntaxError();
     }
 
     public createInclude(include: AutoIt3.IncludeStatement): Include {
