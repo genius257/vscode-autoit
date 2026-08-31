@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Document highlight support for variables and functions
 - Symbol discovery support for `Assign` expressions, enabling hover, go-to-definition, find references, and document highlight on string literal arguments, with scope resolution honoring the `Global`, `Local`, and `ExistFail` flags
 - Symbol discovery support for `Execute` string literal arguments, with locations resolved against the enclosing document and syntax errors inside the string reported as diagnostics
+- Syntax highlighting for code within `Execute` string literals, and for the symbol names within `Eval`, `Call`, `IsDeclared` and `Assign` string literals (variables for `Eval`, `IsDeclared` and `Assign`; function names for `Call`)
 - New setting `autoit3.showAllDeclarations` to toggle between showing all matching declarations or only the closest match on go to definition
 
 ### Changed

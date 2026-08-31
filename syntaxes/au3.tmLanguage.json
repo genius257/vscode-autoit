@@ -22,6 +22,15 @@
 					"include": "#keywords"
 				},
 				{
+					"include": "#expression-string"
+				},
+				{
+					"include": "#variable-name-string"
+				},
+				{
+					"include": "#function-name-string"
+				},
+				{
 					"include": "#strings"
 				},
 				{
@@ -131,6 +140,150 @@
 				{
 					"name": "keyword.control.au3",
 					"match": "\\b(?i:True|False|Default|Null)\\b"
+				}
+			]
+		},
+		"expression-string": {
+			"comment": "Highlights AutoIt code within the string literal argument of Execute",
+			"match": "(?i)\\b(execute)\\b(\\s*)(\\()(\\s*)(\"(?:\"\"|[^\"])*\"|'(?:''|[^'])*')",
+			"captures": {
+				"1": {
+					"name": "support.function.au3"
+				},
+				"3": {
+					"name": "meta.brace.round.au3"
+				},
+				"5": {
+					"name": "string.quoted.au3",
+					"patterns": [
+						{
+							"include": "#expression-in-string"
+						}
+					]
+				}
+			}
+		},
+		"variable-name-string": {
+			"comment": "Highlights the variable name within the string literal argument of Assign, Eval and IsDeclared. Unlike Execute, the argument is a bare variable name without a leading dollar sign, so bare identifiers are highlighted as variables instead of function identifiers",
+			"match": "(?i)\\b(eval|isdeclared|assign)\\b(\\s*)(\\()(\\s*)(\"(?:\"\"|[^\"])*\"|'(?:''|[^'])*')",
+			"captures": {
+				"1": {
+					"name": "support.function.au3"
+				},
+				"3": {
+					"name": "meta.brace.round.au3"
+				},
+				"5": {
+					"name": "string.quoted.au3",
+					"patterns": [
+						{
+							"include": "#expression-in-variable-string"
+						}
+					]
+				}
+			}
+		},
+		"function-name-string": {
+			"comment": "Highlights the function name within the string literal argument of Call",
+			"match": "(?i)\\b(call)\\b(\\s*)(\\()(\\s*)(\"(?:\"\"|[^\"])*\"|'(?:''|[^'])*')",
+			"captures": {
+				"1": {
+					"name": "support.function.au3"
+				},
+				"3": {
+					"name": "meta.brace.round.au3"
+				},
+				"5": {
+					"name": "string.quoted.au3",
+					"patterns": [
+						{
+							"include": "#expression-in-string"
+						}
+					]
+				}
+			}
+		},
+		"bare-identifier": {
+			"comment": "Bare identifier within a variable string, highlighted as a variable",
+			"match": "\\b(?i:[a-z_][a-z_0-9]*)\\b",
+			"name": "variable.other.au3"
+		},
+		"expression-in-variable-string": {
+			"comment": "Like expression-in-string, but bare identifiers are highlighted as variables, as the string holds a symbol name without a leading dollar sign",
+			"patterns": [
+				{
+					"include": "#modifier"
+				},
+				{
+					"include": "#variables"
+				},
+				{
+					"include": "#macros"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#expression-string"
+				},
+				{
+					"include": "#variable-name-string"
+				},
+				{
+					"include": "#function-name-string"
+				},
+				{
+					"include": "#bare-identifier"
+				},
+				{
+					"include": "#numbers"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#underscore"
+				}
+			]
+		},
+		"expression-in-string": {
+			"comment": "Like expression, but without plain string and comment matching, and including expression-string so calls nested within Execute strings are highlighted as well",
+			"patterns": [
+				{
+					"include": "#modifier"
+				},
+				{
+					"include": "#variables"
+				},
+				{
+					"include": "#macros"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#expression-string"
+				},
+				{
+					"include": "#variable-name-string"
+				},
+				{
+					"include": "#function-name-string"
+				},
+				{
+					"include": "#meta"
+				},
+				{
+					"include": "#numbers"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#underscore"
+				},
+				{
+					"include": "#function-literal"
 				}
 			]
 		},
