@@ -797,7 +797,6 @@ export default class Script {
         this.resetDiagnostics();
 
         this.analyze();
-        this.triggerDiagnostics();
 
         // Restore syntax diagnostics, which are unaffected by the configuration change
         this.reportSyntaxError();
