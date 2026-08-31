@@ -149,7 +149,12 @@ export default class Script {
     protected informations: ScriptInformation[] = [];
     protected hints: ScriptHint[] = [];
 
-    /** A cache of all currently resolved include statements, for the current script instance */
+    /**
+     * A cache of all currently resolved include statements, for the current script instance.
+     * The cache is scoped per-script-instance and the script URI is immutable after construction,
+     * so entries remain valid for the lifetime of the script. Detached entries are cleaned up in
+     * analyze() to prevent unbounded memory growth.
+     */
     protected includeCache: Include[] = [];
     protected includes: Include[] = [];
 
@@ -264,7 +269,7 @@ export default class Script {
          * }
          */
 
-        return this.refCount;
+        return --this.refCount;
     }
 
     public analyze() {
@@ -676,6 +681,13 @@ export default class Script {
             });
         });
 
+        // Remove detached includes from the cache to prevent unbounded memory growth
+        this.includeCache = this.includeCache.filter(
+            (cacheItem) => !detached.some(
+                (include) => includeStatementComparator(cacheItem.statement, include.statement),
+            ),
+        );
+
         // Update the list of includes
         this.includes = currrentIncludes?.map((include) => {
             // Check if the include statement is already cached
@@ -759,6 +771,30 @@ export default class Script {
         });
 
         this.scope = scope;
+    }
+
+    /**
+     * Releases all cached includes and re-runs analysis, without re-parsing the script text.
+     * Used when workspace configuration that affects include resolution (e.g. `installDir`
+     * or user defined libraries) changes, so includes are re-resolved and diagnostics
+     * reflect the new configuration.
+     */
+    public refreshIncludes(): void {
+        // Release the references held by cached includes, mirroring the detached include handling in analyze()
+        this.includeCache.forEach((include) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            include.promise.then((value) => {
+                if (value !== null) {
+                    this.workspace?.get(value)?.release();
+                }
+            });
+        });
+
+        // Clear the cache, forcing analyze() to re-resolve every include against the current configuration
+        this.includeCache = [];
+
+        this.analyze();
+        this.triggerDiagnostics();
     }
 
     public createInclude(include: AutoIt3.IncludeStatement): Include {

@@ -5,6 +5,17 @@ import { URI /* , Utils*/ } from 'vscode-uri';
 import { Connection /* , RemoteConsole*/ } from 'vscode-languageserver';
 import type { SymbolKey } from './Scope';
 
+const createConfiguration = (overrides: Partial<AutoIt3Configuration> = {}): AutoIt3Configuration => ({
+    version: '1.0.0',
+    userDefinedLibraries: [],
+    installDir: 'C:\\Program Files (x86)\\AutoIt3\\',
+    ignoreInternalInIncludes: false,
+    showAllDeclarations: true,
+    ...overrides,
+});
+
+type DidChangeConfigurationHandler = (change: { settings: { autoit3: AutoIt3Configuration } }) => void;
+
 test('get', () => {
     const workspace = new Workspace();
 
@@ -75,6 +86,87 @@ test('resolveInclude', () => {
     // const uri = "D:\\users\\bob\\workspace\\one.au3".replace(/\\/g, '/');
 
     // console.log(Utils.resolvePath(URI.file(installDir), 'Include', uri).toString());
+});
+
+test('onDidChangeConfiguration refreshes includes when installDir changes', () => {
+    let configHandler: DidChangeConfigurationHandler | undefined;
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getConfiguration: (): Promise<AutoIt3Configuration> => Promise.resolve(createConfiguration()),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: <P extends string>(type: P, params: P) => {
+            return Promise.resolve(URI.parse(params).toString());
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        onDidChangeConfiguration: (handler) => {
+            configHandler = handler;
+
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            return { dispose: () => {} };
+        },
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const script = new Script('#include <One.au3>', URI.file('/main.au3'), workspace);
+    workspace.add(script);
+
+    // Apply the initial configuration, as would happen via onInitialized
+    configHandler?.({ settings: { autoit3: createConfiguration() } });
+
+    const spy = vi.spyOn(script, 'refreshIncludes');
+
+    // Unchanged configuration should not trigger a refresh
+    configHandler?.({ settings: { autoit3: createConfiguration() } });
+    expect(spy).not.toHaveBeenCalled();
+
+    // Changed installDir should trigger a refresh
+    configHandler?.({ settings: { autoit3: createConfiguration({ installDir: 'D:\\AutoIt3\\' }) } });
+    expect(spy).toHaveBeenCalledTimes(1);
+});
+
+test('onDidChangeConfiguration refreshes includes when userDefinedLibraries change', () => {
+    let configHandler: DidChangeConfigurationHandler | undefined;
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getConfiguration: (): Promise<AutoIt3Configuration> => Promise.resolve(createConfiguration()),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: <P extends string>(type: P, params: P) => {
+            return Promise.resolve(URI.parse(params).toString());
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        onDidChangeConfiguration: (handler) => {
+            configHandler = handler;
+
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            return { dispose: () => {} };
+        },
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const script = new Script('#include <One.au3>', URI.file('/main.au3'), workspace);
+    workspace.add(script);
+
+    // Apply the initial configuration, as would happen via onInitialized
+    configHandler?.({ settings: { autoit3: createConfiguration() } });
+
+    const spy = vi.spyOn(script, 'refreshIncludes');
+
+    configHandler?.({ settings: { autoit3: createConfiguration({ userDefinedLibraries: ['D:\\libs\\'] }) } });
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    // Reapplying the same libraries should not trigger another refresh
+    configHandler?.({ settings: { autoit3: createConfiguration({ userDefinedLibraries: ['D:\\libs\\'] }) } });
+    expect(spy).toHaveBeenCalledTimes(1);
 });
 
 test('showAllDeclarations setting toggles between all declarations and closest match', () => {

@@ -65,17 +65,26 @@ export class Workspace {
         });
         this.connection?.onDidChangeConfiguration((change) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            this.configuration = change.settings.autoit3 as AutoIt3Configuration;
+            const newConfiguration = change.settings.autoit3 as AutoIt3Configuration | undefined;
 
-            /*
-             * TODO:
-             * Compare new and old autoit3 configuration.
-             * If installDir or user defined libraries changed, then
-             * Clear each scripts include cache and re-trigger parsing.
-             *
-             * A new script method might be needed, to re-analyze the script,
-             * without re-parsing the text, since nothing changed in the AST.
-             */
+            const oldInstallDir = this.configuration?.installDir;
+            const oldUserDefinedLibraries = this.configuration?.userDefinedLibraries;
+
+            this.configuration = newConfiguration ?? null;
+
+            const installDirChanged = newConfiguration?.installDir !== oldInstallDir;
+            const userDefinedLibrariesChanged = JSON.stringify(newConfiguration?.userDefinedLibraries ?? []) !== JSON.stringify(oldUserDefinedLibraries ?? []);
+
+            if (installDirChanged || userDefinedLibrariesChanged) {
+                /*
+                 * Include resolution depends on installDir and user defined libraries,
+                 * so re-resolve all includes of every script against the new configuration.
+                 */
+                this.scripts.forEach((script) => {
+                    script.refreshIncludes();
+                    this.updateDependencies(script);
+                });
+            }
         });
 
         const script = new Script(native, URI.from({ scheme: 'autoit3doc', path: 'native.au3' }));
@@ -135,6 +144,24 @@ export class Workspace {
          * Collect all include URIs and set dependencies once
          * This ensures old edges are cleaned up via setDependencies
          */
+        this.updateDependencies(script);
+
+        return script;
+    }
+
+    /**
+     * Updates the dependency graph edges for a script based on its currently resolved includes.
+     * Fire-and-forget: edges are set once all include promises have settled.
+     */
+    public updateDependencies(script: Script): void {
+        const scriptUri = script.getUri();
+
+        if (scriptUri === undefined) {
+            return;
+        }
+
+        const uri = scriptUri.toString();
+
         const includeUris = Promise.all(
             script.getIncludes().map((include) => include.promise),
         );
@@ -154,10 +181,8 @@ export class Workspace {
                 }
             }
 
-            this.dependencyGraph.setDependencies(_uri, dependencies);
+            this.dependencyGraph.setDependencies(uri, dependencies);
         });
-
-        return script;
     }
 
     public remove(uri: uri): void {
