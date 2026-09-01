@@ -1,5 +1,5 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, Range } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, type RelativePattern, Range } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
@@ -58,6 +58,7 @@ export class Workspace {
     protected pendingFileEvents = new Map<string, FileChangeType>();
     protected fileEventTimer: ReturnType<typeof setTimeout> | null = null;
     protected readingFiles = new Set<string>();
+    protected fileEventRevisions = new Map<string, number>();
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -81,6 +82,9 @@ export class Workspace {
         this.connection?.onDidChangeWatchedFiles((params) => {
             for (const change of params.changes) {
                 this.pendingFileEvents.set(change.uri, change.type);
+
+                // Monotonically increasing revision per URI, so stale read completions can be detected
+                this.fileEventRevisions.set(change.uri, (this.fileEventRevisions.get(change.uri) ?? 0) + 1);
             }
 
             if (this.fileEventTimer !== null) {
@@ -248,11 +252,15 @@ export class Workspace {
      * clears its diagnostics, and re-resolves the includes of dependent scripts.
      */
     public handleFileDeleted(uri: string): void {
+        // Open documents are owned by text synchronization; deletion of the underlying file must not affect them
+        if (this.activeScripts.has(uri)) {
+            return;
+        }
+
         const dependents = this.dependencyGraph.getDirectDependents(uri);
 
         this.dependencyGraph.removeScript(uri);
         this.scripts.delete(uri);
-        this.activeScripts.delete(uri);
 
         this.eventEmitter.emit('diagnostics', { uri: uri, diagnostics: [] });
 
@@ -610,30 +618,40 @@ export class Workspace {
     /**
      * Builds the watcher list: everything in the workspace, plus the AutoIt3
      * installation include directory and user defined library directories.
+     * Roots outside the workspace are registered as RelativePattern instances
+     * based on file URIs.
      */
     protected buildWatchers(configuration: AutoIt3Configuration): FileSystemWatcher[] {
         const watchers: FileSystemWatcher[] = [{ globPattern: '**/*' }];
-        const outsideWorkspaceRoots: string[] = [];
 
         if (typeof configuration.installDir === 'string') {
-            outsideWorkspaceRoots.push(`${normalizeGlob(configuration.installDir)}/Include/**/*`);
+            const includeUri = URI.file(`${normalizeGlob(configuration.installDir)}/Include`);
+
+            watchers.push({ globPattern: this.createRootRelativePattern(includeUri) });
         }
 
         for (const library of configuration.userDefinedLibraries) {
-            outsideWorkspaceRoots.push(`${normalizeGlob(library)}/**/*`);
-        }
-
-        for (const root of outsideWorkspaceRoots) {
-            watchers.push({ globPattern: root });
+            watchers.push({ globPattern: this.createRootRelativePattern(URI.file(normalizeGlob(library))) });
         }
 
         return watchers;
     }
 
     /**
+     * Creates a RelativePattern watching everything below the given root URI.
+     */
+    protected createRootRelativePattern(rootUri: URI): RelativePattern {
+        return {
+            baseUri: rootUri.toString(),
+            pattern: '**/*',
+        };
+    }
+
+    /**
      * Whether the given URI is inside a location the language server manages:
      * a workspace folder, the AutoIt3 installation include directory, or a
-     * user defined library directory.
+     * user defined library directory. Containment is matched on URI paths with
+     * path-boundary semantics, so sibling paths are not treated as contained.
      */
     protected async isManagedUri(uri: string): Promise<boolean> {
         if (this.exists(uri)) {
@@ -642,27 +660,38 @@ export class Workspace {
 
         const configuration = this.configuration;
 
-        const roots: string[] = [];
+        const rootUris: URI[] = [];
 
         if (this.connection !== null) {
             const folders = await this.connection.workspace.getWorkspaceFolders() ?? [];
 
             for (const folder of folders) {
-                roots.push(normalizeGlob(folder.uri));
+                rootUris.push(URI.parse(folder.uri));
             }
         }
 
         const installDir = configuration?.installDir;
 
         if (typeof installDir === 'string') {
-            roots.push(normalizeGlob(`${normalizeGlob(installDir)}/Include`));
+            rootUris.push(URI.file(`${normalizeGlob(installDir)}/Include`));
         }
 
         for (const library of configuration?.userDefinedLibraries ?? []) {
-            roots.push(normalizeGlob(library));
+            rootUris.push(URI.file(normalizeGlob(library)));
         }
 
-        return roots.some((root) => uri.startsWith(root));
+        const uriPath = URI.parse(uri).path;
+
+        return rootUris.some((rootUri) => {
+            const rootPath = rootUri.path.replace(/\/+$/, '');
+
+            // Case-insensitive comparison for file URIs, since e.g. Windows drive paths may differ in case between configuration and watcher events
+            if (rootUri.scheme === 'file' && URI.parse(uri).scheme === 'file') {
+                return uriPath.toLowerCase() === rootPath.toLowerCase() || uriPath.toLowerCase().startsWith(`${rootPath.toLowerCase()}/`);
+            }
+
+            return uriPath === rootPath || uriPath.startsWith(`${rootPath}/`);
+        });
     }
 
     /**
@@ -700,6 +729,8 @@ export class Workspace {
 
         this.readingFiles.add(uriString);
 
+        const revision = this.fileEventRevisions.get(uriString) ?? 0;
+
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uriString).then<string | null>((text) => text)
             .catch((error: unknown) => {
                 this.connection?.window.showErrorMessage(`AutoIt3: failed to read file "${uriString}": ${error instanceof Error ? error.message : String(error)}`);
@@ -712,6 +743,11 @@ export class Workspace {
             this.readingFiles.delete(uriString);
 
             if (text === null) {
+                return;
+            }
+
+            // A newer file event (e.g. a delete) superseded this read, so its result is stale
+            if ((this.fileEventRevisions.get(uriString) ?? 0) !== revision) {
                 return;
             }
 

@@ -2,7 +2,8 @@ import { expect, test, vi } from 'vitest';
 import Script, { type Include } from './Script';
 import { AutoIt3Configuration, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
-import { Connection /* , RemoteConsole*/ } from 'vscode-languageserver';
+import { Connection, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
+import DependencyGraph from './DependencyGraph';
 import type { SymbolKey } from './Scope';
 
 const createConfiguration = (overrides: Partial<AutoIt3Configuration> = {}): AutoIt3Configuration => ({
@@ -355,6 +356,129 @@ test('handleFileChangedOrCreated skips open documents', async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(sendRequest).not.toHaveBeenCalled();
+    expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $old = 1');
+});
+
+test('handleFileDeleted preserves active scripts', () => {
+    const workspace = new Workspace();
+
+    const scriptUri = URI.file('/open.au3');
+    const script = new Script('Global $x = 1', scriptUri);
+
+    workspace.add(script);
+    workspace.setScriptActive(scriptUri, true);
+
+    const diagnosticsSpy = vi.fn();
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
+
+    workspace.handleFileDeleted(scriptUri.toString());
+
+    expect(workspace.get(scriptUri.toString())).toBe(script);
+    expect(diagnosticsSpy).not.toHaveBeenCalled();
+});
+
+test('DependencyGraph.removeScript removes stale reverse dependency edges', () => {
+    const graph = new DependencyGraph();
+
+    const mainUri = 'file:///main.au3';
+    const includeUri = 'file:///include.au3';
+
+    graph.setDependencies(mainUri, [includeUri, 'autoit3doc:///native.au3']);
+
+    graph.removeScript(includeUri);
+
+    expect(graph.getDirectDependents(includeUri)).toEqual([]);
+    expect(graph.resolveReverseDependencies(includeUri)).toEqual([]);
+    expect(graph.resolveDependencies(mainUri)).not.toContain(includeUri);
+});
+
+test('buildWatchers registers RelativePattern watchers for installDir and userDefinedLibraries', () => {
+    const workspace = new Workspace();
+
+    type WatcherInternals = { buildWatchers(configuration: AutoIt3Configuration): FileSystemWatcher[] };
+
+    const internals = workspace as unknown as WatcherInternals;
+
+    const watchers = internals.buildWatchers(createConfiguration({
+        installDir: 'C:\\AutoIt3\\',
+        userDefinedLibraries: ['D:\\libs\\'],
+    }));
+
+    expect(watchers[0]).toEqual({ globPattern: '**/*' });
+    expect(watchers[1]?.globPattern).toEqual({
+        baseUri: URI.file('C:/AutoIt3/Include').toString(),
+        pattern: '**/*',
+    });
+    expect(watchers[2]?.globPattern).toEqual({
+        baseUri: URI.file('D:/libs').toString(),
+        pattern: '**/*',
+    });
+});
+
+test('isManagedUri matches roots with path-boundary semantics', async () => {
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type IsManagedInternals = { isManagedUri(uri: string): Promise<boolean> };
+
+    const internals = workspace as unknown as IsManagedInternals;
+
+    await expect(internals.isManagedUri('file:///ws/sub/x.au3')).resolves.toBe(true);
+    await expect(internals.isManagedUri('file:///ws2/x.au3')).resolves.toBe(false);
+});
+
+test('stale read completion cannot recreate a deleted script', async () => {
+    let resolveRead: (value: string | null) => void = () => undefined;
+
+    const sendRequest = vi.fn(() => new Promise<string | null>((resolve) => {
+        resolveRead = resolve;
+    }));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const scriptUri = URI.file('/gone.au3');
+    workspace.add(new Script('Global $old = 1', scriptUri));
+
+    // Start a read that will not settle yet
+    workspace.handleFileChangedOrCreated(scriptUri.toString());
+
+    // Simulate a later delete event bumping the URI's event revision
+    type RevisionInternals = { fileEventRevisions: Map<string, number> };
+
+    const internals = workspace as unknown as RevisionInternals;
+
+    internals.fileEventRevisions.set(scriptUri.toString(), (internals.fileEventRevisions.get(scriptUri.toString()) ?? 0) + 1);
+
+    // The stale read completes with content
+    resolveRead('Global $new = 1');
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $old = 1');
 });
 
