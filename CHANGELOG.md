@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hover, go-to-definition, find references, and document highlight now work for expressions inside array dimensions of variable declarations
 - Hover, go-to-definition, find references, and document highlight now work for expressions inside array dimensions of ReDim expressions
 - Hover text for ReDim expressions no longer throws an error and now renders array dimensions correctly
+- Includes are now re-checked when the `autoit3.installDir` or `autoit3.userDefinedLibraries` settings change (issue #75)
 
 ## [1.8.11] - 2026-07-08
 
