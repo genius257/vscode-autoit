@@ -467,19 +467,24 @@ test('stale read completion cannot recreate a deleted script', async () => {
     // Start a read that will not settle yet
     workspace.handleFileChangedOrCreated(scriptUri.toString());
 
-    // Simulate a later delete event bumping the URI's event revision
+    // Simulate a later delete event: the event bumps the URI's revision and the file is deleted
     type RevisionInternals = { fileEventRevisions: Map<string, number> };
 
     const internals = workspace as unknown as RevisionInternals;
 
     internals.fileEventRevisions.set(scriptUri.toString(), (internals.fileEventRevisions.get(scriptUri.toString()) ?? 0) + 1);
 
-    // The stale read completes with content
+    workspace.handleFileDeleted(scriptUri.toString());
+
+    expect(workspace.get(scriptUri.toString())).toBeUndefined();
+
+    // The stale read completes with content after the deletion
     resolveRead('Global $new = 1');
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $old = 1');
+    // The stale read must not recreate the deleted script
+    expect(workspace.get(scriptUri.toString())).toBeUndefined();
 });
 
 test('showAllDeclarations setting toggles between all declarations and closest match', () => {
