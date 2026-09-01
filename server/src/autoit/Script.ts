@@ -720,6 +720,11 @@ export default class Script {
         this.includes.forEach((include) => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             include.promise.then((value) => {
+                // Skip superseded analyses: the include was replaced by a later analyze()/refreshIncludes()
+                if (!this.includes.includes(include)) {
+                    return;
+                }
+
                 if (value === null) {
                     this.addError({
                         message: `Could not resolve include: '${include.statement.file}'`,

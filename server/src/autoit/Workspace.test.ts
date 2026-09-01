@@ -218,6 +218,42 @@ test('updateDependencies ignores stale include results after includes are replac
     expect(dependencies).toContain(freshUri);
     expect(dependencies).not.toContain(staleUri);
 });
+
+test('superseded analysis cannot retain a stale could-not-resolve include error', async () => {
+    const script = new Script('#include <Missing.au3>', URI.file('/main.au3'));
+
+    // Deferred resolvers, one per resolveInclude call (initial analysis + each refresh)
+    const resolvers: ((value: null) => void)[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    script.workspace = {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        eventEmitter: { emit: () => {} },
+        resolveInclude: () => new Promise<null>((resolve) => {
+            resolvers.push(resolve);
+        }),
+        get: () => undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    script.refreshIncludes(); // refresh #1
+    script.refreshIncludes(); // refresh #2, superseding #1 before anything settles
+
+    // All include promises now settle as unresolvable
+    resolvers.forEach((resolve) => {
+        resolve(null);
+    });
+
+    // Allow the promise callbacks to run
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Only the latest analysis may report the error
+    const errors = script
+        .getDiagnostics()
+        .filter((diagnostic) => diagnostic.message.startsWith('Could not resolve include'));
+
+    expect(errors).toHaveLength(1);
+});
+
 test('showAllDeclarations setting toggles between all declarations and closest match', () => {
     const workspace = new Workspace();
 
