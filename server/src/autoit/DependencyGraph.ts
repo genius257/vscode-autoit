@@ -58,6 +58,13 @@ export default class DependencyGraph {
         }
     }
 
+    /**
+     * Get the scripts that directly depend on the given script.
+     */
+    public getDirectDependents(id: URI): URI[] {
+        return Array.from(this.rev.get(id) ?? []);
+    }
+
     public resolveDependencies(rootId: URI, visited = new Set<URI>()) {
         const dependencies = this.adjacencyList.get(rootId);
 

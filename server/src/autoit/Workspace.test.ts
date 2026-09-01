@@ -44,13 +44,15 @@ test('resolveInclude', () => {
             },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
-        sendRequest: <P extends string>(type: P, params: P) => {
-            return Promise.resolve(URI.parse(params).toString());
+        sendRequest: <P extends string>(_type: P, _params: P) => {
+            return Promise.resolve(URI.parse(_params).toString());
         },
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
         onInitialized: () => ({ dispose: () => {} }),
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
         onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
     };
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -108,6 +110,14 @@ test('onDidChangeConfiguration refreshes includes when installDir changes', () =
             // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
             return { dispose: () => {} };
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        client: {
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            register: () => Promise.resolve({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
     };
 
     const workspace = new Workspace(connection as Connection);
@@ -149,6 +159,14 @@ test('onDidChangeConfiguration refreshes includes when userDefinedLibraries chan
             // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
             return { dispose: () => {} };
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        client: {
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            register: () => Promise.resolve({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
     };
 
     const workspace = new Workspace(connection as Connection);
@@ -252,6 +270,92 @@ test('superseded analysis cannot retain a stale could-not-resolve include error'
         .filter((diagnostic) => diagnostic.message.startsWith('Could not resolve include'));
 
     expect(errors).toHaveLength(1);
+});
+
+test('handleFileDeleted removes the script, clears diagnostics and refreshes dependents', () => {
+    const workspace = new Workspace();
+
+    const mainUri = URI.file('/main.au3');
+    const includeUri = URI.file('/include.au3');
+
+    const mainScript = new Script('#include <include.au3>', mainUri);
+    const includeScript = new Script('Global $x = 1', includeUri);
+
+    workspace.add(mainScript);
+    workspace.add(includeScript);
+
+    workspace.dependencyGraph.setDependencies(mainUri.toString(), [
+        includeUri.toString(),
+        URI.from({ scheme: 'autoit3doc', path: 'native.au3' }).toString(),
+    ]);
+
+    const refreshSpy = vi.spyOn(mainScript, 'refreshIncludes');
+    const diagnosticsSpy = vi.fn();
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
+
+    workspace.handleFileDeleted(includeUri.toString());
+
+    expect(workspace.get(includeUri.toString())).toBeUndefined();
+    expect(refreshSpy).toHaveBeenCalledTimes(1);
+    expect(diagnosticsSpy).toHaveBeenCalledWith({ uri: includeUri.toString(), diagnostics: [] });
+    expect(workspace.dependencyGraph.resolveDependencies(mainUri.toString())).not.toContain(includeUri.toString());
+});
+
+test('handleFileChangedOrCreated re-reads the file and updates the script', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve('Global $updated = 1'));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const scriptUri = URI.file('/external.au3');
+    workspace.add(new Script('Global $old = 1', scriptUri));
+
+    workspace.handleFileChangedOrCreated(scriptUri.toString());
+
+    // Allow the readFile promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', scriptUri.toString());
+    expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $updated = 1');
+});
+
+test('handleFileChangedOrCreated skips open documents', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve('Global $updated = 1'));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const scriptUri = URI.file('/open.au3');
+    workspace.add(new Script('Global $old = 1', scriptUri));
+    workspace.setScriptActive(scriptUri, true);
+
+    workspace.handleFileChangedOrCreated(scriptUri.toString());
+
+    // Allow any pending promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(sendRequest).not.toHaveBeenCalled();
+    expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $old = 1');
 });
 
 test('showAllDeclarations setting toggles between all declarations and closest match', () => {
