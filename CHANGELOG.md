@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Syntax highlighting for code within `Execute` string literals, and for the symbol names within `Eval`, `Call`, `IsDeclared` and `Assign` string literals (variables for `Eval`, `IsDeclared` and `Assign`; function names for `Call`)
 - New setting `autoit3.showAllDeclarations` to toggle between showing all matching declarations or only the closest match on go to definition
 - Scope information (`local`/`global`) shown in hover text and completion suggestion detail for variables and parameters
+- All AutoIt3 script files in workspace folders, the AutoIt3 installation include directory and user defined library directories are now loaded on startup
 
 ### Changed
 
