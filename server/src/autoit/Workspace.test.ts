@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest';
 import Script, { type Include } from './Script';
-import { AutoIt3Configuration, Workspace } from './Workspace';
+import { AutoIt3Configuration, IndexingProgressNotification, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
 import { Connection, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
 import DependencyGraph from './DependencyGraph';
@@ -526,6 +526,8 @@ ConsoleWrite($shared)`, mainUri);
     expect(closestDeclaration).toBeDefined();
 });
 test('preloadWorkspace loads files from managed roots', async () => {
+    const sendNotification = vi.fn();
+
     const sendRequest = vi.fn((type: string, params: string): Promise<unknown> => {
         if (type === 'fs/listFiles') {
             return Promise.resolve(['file:///ws/a.au3', 'file:///ws/b.au3']);
@@ -541,6 +543,16 @@ test('preloadWorkspace loads files from managed roots', async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        sendNotification: sendNotification as unknown as Connection['sendNotification'],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        window: {
+            createWorkDoneProgress: (): Promise<{ begin(): void, report(percentage: number, message?: string): void, done(): void }> => {
+                const progress = { begin: vi.fn(), report: vi.fn(), done: vi.fn() };
+
+                return Promise.resolve(progress);
+            },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
         onInitialized: () => ({ dispose: () => {} }),
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
@@ -563,6 +575,11 @@ test('preloadWorkspace loads files from managed roots', async () => {
     expect(workspace.get('file:///ws/a.au3')?.getText()).toBe('Global $a = 1');
     expect(workspace.get('file:///ws/b.au3')?.getText()).toBe('Global $b = 1');
     expect(sendRequest).toHaveBeenCalledWith('fs/listFiles', URI.file('C:/Program Files (x86)/AutoIt3/Include').toString());
+
+    // Progress notifications: starts at 0/2 and ends at 2/2
+    expect(sendNotification).toHaveBeenNthCalledWith(1, IndexingProgressNotification, { loaded: 0, total: 2 });
+    expect(sendNotification).toHaveBeenLastCalledWith(IndexingProgressNotification, { loaded: 2, total: 2 });
+    expect(sendNotification).toHaveBeenCalledTimes(3);
 });
 
 test('preloadWorkspace skips active scripts', async () => {
@@ -581,6 +598,7 @@ test('preloadWorkspace skips active scripts', async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        sendNotification: vi.fn() as unknown as Connection['sendNotification'],
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
         onInitialized: () => ({ dispose: () => {} }),
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline

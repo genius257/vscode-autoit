@@ -6,11 +6,16 @@
  */
 
 import { /* CancellationToken,*/ ExtensionContext, FileSystemError, FileType, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
-import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
+import { DocumentSelector, LanguageClientOptions, NotificationType } from 'vscode-languageclient';
 import native from '../../server/src/autoit/native.au3?raw';
 import { LanguageClient } from 'vscode-languageclient/browser';
 
 let statusBarItem: StatusBarItem;
+let indexingStatusBarItem: StatusBarItem;
+
+type IndexingProgress = { loaded: number, total: number };
+
+const IndexingProgressNotification = new NotificationType<IndexingProgress>('autoit3/indexingProgress');
 
 // this method is called when vs code is activated
 export function activate(context: ExtensionContext) {
@@ -92,6 +97,17 @@ export function activate(context: ExtensionContext) {
 
         // eslint-disable-next-line no-console
         console.log('autoit3-lsp-web-extension server is ready');
+
+        client.onNotification(IndexingProgressNotification, ({ loaded, total }) => {
+            if (loaded >= total) {
+                indexingStatusBarItem.hide();
+
+                return;
+            }
+
+            indexingStatusBarItem.text = `$(sync~spin) AutoIt3: indexing ${loaded}/${total}`;
+            indexingStatusBarItem.show();
+        });
     });
 
     const myProvider = new class implements TextDocumentContentProvider {
@@ -108,6 +124,11 @@ export function activate(context: ExtensionContext) {
     // statusBarItem.command = "";
     statusBarItem.name = 'AutoIt3 Parser Target Version';
     statusBarItem.text = '3.3.14.5';
+
+    indexingStatusBarItem = window.createStatusBarItem('genius257.au3.indexing', StatusBarAlignment.Right, 98);
+    indexingStatusBarItem.name = 'AutoIt3 Indexing Progress';
+
+    context.subscriptions.push(indexingStatusBarItem);
     context.subscriptions.push(
         window.onDidChangeActiveTextEditor(statusBarStateChange),
     );

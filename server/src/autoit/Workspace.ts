@@ -1,5 +1,5 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, type RelativePattern, Range } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, ProtocolNotificationType, type RelativePattern, Range, type WorkDoneProgressServerReporter } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
@@ -45,6 +45,10 @@ export type AutoIt3Configuration = {
     /** When enabled, go to definition shows all matching declarations across scopes and included files. When disabled, only the closest matching declaration is shown. */
     showAllDeclarations: boolean,
 };
+
+export type IndexingProgress = { loaded: number, total: number };
+
+export const IndexingProgressNotification = new ProtocolNotificationType<IndexingProgress, void>('autoit3/indexingProgress');
 
 export class Workspace {
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
@@ -722,7 +726,7 @@ export class Workspace {
     /**
      * Reads a file from disk via the client and updates (or creates) its script.
      */
-    protected readFileIntoWorkspace(uri: URI): void {
+    protected readFileIntoWorkspace(uri: URI, onSettled?: () => void): void {
         const uriString = uri.toString();
 
         if (this.readingFiles.has(uriString)) {
@@ -743,6 +747,8 @@ export class Workspace {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         promise.then((text) => {
             this.readingFiles.delete(uriString);
+
+            onSettled?.();
 
             if (text === null) {
                 return;
@@ -794,6 +800,8 @@ export class Workspace {
     protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
         const rootUris = await this.getManagedRootUris(configuration);
 
+        const pendingUris: string[] = [];
+
         for (const rootUri of rootUris) {
             const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
 
@@ -802,8 +810,56 @@ export class Workspace {
                     continue;
                 }
 
-                this.readFileIntoWorkspace(URI.parse(uri));
+                pendingUris.push(uri);
             }
+        }
+
+        const total = pendingUris.length;
+
+        const notifyProgress = (loaded: number): void => {
+            void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });
+        };
+
+        notifyProgress(0);
+
+        if (total === 0) {
+            return;
+        }
+
+        const progress = await this.createIndexingProgress();
+
+        let loaded = 0;
+
+        const onSettled = (): void => {
+            loaded++;
+
+            notifyProgress(loaded);
+
+            if (progress !== null) {
+                progress.report(Math.round(loaded / total * 100), `Loading ${loaded} of ${total} files`);
+
+                if (loaded === total) {
+                    progress.done();
+                }
+            }
+        };
+
+        progress?.begin('Indexing AutoIt3 scripts');
+
+        for (const uri of pendingUris) {
+            this.readFileIntoWorkspace(URI.parse(uri), onSettled);
+        }
+    }
+
+    /**
+     * Creates a window work done progress for indexing, or null when the client
+     * does not support it (or the creation fails for any other reason).
+     */
+    protected async createIndexingProgress(): Promise<WorkDoneProgressServerReporter | null> {
+        try {
+            return await this.connection?.window.createWorkDoneProgress() ?? null;
+        } catch {
+            return null;
         }
     }
 }
