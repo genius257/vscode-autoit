@@ -50,12 +50,31 @@ export default class DependencyGraph {
     }
 
     public removeScript(id: URI): void {
+        // Remove id from the reverse sets of its former dependencies
+        const dependencies = this.adjacencyList.get(id);
+
+        if (dependencies !== undefined) {
+            for (const dependency of dependencies) {
+                this.rev.get(dependency)?.delete(id);
+            }
+        }
+
         this.adjacencyList.delete(id);
 
-        // Remove references to this script from other nodes
+        // Remove id from other scripts' dependency sets
         for (const dependencies of this.adjacencyList.values()) {
             dependencies.delete(id);
         }
+
+        // Remove id's own reverse entry, so recreation at the same URI cannot retain stale reverse dependency edges
+        this.rev.delete(id);
+    }
+
+    /**
+     * Get the scripts that directly depend on the given script.
+     */
+    public getDirectDependents(id: URI): URI[] {
+        return Array.from(this.rev.get(id) ?? []);
     }
 
     public resolveDependencies(rootId: URI, visited = new Set<URI>()) {

@@ -1,5 +1,5 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification, Range } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, type RelativePattern, Range } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
@@ -16,6 +16,14 @@ import Deprecation from './docBlock/Deprecation';
 export type ScriptList = Map<string, Script>;
 
 type uri = string | URI | { toString: () => string };
+
+/**
+ * Normalizes a file path or URI into a glob-compatible string:
+ * backslashes become forward slashes and trailing slashes are removed.
+ */
+function normalizeGlob(path: string): string {
+    return path.replace(/\\/g, '/').replace(/\/+$/, '');
+}
 
 export type IncludeResolve = { uri: URI, text: string | null };
 
@@ -46,6 +54,11 @@ export class Workspace {
     protected resolvingIncludes = new Map<string, IncludePromise>();
     protected connection: Connection | null;
     protected configuration: AutoIt3Configuration | null = null;
+    protected watchedFilesDisposable: Disposable | null = null;
+    protected pendingFileEvents = new Map<string, FileChangeType>();
+    protected fileEventTimer: ReturnType<typeof setTimeout> | null = null;
+    protected readingFiles = new Set<string>();
+    protected fileEventRevisions = new Map<string, number>();
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -58,11 +71,33 @@ export class Workspace {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.connection?.workspace.getConfiguration('autoit3').then((configuration: AutoIt3Configuration) => {
                 this.configuration = configuration;
+
+                this.registerWatchers(configuration);
             });
 
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.connection?.client.register(DidChangeConfigurationNotification.type, { section: 'autoit3' });
         });
+
+        this.connection?.onDidChangeWatchedFiles((params) => {
+            for (const change of params.changes) {
+                this.pendingFileEvents.set(change.uri, change.type);
+
+                // Monotonically increasing revision per URI, so stale read completions can be detected
+                this.fileEventRevisions.set(change.uri, (this.fileEventRevisions.get(change.uri) ?? 0) + 1);
+            }
+
+            if (this.fileEventTimer !== null) {
+                return;
+            }
+
+            this.fileEventTimer = setTimeout(() => {
+                this.fileEventTimer = null;
+
+                void this.processFileEvents();
+            }, 200);
+        });
+
         this.connection?.onDidChangeConfiguration((change) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             const newConfiguration = change.settings.autoit3 as AutoIt3Configuration | undefined;
@@ -84,6 +119,9 @@ export class Workspace {
                     script.refreshIncludes();
                     this.updateDependencies(script);
                 });
+
+                // Watched locations outside the workspace depend on the configuration as well
+                this.registerWatchers(newConfiguration);
             }
         });
 
@@ -195,6 +233,58 @@ export class Workspace {
 
             this.dependencyGraph.setDependencies(uri, dependencies);
         });
+    }
+
+    /**
+     * Marks a document as open (or closed) in the editor, so file watcher events
+     * for it can be ignored (text synchronization owns open documents).
+     */
+    public setScriptActive(uri: uri, active: boolean): void {
+        if (active) {
+            this.activeScripts.add(uri.toString());
+        } else {
+            this.activeScripts.delete(uri.toString());
+        }
+    }
+
+    /**
+     * Handles a file deletion: removes the script and its dependency graph edges,
+     * clears its diagnostics, and re-resolves the includes of dependent scripts.
+     */
+    public handleFileDeleted(uri: string): void {
+        // Open documents are owned by text synchronization; deletion of the underlying file must not affect them
+        if (this.activeScripts.has(uri)) {
+            return;
+        }
+
+        const dependents = this.dependencyGraph.getDirectDependents(uri);
+
+        this.dependencyGraph.removeScript(uri);
+        this.scripts.delete(uri);
+
+        this.eventEmitter.emit('diagnostics', { uri: uri, diagnostics: [] });
+
+        for (const dependentUri of dependents) {
+            const dependent = this.scripts.get(dependentUri);
+
+            if (dependent !== undefined) {
+                dependent.refreshIncludes();
+                this.updateDependencies(dependent);
+            }
+        }
+    }
+
+    /**
+     * Handles a file creation or change outside the editor: re-reads the file
+     * from disk and updates (or creates) its script. Open documents are skipped,
+     * since text synchronization owns them.
+     */
+    public handleFileChangedOrCreated(uri: string): void {
+        if (this.activeScripts.has(uri)) {
+            return;
+        }
+
+        this.readFileIntoWorkspace(URI.parse(uri));
     }
 
     public remove(uri: uri): void {
@@ -503,5 +593,165 @@ export class Workspace {
                 this.collectSubscopesAtPosition(subscope, position, scopes);
             }
         }
+    }
+
+    /**
+     * (Re-)registers the file watchers: everything in the workspace folders, the
+     * AutoIt3 installation include directory, and the user defined library directories.
+     */
+    protected registerWatchers(configuration: AutoIt3Configuration | null | undefined): void {
+        if (this.connection === null || configuration === null || configuration === undefined) {
+            return;
+        }
+
+        this.watchedFilesDisposable?.dispose();
+        this.watchedFilesDisposable = null;
+
+        const watchers = this.buildWatchers(configuration);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        this.connection.client.register(DidChangeWatchedFilesNotification.type, { watchers: watchers }).then((disposable) => {
+            this.watchedFilesDisposable = disposable;
+        });
+    }
+
+    /**
+     * Builds the watcher list: everything in the workspace, plus the AutoIt3
+     * installation include directory and user defined library directories.
+     * Roots outside the workspace are registered as RelativePattern instances
+     * based on file URIs.
+     */
+    protected buildWatchers(configuration: AutoIt3Configuration): FileSystemWatcher[] {
+        const watchers: FileSystemWatcher[] = [{ globPattern: '**/*' }];
+
+        if (typeof configuration.installDir === 'string') {
+            const includeUri = URI.file(`${normalizeGlob(configuration.installDir)}/Include`);
+
+            watchers.push({ globPattern: this.createRootRelativePattern(includeUri) });
+        }
+
+        for (const library of configuration.userDefinedLibraries) {
+            watchers.push({ globPattern: this.createRootRelativePattern(URI.file(normalizeGlob(library))) });
+        }
+
+        return watchers;
+    }
+
+    /**
+     * Creates a RelativePattern watching everything below the given root URI.
+     */
+    protected createRootRelativePattern(rootUri: URI): RelativePattern {
+        return {
+            baseUri: rootUri.toString(),
+            pattern: '**/*',
+        };
+    }
+
+    /**
+     * Whether the given URI is inside a location the language server manages:
+     * a workspace folder, the AutoIt3 installation include directory, or a
+     * user defined library directory. Containment is matched on URI paths with
+     * path-boundary semantics, so sibling paths are not treated as contained.
+     */
+    protected async isManagedUri(uri: string): Promise<boolean> {
+        if (this.exists(uri)) {
+            return true;
+        }
+
+        const configuration = this.configuration;
+
+        const rootUris: URI[] = [];
+
+        if (this.connection !== null) {
+            const folders = await this.connection.workspace.getWorkspaceFolders() ?? [];
+
+            for (const folder of folders) {
+                rootUris.push(URI.parse(folder.uri));
+            }
+        }
+
+        const installDir = configuration?.installDir;
+
+        if (typeof installDir === 'string') {
+            rootUris.push(URI.file(`${normalizeGlob(installDir)}/Include`));
+        }
+
+        for (const library of configuration?.userDefinedLibraries ?? []) {
+            rootUris.push(URI.file(normalizeGlob(library)));
+        }
+
+        const uriPath = URI.parse(uri).path;
+
+        return rootUris.some((rootUri) => {
+            const rootPath = rootUri.path.replace(/\/+$/, '');
+
+            // Case-insensitive comparison for file URIs, since e.g. Windows drive paths may differ in case between configuration and watcher events
+            if (rootUri.scheme === 'file' && URI.parse(uri).scheme === 'file') {
+                return uriPath.toLowerCase() === rootPath.toLowerCase() || uriPath.toLowerCase().startsWith(`${rootPath.toLowerCase()}/`);
+            }
+
+            return uriPath === rootPath || uriPath.startsWith(`${rootPath}/`);
+        });
+    }
+
+    /**
+     * Processes debounced file watcher events.
+     */
+    protected async processFileEvents(): Promise<void> {
+        const events = [...this.pendingFileEvents.entries()];
+
+        this.pendingFileEvents.clear();
+
+        for (const [uri, type] of events) {
+            const managed = await this.isManagedUri(uri);
+
+            if (!managed) {
+                continue;
+            }
+
+            if (type === FileChangeType.Deleted) {
+                this.handleFileDeleted(uri);
+            } else {
+                this.handleFileChangedOrCreated(uri);
+            }
+        }
+    }
+
+    /**
+     * Reads a file from disk via the client and updates (or creates) its script.
+     */
+    protected readFileIntoWorkspace(uri: URI): void {
+        const uriString = uri.toString();
+
+        if (this.readingFiles.has(uriString)) {
+            return;
+        }
+
+        this.readingFiles.add(uriString);
+
+        const revision = this.fileEventRevisions.get(uriString) ?? 0;
+
+        const promise = this.connection?.sendRequest<string | null>('fs/readFile', uriString).then<string | null>((text) => text)
+            .catch((error: unknown) => {
+                this.connection?.window.showErrorMessage(`AutoIt3: failed to read file "${uriString}": ${error instanceof Error ? error.message : String(error)}`);
+
+                return null;
+            }) ?? Promise.resolve(null);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        promise.then((text) => {
+            this.readingFiles.delete(uriString);
+
+            if (text === null) {
+                return;
+            }
+
+            // A newer file event (e.g. a delete) superseded this read, so its result is stale
+            if ((this.fileEventRevisions.get(uriString) ?? 0) !== revision) {
+                return;
+            }
+
+            this.createOrUpdate(uri, text);
+        });
     }
 }

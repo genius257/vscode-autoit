@@ -87,6 +87,7 @@ workspace.eventEmitter.on('diagnostics', function ({ uri, diagnostics }) {
 });
 
 connection.onDidOpenTextDocument((params) => {
+    workspace.setScriptActive(params.textDocument.uri, true);
     workspace.createOrUpdate(params.textDocument.uri, params.textDocument.text);
 });
 
@@ -123,6 +124,7 @@ connection.onDidChangeTextDocument((params) => {
 });
 
 connection.onDidCloseTextDocument((params) => {
+    workspace.setScriptActive(params.textDocument.uri, false);
     workspace.get(params.textDocument.uri)?.release();
 });
 
