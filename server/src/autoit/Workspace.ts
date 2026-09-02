@@ -800,7 +800,7 @@ export class Workspace {
     protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
         const rootUris = await this.getManagedRootUris(configuration);
 
-        const pendingUris: string[] = [];
+        const pendingUris = new Set<string>();
 
         for (const rootUri of rootUris) {
             const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
@@ -810,11 +810,11 @@ export class Workspace {
                     continue;
                 }
 
-                pendingUris.push(uri);
+                pendingUris.add(uri);
             }
         }
 
-        const total = pendingUris.length;
+        const total = pendingUris.size;
 
         const notifyProgress = (loaded: number): void => {
             void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });

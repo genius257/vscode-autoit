@@ -627,6 +627,51 @@ test('preloadWorkspace skips active scripts', async () => {
     expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $old = 1');
 });
 
+test('preloadWorkspace deduplicates URIs returned by overlapping roots', async () => {
+    const sendRequest = vi.fn((type: string): Promise<unknown> => {
+        if (type === 'fs/listFiles') {
+            return Promise.resolve(['file:///x/a.au3']);
+        }
+
+        return Promise.resolve('Global $a = 1');
+    });
+
+    const sendNotification = vi.fn();
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        sendNotification: sendNotification as unknown as Connection['sendNotification'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type PreloadInternals = { preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> };
+
+    const internals = workspace as unknown as PreloadInternals;
+
+    // The workspace folder and the user defined library return the same URI
+    await internals.preloadWorkspace(createConfiguration({ userDefinedLibraries: ['D:\\libs\\'] }));
+
+    // Allow any pending promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(sendRequest).toHaveBeenCalledTimes(4); // 2x fs/listFiles + 1x fs/readFile (deduplicated)
+
+    // Progress completes at 1/1 despite the duplicate, so done() is called
+    expect(sendNotification).toHaveBeenLastCalledWith(IndexingProgressNotification, { loaded: 1, total: 1 });
+});
+
 test('getManagedRootUris collects workspace folders, installDir Include and library roots', async () => {
     const connection: Partial<Connection> = {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
