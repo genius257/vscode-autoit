@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------
  */
 
-import { /* CancellationToken,*/ ExtensionContext, FileSystemError, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
+import { /* CancellationToken,*/ ExtensionContext, FileSystemError, FileType, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
 import { DocumentSelector, LanguageClientOptions } from 'vscode-languageclient';
 import native from '../../server/src/autoit/native.au3?raw';
 import { LanguageClient } from 'vscode-languageclient/browser';
@@ -58,6 +58,36 @@ export function activate(context: ExtensionContext) {
             } catch {
                 throw new Error(`Failed to decode file as UTF-8: ${uri}`);
             }
+        });
+
+        client.onRequest<string[], [string]>('fs/listFiles', async (baseUri: string) => {
+            const files: string[] = [];
+            const base = Uri.parse(baseUri);
+
+            const walk = async (dir: Uri): Promise<void> => {
+                let entries: [string, FileType][];
+
+                try {
+                    entries = await workspace.fs.readDirectory(dir);
+                } catch {
+                    // Missing or unreadable directories are expected (e.g. wrong configuration paths)
+                    return;
+                }
+
+                for (const [name, type] of entries) {
+                    const child = Uri.joinPath(dir, name);
+
+                    if (type === FileType.Directory) {
+                        await walk(child);
+                    } else if (name.toLowerCase().endsWith('.au3')) {
+                        files.push(child.toString());
+                    }
+                }
+            };
+
+            await walk(base);
+
+            return files;
         });
 
         // eslint-disable-next-line no-console

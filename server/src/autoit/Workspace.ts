@@ -73,6 +73,8 @@ export class Workspace {
                 this.configuration = configuration;
 
                 this.registerWatchers(configuration);
+
+                void this.preloadWorkspace(configuration);
             });
 
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -753,5 +755,55 @@ export class Workspace {
 
             this.createOrUpdate(uri, text);
         });
+    }
+
+    /**
+     * Collects the root URIs of all managed locations: workspace folders, the
+     * AutoIt3 installation include directory, and user defined library directories.
+     */
+    protected async getManagedRootUris(configuration: AutoIt3Configuration): Promise<URI[]> {
+        const rootUris: URI[] = [];
+
+        if (this.connection !== null) {
+            const folders = await this.connection.workspace.getWorkspaceFolders() ?? [];
+
+            for (const folder of folders) {
+                rootUris.push(URI.parse(folder.uri));
+            }
+        }
+
+        const installDir = configuration.installDir;
+
+        if (typeof installDir === 'string') {
+            rootUris.push(URI.file(`${normalizeGlob(installDir)}/Include`));
+        }
+
+        for (const library of configuration.userDefinedLibraries) {
+            rootUris.push(URI.file(normalizeGlob(library)));
+        }
+
+        return rootUris;
+    }
+
+    /**
+     * Loads all AutoIt3 script files in the managed locations on startup, so
+     * declarations from includes and other workspace files are available without
+     * each file being opened first. Open documents are skipped, since text
+     * synchronization owns them.
+     */
+    protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
+        const rootUris = await this.getManagedRootUris(configuration);
+
+        for (const rootUri of rootUris) {
+            const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
+
+            for (const uri of uris) {
+                if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
+                    continue;
+                }
+
+                this.readFileIntoWorkspace(URI.parse(uri));
+            }
+        }
     }
 }

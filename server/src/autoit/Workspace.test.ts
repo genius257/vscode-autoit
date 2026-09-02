@@ -525,3 +525,119 @@ ConsoleWrite($shared)`, mainUri);
     const closestDeclaration = closestDeclarations[0];
     expect(closestDeclaration).toBeDefined();
 });
+test('preloadWorkspace loads files from managed roots', async () => {
+    const sendRequest = vi.fn((type: string, params: string): Promise<unknown> => {
+        if (type === 'fs/listFiles') {
+            return Promise.resolve(['file:///ws/a.au3', 'file:///ws/b.au3']);
+        }
+
+        return Promise.resolve(params === 'file:///ws/a.au3' ? 'Global $a = 1' : 'Global $b = 1');
+    });
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type PreloadInternals = { preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> };
+
+    const internals = workspace as unknown as PreloadInternals;
+
+    await internals.preloadWorkspace(createConfiguration());
+
+    // Allow any pending promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(workspace.get('file:///ws/a.au3')?.getText()).toBe('Global $a = 1');
+    expect(workspace.get('file:///ws/b.au3')?.getText()).toBe('Global $b = 1');
+    expect(sendRequest).toHaveBeenCalledWith('fs/listFiles', URI.file('C:/Program Files (x86)/AutoIt3/Include').toString());
+});
+
+test('preloadWorkspace skips active scripts', async () => {
+    const sendRequest = vi.fn((type: string): Promise<unknown> => {
+        if (type === 'fs/listFiles') {
+            return Promise.resolve(['file:///ws/open.au3']);
+        }
+
+        return Promise.resolve('Global $new = 1');
+    });
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const scriptUri = URI.file('/ws/open.au3');
+
+    workspace.add(new Script('Global $old = 1', scriptUri));
+    workspace.setScriptActive(scriptUri, true);
+
+    type PreloadInternals = { preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> };
+
+    const internals = workspace as unknown as PreloadInternals;
+
+    await internals.preloadWorkspace(createConfiguration());
+
+    // Allow any pending promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(sendRequest).not.toHaveBeenCalledWith('fs/readFile', scriptUri.toString());
+    expect(workspace.get(scriptUri.toString())?.getText()).toBe('Global $old = 1');
+});
+
+test('getManagedRootUris collects workspace folders, installDir Include and library roots', async () => {
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type RootUrisInternals = { getManagedRootUris(configuration: AutoIt3Configuration): Promise<URI[]> };
+
+    const internals = workspace as unknown as RootUrisInternals;
+
+    const rootUris = await internals.getManagedRootUris(createConfiguration({
+        installDir: 'C:\\AutoIt3\\',
+        userDefinedLibraries: ['D:\\libs\\'],
+    }));
+
+    expect(rootUris).toEqual([
+        URI.file('/ws'),
+        URI.file('C:/AutoIt3/Include'),
+        URI.file('D:/libs'),
+    ]);
+});
