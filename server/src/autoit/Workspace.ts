@@ -1,5 +1,5 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, type RelativePattern, Range } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, ProtocolNotificationType, type RelativePattern, Range, type WorkDoneProgressServerReporter } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
@@ -46,6 +46,13 @@ export type AutoIt3Configuration = {
     showAllDeclarations: boolean,
 };
 
+export type IndexingProgress = { loaded: number, total: number };
+
+export const IndexingProgressNotification = new ProtocolNotificationType<IndexingProgress, void>('autoit3/indexingProgress');
+
+/** Maximum number of concurrent file reads during startup preloading. */
+const preloadConcurrency = 8;
+
 export class Workspace {
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
     public readonly dependencyGraph = new DependencyGraph();
@@ -73,6 +80,8 @@ export class Workspace {
                 this.configuration = configuration;
 
                 this.registerWatchers(configuration);
+
+                void this.preloadWorkspace(configuration);
             });
 
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -720,7 +729,7 @@ export class Workspace {
     /**
      * Reads a file from disk via the client and updates (or creates) its script.
      */
-    protected readFileIntoWorkspace(uri: URI): void {
+    protected readFileIntoWorkspace(uri: URI, onSettled?: () => void): void {
         const uriString = uri.toString();
 
         if (this.readingFiles.has(uriString)) {
@@ -742,6 +751,8 @@ export class Workspace {
         promise.then((text) => {
             this.readingFiles.delete(uriString);
 
+            onSettled?.();
+
             if (text === null) {
                 return;
             }
@@ -753,5 +764,141 @@ export class Workspace {
 
             this.createOrUpdate(uri, text);
         });
+    }
+
+    /**
+     * Collects the root URIs of all managed locations: workspace folders, the
+     * AutoIt3 installation include directory, and user defined library directories.
+     */
+    protected async getManagedRootUris(configuration: AutoIt3Configuration): Promise<URI[]> {
+        const rootUris: URI[] = [];
+
+        if (this.connection !== null) {
+            const folders = await this.connection.workspace.getWorkspaceFolders() ?? [];
+
+            for (const folder of folders) {
+                rootUris.push(URI.parse(folder.uri));
+            }
+        }
+
+        const installDir = configuration.installDir;
+
+        if (typeof installDir === 'string') {
+            rootUris.push(URI.file(`${normalizeGlob(installDir)}/Include`));
+        }
+
+        for (const library of configuration.userDefinedLibraries) {
+            rootUris.push(URI.file(normalizeGlob(library)));
+        }
+
+        return rootUris;
+    }
+
+    /**
+     * Loads all AutoIt3 script files in the managed locations on startup, so
+     * declarations from includes and other workspace files are available without
+     * each file being opened first. Open documents are skipped, since text
+     * synchronization owns them.
+     */
+    protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
+        const rootUris = await this.getManagedRootUris(configuration);
+
+        const pendingUris = new Set<string>();
+
+        for (const rootUri of rootUris) {
+            const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
+
+            for (const uri of uris) {
+                if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
+                    continue;
+                }
+
+                pendingUris.add(uri);
+            }
+        }
+
+        const total = pendingUris.size;
+
+        const notifyProgress = (loaded: number): void => {
+            void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });
+        };
+
+        notifyProgress(0);
+
+        if (total === 0) {
+            return;
+        }
+
+        const progress = await this.createIndexingProgress();
+
+        let loaded = 0;
+
+        const onSettled = (): void => {
+            loaded++;
+
+            notifyProgress(loaded);
+
+            if (progress !== null) {
+                progress.report(Math.round(loaded / total * 100), `Loading ${loaded} of ${total} files`);
+
+                if (loaded === total) {
+                    progress.done();
+                }
+            }
+        };
+
+        progress?.begin('Indexing AutoIt3 scripts');
+
+        /*
+         * Bounded worker pool: keep at most `preloadConcurrency` reads active at a
+         * time, starting the next URI only when an active read settles, so a huge
+         * workspace does not flood the client with simultaneous fs/readFile requests.
+         */
+        const urisIterator = pendingUris.values();
+
+        const worker = async (): Promise<void> => {
+            for (;;) {
+                const next = urisIterator.next();
+
+                if (next.done === true) {
+                    return;
+                }
+
+                await new Promise<void>((resolve) => {
+                    const uriString = URI.parse(next.value).toString();
+
+                    /*
+                     * A file event may have started a read of this URI between the
+                     * filtering above and now; readFileIntoWorkspace would skip it
+                     * without invoking onSettled, so treat it as settled instead.
+                     */
+                    if (this.readingFiles.has(uriString)) {
+                        resolve();
+
+                        return;
+                    }
+
+                    this.readFileIntoWorkspace(URI.parse(uriString), () => {
+                        onSettled();
+
+                        resolve();
+                    });
+                });
+            }
+        };
+
+        await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
+    }
+
+    /**
+     * Creates a window work done progress for indexing, or null when the client
+     * does not support it (or the creation fails for any other reason).
+     */
+    protected async createIndexingProgress(): Promise<WorkDoneProgressServerReporter | null> {
+        try {
+            return await this.connection?.window.createWorkDoneProgress() ?? null;
+        } catch {
+            return null;
+        }
     }
 }
