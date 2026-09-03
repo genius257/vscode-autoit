@@ -672,6 +672,56 @@ test('preloadWorkspace deduplicates URIs returned by overlapping roots', async (
     expect(sendNotification).toHaveBeenLastCalledWith(IndexingProgressNotification, { loaded: 1, total: 1 });
 });
 
+test('preloadWorkspace limits concurrent fs/readFile requests', async () => {
+    let activeReads = 0;
+    let maxActiveReads = 0;
+
+    const sendRequest = vi.fn((type: string): Promise<unknown> => {
+        if (type === 'fs/listFiles') {
+            return Promise.resolve(Array.from({ length: 20 }, (_, i) => `file:///ws/f${i}.au3`));
+        }
+
+        activeReads++;
+        maxActiveReads = Math.max(maxActiveReads, activeReads);
+
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                activeReads--;
+                resolve('Global $x = 1');
+            }, 0);
+        });
+    });
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        sendNotification: vi.fn() as unknown as Connection['sendNotification'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type PreloadInternals = { preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> };
+
+    const internals = workspace as unknown as PreloadInternals;
+
+    await internals.preloadWorkspace(createConfiguration());
+
+    expect(maxActiveReads).toBeLessThanOrEqual(8);
+
+    // All 20 files were eventually read
+    expect(sendRequest).toHaveBeenCalledTimes(21); // 1x fs/listFiles + 20x fs/readFile
+});
+
 test('getManagedRootUris collects workspace folders, installDir Include and library roots', async () => {
     const connection: Partial<Connection> = {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

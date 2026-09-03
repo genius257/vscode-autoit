@@ -50,6 +50,9 @@ export type IndexingProgress = { loaded: number, total: number };
 
 export const IndexingProgressNotification = new ProtocolNotificationType<IndexingProgress, void>('autoit3/indexingProgress');
 
+/** Maximum number of concurrent file reads during startup preloading. */
+const preloadConcurrency = 8;
+
 export class Workspace {
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
     public readonly dependencyGraph = new DependencyGraph();
@@ -846,9 +849,45 @@ export class Workspace {
 
         progress?.begin('Indexing AutoIt3 scripts');
 
-        for (const uri of pendingUris) {
-            this.readFileIntoWorkspace(URI.parse(uri), onSettled);
-        }
+        /*
+         * Bounded worker pool: keep at most `preloadConcurrency` reads active at a
+         * time, starting the next URI only when an active read settles, so a huge
+         * workspace does not flood the client with simultaneous fs/readFile requests.
+         */
+        const urisIterator = pendingUris.values();
+
+        const worker = async (): Promise<void> => {
+            for (;;) {
+                const next = urisIterator.next();
+
+                if (next.done === true) {
+                    return;
+                }
+
+                await new Promise<void>((resolve) => {
+                    const uriString = URI.parse(next.value).toString();
+
+                    /*
+                     * A file event may have started a read of this URI between the
+                     * filtering above and now; readFileIntoWorkspace would skip it
+                     * without invoking onSettled, so treat it as settled instead.
+                     */
+                    if (this.readingFiles.has(uriString)) {
+                        resolve();
+
+                        return;
+                    }
+
+                    this.readFileIntoWorkspace(URI.parse(uriString), () => {
+                        onSettled();
+
+                        resolve();
+                    });
+                });
+            }
+        };
+
+        await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
     }
 
     /**
