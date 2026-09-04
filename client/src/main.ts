@@ -7,6 +7,7 @@
 
 import { /* CancellationToken,*/ ExtensionContext, FileSystemError, FileType, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
 import { DocumentSelector, LanguageClientOptions, NotificationType } from 'vscode-languageclient';
+import jschardet from 'jschardet';
 import native from '../../server/src/autoit/native.au3?raw';
 import { LanguageClient } from 'vscode-languageclient/browser';
 
@@ -61,7 +62,30 @@ export function activate(context: ExtensionContext) {
             try {
                 return new TextDecoder('utf-8', { fatal: true }).decode(content);
             } catch {
-                throw new Error(`Failed to decode file as UTF-8: ${uri}`);
+                /*
+                 * Not valid UTF-8. jschardet can report `encoding: null` at
+                 * runtime (typed as string, but happens for undetectable
+                 * input), and reports 'ascii', which is not a TextDecoder
+                 * label — windows-1252 is its WHATWG superset.
+                 */
+                const detected = jschardet.detect(toBinaryString(content));
+                const detectedEncoding = detected.encoding.toLowerCase();
+
+                /*
+                 * jschardet reports 'ascii', which is not a TextDecoder label;
+                 * windows-1252 is its WHATWG superset.
+                 */
+                const encoding = detectedEncoding === 'ascii' ? 'windows-1252' : detectedEncoding;
+
+                if (!encoding) {
+                    throw new Error(`Failed to detect file encoding: ${uri}`);
+                }
+
+                try {
+                    return new TextDecoder(encoding, { fatal: true }).decode(content);
+                } catch {
+                    throw new Error(`Failed to decode file as ${encoding}: ${uri}`);
+                }
             }
         });
 
@@ -154,4 +178,22 @@ function statusBarStateChange(e: TextEditor | undefined): void {
     } else {
         statusBarItem.hide();
     }
+}
+
+/*
+ * jschardet's detect() expects a latin-1 "binary" string (one character per
+ * byte), or a Node Buffer, which is converted to exactly that internally.
+ * Since this runs in a webworker without Buffer, we perform the equivalent
+ * conversion ourselves. Done in chunks to avoid blowing the call stack via
+ * String.fromCharCode spread on large files.
+ */
+function toBinaryString(bytes: Uint8Array): string {
+    let result = '';
+    const chunkSize = 0x8000;
+
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        result += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+
+    return result;
 }
