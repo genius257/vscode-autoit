@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2027-09-04
+
 ### Added
 
 - Symbol discovery support for `Eval`, `Call` and `IsDeclared` expressions, enabling hover, go-to-definition, find references, and document highlight on string literal arguments
