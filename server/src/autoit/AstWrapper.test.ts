@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test, describe } from 'vitest';
 import parser from 'autoit3-pegjs';
 import AstWrapper from './AstWrapper';
@@ -402,8 +403,8 @@ describe('AstWrapper incremental updates (expected behavior)', function () {
         // The gap now parses into EmptyStatements, but B itself is untouched.
         expect(body).toHaveLength(4);
         expect(body).toContain(statementB);
-        expect(body.indexOf(statementB)).toBe(3);
-        expect(statementB.location.start.line).toBe(4);
+        expect(body.indexOf(statementB!)).toBe(3);
+        expect(statementB!.location.start.line).toBe(4);
     });
 
     test('whitespace edits after the last statement anchor to the preceding sibling', function () {
