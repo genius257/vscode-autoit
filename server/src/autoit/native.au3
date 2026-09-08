@@ -3970,7 +3970,7 @@ EndFunc
 #
 # @return 0|1 1 if successful, 0 if not.
 #ce
-Func GUICtrlDestroy($controlID)
+Func GUICtrlDelete($controlID)
     #native code
 EndFunc
 
