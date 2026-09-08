@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Native function Au3Doc descriptions now include links to the online documentation
+
 ## [1.9.0] - 2027-09-04
 
 ### Added

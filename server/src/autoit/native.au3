@@ -21,11 +21,11 @@ Global $CmdLineRaw = ""
 #
 # A string has a value of zero.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
+#
 # @param Mixed $expression Any valid numeric expression.
 #
 # @return Double Returns absolute value of expression.
-#
-# @see https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
 #ce
 Func Abs($expression)
     #native code
@@ -36,11 +36,11 @@ EndFunc
 #
 # ACos(x) is mathematically defined only for -1 < x < 1, so ACos() tends to return -1.#IND for other values of x.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ACos.htm
+#
 # @param Mixed $expression Any value between -1 and 1 inclusive.
 #
 # @return Double Returns the trigonometric arccosine of the number. Result is in radians.
-#
-# @see https://www.autoitscript.com/autoit3/docs/functions/ACos.htm
 #ce
 Func ACos($expression)
     #native code
@@ -54,12 +54,12 @@ EndFunc
 # The adlib function should be kept simple as it is executed often and during this time the main script is paused. Also, the time parameter should be used carefully to avoid CPU load.
 # You can not register a function using parameters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/AdlibRegister.htm
+#
 # @param UserFunction|String<UserFunction> $function The adlib function to be registered.
 # @param Int $time How often in milliseconds to call the function.
 #
 # @return 0|1
-#
-# @see https://www.autoitscript.com/autoit3/docs/functions/AdlibRegister.htm
 #ce
 Func AdlibRegister($function, $time = 250)
     #native code
@@ -69,6 +69,8 @@ EndFunc
 # Unregisters an adlib function.
 #
 # If the function name is not specified then the last registered function will be unregistered.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/AdlibUnRegister.htm
 #
 # @param UserFunction|String<UserFunction> $function The name of the adlib function to be Unregistered.
 #
@@ -81,6 +83,8 @@ EndFunc
 #cs
 # Returns the ASCII code of a character.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Asc.htm
+#
 # @param String $char The character to get the code for. If a string is used, the code for the first character is given.
 #
 # @return Int32 The ASCII code of the specified char.
@@ -91,6 +95,8 @@ EndFunc
 
 #cs
 # Returns the unicode code of a character.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/AscW.htm
 #
 # @param String $char The character to get the code for. If a string is used, the code for the first character is given.
 #
@@ -105,6 +111,8 @@ EndFunc
 #
 # ASin(x) is mathematically defined only for -1 < x < 1, so ASin() tends to return -1.#IND for other values of x.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ASin.htm
+#
 # @param Mixed $expression Any value between -1 and 1 (inclusive).
 #
 # @return Double Returns the trigonometric arcsine of the number. Result is in radians.
@@ -117,6 +125,8 @@ EndFunc
 # Assigns a variable by name with the data.
 #
 # If there is a need to use Assign() to create/write to a variable, then in most situations, Eval() should be used to read the variable and IsDeclared() should be used to check that the variable exists.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Assign.htm
 #
 # @param String<Variable> $varname The name of the variable you wish to assign. Cannot be an array element and must only contain letters, digits and underscore characters (as per normal variable naming conventions).
 # @param Mixed $data The data you wish to assign to the variable.
@@ -131,11 +141,11 @@ EndFunc
 #cs
 # Calculates the arctangent of a number.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ATan.htm
+#
 # @param Mixed $expression Any valid numeric expression.
 #
 # @return Double The trigonometric arctangent of the number. Result is in radians.
-#
-# @see https://www.autoitscript.com/autoit3/docs/functions/ATan.htm
 #ce
 Func ATan($expression)
     #native code
@@ -145,6 +155,8 @@ EndFunc
 # Changes the operation of various AutoIt functions/parameters.
 #
 # You may use Opt() as an alternative to AutoItSetOption().
+#
+# https://www.autoitscript.com/autoit3/docs/functions/AutoItSetOption.htm
 #
 # @option String $option The option to change.
 # @param Mixed $param The value to assign to the option.
@@ -161,6 +173,8 @@ EndFunc
 #cs
 # Changes the operation of various AutoIt functions/parameters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Opt.htm
+#
 # @option String $option The option to change.
 # @param Mixed $param The value to assign to the option.
 # The type and meaning vary by option.
@@ -176,6 +190,8 @@ EndFunc
 #cs
 # Retrieves the title of the AutoIt window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/AutoItWinGetTitle.htm
+#
 # @return String The title of the AutoIt window.
 #ce
 Func AutoItWinGetTitle()
@@ -187,6 +203,8 @@ EndFunc
 #
 # The AutoIt window is usually hidden. The purpose of changing the title is to allow other programs (or other AutoIt scripts) to interact with AutoIt.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/AutoItWinSetTitle.htm
+#
 # @param String $newtitle The new title to give to the window.
 #
 # @return Void
@@ -197,6 +215,8 @@ EndFunc
 
 #cs
 # Plays back a beep to the user.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Beep.htm
 #
 # @param Int $frequency The frequency of the beep in hertz. Can be anywhere from 37 through 32,767 (0x25 through 0x7FFF).
 # @param Int $duration The length of the beep in milliseconds.
@@ -212,6 +232,8 @@ EndFunc
 #
 # See language datatypes for a detailed description.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Binary.htm
+#
 # @return Binary
 #
 # @see https://www.autoitscript.com/autoit3/docs/intro/lang_datatypes.htm language datatypes
@@ -222,6 +244,8 @@ EndFunc
 
 #cs
 # Returns the number of bytes in a binary variant.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/BinaryLen.htm
 #
 # @param Binary $binary The data to evaluate.
 #
@@ -236,6 +260,8 @@ EndFunc
 #
 # If start is out-of-bounds, an empty binary variant is returned.
 # If start is valid but count is out-of-bounds, the entire remainder of the binary data is returned.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/BinaryMid.htm
 #
 # @param Binary $binary The data to evaluate.
 # @param Int $start The byte position to start. (1 = first byte)
@@ -252,6 +278,8 @@ EndFunc
 #
 # Unlike String() which returns a hexadecimal representation of binary data, this function will assume the binary data is a string value and convert it appropriately.
 # See "Unicode Support" for a detailed description.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/BinaryToString.htm
 #
 # @param Binary $expression An expression to convert into a string.
 # @param Int $flags Changes how the binary data is converted:
@@ -273,6 +301,8 @@ EndFunc
 # Performs a bitwise AND operation.
 #
 # Bit operations are performed as 32-bit integers.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/BitAND.htm
 #
 # @param Int $value1
 # @param Int $value2
@@ -541,6 +571,8 @@ EndFunc
 #
 # Bit operations are performed as 32-bit integers.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/BitNOT.htm
+#
 # @param Int $value The number to operate on
 #
 # @return Int32 Returns the bitwise NOT of the value.
@@ -553,6 +585,8 @@ EndFunc
 # Performs a bitwise OR operation.
 #
 # Bit operations are performed as 32-bit integers.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/BitOR.htm
 #
 # @param Int $value1
 # @param Int $value2
@@ -819,6 +853,8 @@ EndFunc
 #cs
 # Performs a bit shifting operation, with rotation.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/BitRotate.htm
+#
 # @param Int $value The number to operate on
 # @param Int $shift Number of bits to rotate to the left (negative numbers rotate right).
 # @param String $size A string that determines the rotation size, the default is (16 bits)
@@ -837,6 +873,8 @@ EndFunc
 #
 # Bit operations are performed as 32-bit integers.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/BitShift.htm
+#
 # @param Int $value The number to be shifted.
 # @param Int $shift Number of bits to shift to the right (negative numbers shift left).
 #
@@ -850,6 +888,8 @@ EndFunc
 # Performs a bitwise exclusive OR (XOR) operation.
 #
 # Bit operations are performed as 32-bit integers.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/BitXOR.htm
 #
 # @param Int $value1
 # @param Int $value2
@@ -1125,6 +1165,8 @@ EndFunc
 #
 # BlockInput() only affects user-input. Input from functions like Send() or MouseMove() still work.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/BlockInput.htm
+#
 # @param 0|1 $flag
 # $BI_DISABLE (1) = Disable user input
 # $BI_ENABLE (0) = Enable user input
@@ -1143,6 +1185,8 @@ EndFunc
 # AutoIt normally creates a tray icon when running, and right-clicking this icon allows the user to pause or exit the script.
 # If Break() is disabled (0), then the user cannot terminate the script this way.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Break.htm
+#
 # @param 0|1 $mode Sets the script break mode:
 # $BREAK_ENABLE (1) = Break is enabled (user can quit) (default)
 # $BREAK_DISABLE (0) = Break is disabled (user cannot quit)
@@ -1159,6 +1203,9 @@ EndFunc
 #
 # Arguments can be passed to functions individually or by placing them in an array.
 # This array, which must be the only parameter used, should have its [0] element set to "CallArgArray" while elements [1 - N] hold the separate arguments to the function.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Call.htm
+#
 # @param UserFunction|String<UserFunction> $function The name of function to call as a literal string.
 #
 # Note that either Call() or the called function can set the @error flag. If Call() sets the @error flag, the value will be 0xDEAD and @extended will also be set to 0xBEEF.
@@ -1432,6 +1479,8 @@ EndFunc
 # CDTray() does not work on non-local/mapped CD drives; CDTray() must be run from the computer whose drive it affects.
 # CDTray("X:", "close") returns 1 on laptop-style cd trays that can only be closed manually.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/CDTray.htm
+#
 # @param String $drive The drive letter of the CD tray to control, in the format D:, E:, etc.
 # @param String $status Specifies if you want the CD tray to be open or closed:
 # $CDTRAY_OPEN ("open") - to be open
@@ -1447,6 +1496,8 @@ EndFunc
 #cs
 # Returns a number rounded up to the next integer.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Ceiling.htm
+#
 # @param Number $expression Any valid numeric expression.
 #
 # @return Int Returns the rounded number.
@@ -1459,6 +1510,8 @@ EndFunc
 # Returns a character corresponding to an ASCII code.
 #
 # See the ASCII Character Code table for a complete list of available values.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Chr.htm
 #
 # @param Int $ASCIIcode An ASCII code in the range 0-255
 #
@@ -1475,6 +1528,8 @@ EndFunc
 #
 # See the ASCII Character Code table for a complete list of available values.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ChrW.htm
+#
 # @param Int $UNICODEcode A unicode code in the range 0-65535
 #
 # @return String String containing the representation of the given code or an empty string and sets the @error flag to non-zero if the UNICODE value is greater than 65535.
@@ -1490,9 +1545,9 @@ EndFunc
 #
 # When multiple selecting file/dir are stored in the clipboard, the filename/dirname are returned as texts separated by @LF.
 #
-# @return String String containing the text on the clipboard
+# https://www.autoitscript.com/autoit3/docs/functions/ClipGet.htm
 #
-# @see https://www.autoitscript.com/autoit3/docs/functions/ClipGet.htm
+# @return String String containing the text on the clipboard
 #ce
 Func ClipGet()
     #native code
@@ -1503,6 +1558,8 @@ EndFunc
 #
 # Any existing clipboard contents are overwritten.
 # An empty string "" will empty the clipboard.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ClipPut.htm
 #
 # @param String $value The text to write to the clipboard.
 #
@@ -1519,6 +1576,8 @@ EndFunc
 # ConsoleRead() does not block, it will return immediately. In order to get all data, it must be called in a loop.
 # Peeking on the stream does not remove the data from the buffer, however, it does return the available data as normal.
 # By default, data is returned in text format. By using the binary option, the data will be returned in binary format.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ConsoleRead.htm
 #
 # @param Bool $peek If True the function does not remove the read characters from the stream.
 # @param Bool $binary If True the function reads the data as binary instead of text (default is text).
@@ -1542,6 +1601,8 @@ EndFunc
 #
 # The @error and @extended are not set on return leaving them as they were before calling. Usefull when debugging with the SciTE debugging output.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ConsoleWrite.htm
+#
 # @param String|Binary $data The data you wish to output. This may either be text or binary.
 #
 # @return Int The amount of data written. If writing binary, the number of bytes written, if writing text, the number of characters written.
@@ -1563,6 +1624,8 @@ EndFunc
 #
 # The @error and @extended are not set on return leaving them as they were before calling. Usefull when debugging with the SciTE debugging output.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ConsoleWriteError.htm
+#
 # @param String|Binary $data The data you wish to output. This may either be text or binary.
 #
 # @return Int The amount of data written. If writing binary, the number of bytes written, if writing text, the number of characters written.
@@ -1578,6 +1641,8 @@ EndFunc
 # Using 2 for the number of clicks will send a double-click message to the control - this can even be used to launch programs from an explorer control!
 #
 # If the user has swapped the left and right mouse buttons in the control panel, then the behaviour of the buttons is different. "Left" and "right" always click those buttons, whether the buttons are swapped or not. The "primary" or "main" button will be the main click, whether or not the buttons are swapped. The "secondary" or "menu" buttons will usually bring up the context menu, whether the buttons are swapped or not.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlClick.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1599,6 +1664,8 @@ EndFunc
 #cs
 # Sends a command to a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlCommand.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1617,6 +1684,8 @@ EndFunc
 #cs
 # Disables or "grays-out" a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlDisable.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1632,6 +1701,8 @@ EndFunc
 
 #cs
 # Enables a "grayed-out" control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlEnable.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1649,6 +1720,8 @@ EndFunc
 #cs
 # Sets input focus to a given control on a window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlFocus.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1665,6 +1738,8 @@ EndFunc
 #cs
 # Returns the ControlRef# of the control that has keyboard focus within a specified window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlGetFocus.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -1680,6 +1755,8 @@ EndFunc
 # Retrieves the internal handle of a control.
 #
 # This function returns a HWND/Handle value.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlGetHandle.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1698,6 +1775,8 @@ EndFunc
 # Retrieves the position and size of a control relative to its window.
 #
 # The title/text is referencing the parent window, so be careful with "", which references the active window which may not be the one containing the controlID control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlGetPos.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1719,6 +1798,8 @@ EndFunc
 #cs
 # Returns the control's current text.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlGetText.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1734,6 +1815,8 @@ EndFunc
 
 #cs
 # Hides a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlHide.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1752,6 +1835,8 @@ EndFunc
 # Sends a command to a ListView32 control.
 #
 # Some commands may fail when using a 32-bit AutoIt process to read from a 64-bit process. Likewise commands may fail when using a 64-bit AutoIt process to read from a 32-bit process.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlListView.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1774,6 +1859,8 @@ EndFunc
 #
 # If x and y equal to the Default keyword no move occurs, just resizing.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlMove.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1793,6 +1880,8 @@ EndFunc
 
 #cs
 # Sends a string to a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlSend.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1815,6 +1904,8 @@ EndFunc
 #cs
 # Sets the text of a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlSetText.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1833,6 +1924,8 @@ EndFunc
 #cs
 # Shows a control that was hidden.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ControlShow.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param String $controlID The control to interact with. See Controls.
@@ -1848,6 +1941,8 @@ EndFunc
 
 #cs
 # Sends a command to a TreeView32 control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ControlTreeView.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -1867,6 +1962,8 @@ EndFunc
 #cs
 # Calculates the cosine of a number.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Cos.htm
+#
 # @param Number $expression Value in radians.
 #
 # @return Number The trigonometric cosine of the number.
@@ -1879,6 +1976,8 @@ EndFunc
 # Returns a numeric representation of a hexadecimal string.
 #
 # Default behavior is that the input string is treated as an integer. In this case, if the result is within range of a 32bit integer then it's returned as a 32bit integer, otherwise it's returned as a 64bit integer - both signed.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Dec.htm
 #
 # @param String $hex The hexadecimal string to convert.
 # @param 0|1|2|3 $flag Defines behavior.
@@ -1900,6 +1999,8 @@ EndFunc
 #
 # If the destination directory structure doesn't exist, it will be created (if possible).
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DirCopy.htm
+#
 # @param String $source_dir Path of the source directory (with no trailing backslash). e.g. "C:\Path1"
 # @param String $dest_dir Path of the destination dir (with no trailing backslash). e.g. "C:\Path_Copy"
 # @param 0|1 $flag this flag determines whether to overwrite files if they already exist:
@@ -1918,6 +2019,8 @@ EndFunc
 #
 # This function will also create all parent directories given in "path" if they do not already exist.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DirCreate.htm
+#
 # @param String $path Path of the directory to create.
 #
 # @return 0|1 0 if there is an error creating the directory.
@@ -1935,6 +2038,8 @@ EndFunc
 # $aArray[0] = Size
 # $aArray[1] = Files count
 # $aArray[2] = Dirs Count
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DirGetSize.htm
 #
 # @param String $path The directory path to get the size from, e.g. "C:\Windows".
 # @param Int $flag this flag determines the behaviour and result of the function, and can be a combination of the following:
@@ -1958,6 +2063,8 @@ EndFunc
 #
 # AutoIt does not have a "DirRename" function as you can use this function to rename a folder using "Full_Path\Old_Name" and "Full_Path\New_Name" as the "source dir" and dest dir" parameters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DirMove.htm
+#
 # @param String $source_dir Path of the source directory (with no trailing backslash). e.g. "C:\Path1"
 # @param String $dest_dir Path of the destination dir (with no trailing backslash). e.g. "C:\Path_Copy"
 # @param 0|1 $flag this flag determines whether to overwrite files if they already exist:
@@ -1975,6 +2082,8 @@ EndFunc
 # Deletes a directory/folder.
 #
 # Some directory attributes can make the deletion impossible, therefore if this is the case look at FileSetAttrib() to change the attributes of a directory.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DirRemove.htm
 #
 # @param String $path Path of the directory to remove.
 # @param 0|1 $recurse Use this flag to specify if you want to delete sub-directories too.
@@ -2007,6 +2116,8 @@ EndFunc
 # $return[n] = paramn
 #
 # If an output parameter with type STR or WSTR is defined as a Null string only a maximum 65536 string will be return.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DllCall.htm
 #
 # @param String|Handle $dll The filename of the DLL to use or a handle obtained from DllOpen.
 # @param String $return_type The return type of the function.
@@ -2273,6 +2384,8 @@ EndFunc;TODO: support DLLCALL param types (currently shown as a table in officia
 #cs
 # Dynamically calls a function at a specific memory address.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllCallAddress.htm
+#
 # @param String $return_type The return type of the function.
 # @param Ptr $address The address of a function. If this value is invalid your script will crash!
 # @param String $type1
@@ -2537,6 +2650,8 @@ EndFunc
 #cs
 # Frees a previously created handle created with DllCallbackRegister.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllCallbackFree.htm
+#
 # @param Handle $handle The DllCallback handle, as returned by a previous call to DllCallbackRegister().
 #
 # @return Void
@@ -2548,6 +2663,8 @@ EndFunc
 #cs
 # Returns the pointer to a callback function that can be passed to the Win32 API.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllCallbackGetPtr.htm
+#
 # @param Handle $handle A DllCallback handle returned from DllCallbackRegister().
 #
 # @return Ptr the pointer to the callback function.
@@ -2558,6 +2675,8 @@ EndFunc
 
 #cs
 # Creates a user-defined DLL Callback function.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DllCallbackRegister.htm
 #
 # @param String $function The name of the User Defined Function to call.
 # @param String $return_type The return type and calling convention of the function (see DllCall).
@@ -2572,6 +2691,8 @@ EndFunc
 #cs
 # Closes a previously opened DLL.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllClose.htm
+#
 # @param Handle $dllhandle The handle of a dll, as returned by a previous call to DllOpen().
 #
 # @return Void
@@ -2582,6 +2703,8 @@ EndFunc
 
 #cs
 # Opens a DLL file for use in DllCall.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DllOpen.htm
 #
 # @param String $filename Filename of the DLL file to open.
 #
@@ -2594,6 +2717,8 @@ EndFunc
 #cs
 # Creates a C/C++ style structure to be used in DllCall.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllStructCreate.htm
+#
 # @param String $struct A string representing the structure to create (See Remarks).
 # @param Ptr $pointer If supplied the struct will not allocate memory but use the pointer supplied.
 #
@@ -2605,6 +2730,8 @@ EndFunc
 
 #cs
 # Returns the data of an element of the struct.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DllStructGetData.htm
 #
 # @param Handle $struct The struct returned by DllStructCreate().
 # @param String $element Which element of the struct you want to access, starting at 1 or the element name as defined in DllStructCreate().
@@ -2620,6 +2747,8 @@ EndFunc
 #cs
 # Returns the pointer to the struct or an element in the struct.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllStructGetPtr.htm
+#
 # @param Handle $struct The struct returned by DllStructCreate().
 # @param String|Int $element The element of the struct whose pointer you need, starting at 1 or the element name as defined in DllStructCreate().
 #
@@ -2632,6 +2761,8 @@ EndFunc
 #cs
 # Returns the size of the struct in bytes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DllStructGetSize.htm
+#
 # @param Handle $struct The struct returned by DllStructCreate().
 #
 # @return Int The size of the struct in bytes.
@@ -2642,6 +2773,8 @@ EndFunc
 
 #cs
 # Sets the data of an element in the struct.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DllStructSetData.htm
 #
 # @param Handle $struct The struct returned by DllStructCreate().
 # @param String $element Which element of the struct you want to access, starting at 1 or the element name as defined in DllStructCreate().
@@ -2656,6 +2789,8 @@ EndFunc
 
 #cs
 # Returns an array containing the enumerated drives.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DriveGetDrive.htm
 #
 # @param String $type Type of drive to find:
 # $DT_ALL ("ALL")
@@ -2676,6 +2811,8 @@ EndFunc
 #cs
 # Returns File System Type of a drive.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DriveGetFileSystem.htm
+#
 # @param String $path Path of drive to receive information from.
 #
 # @return String The File System Type of the drive as a string
@@ -2686,6 +2823,8 @@ EndFunc
 
 #cs
 # Returns Volume Label of a drive, if it has one.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DriveGetLabel.htm
 #
 # @param String $path Path of drive to receive information from.
 #
@@ -2700,6 +2839,8 @@ EndFunc
 #
 # The value returned is not the hardware serial number as found on the label of the drive, it is the Windows Volume ID for the drive.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DriveGetSerial.htm
+#
 # @param String $path Path of drive to receive information from.
 #
 # @return String The Serial Number of the drive
@@ -2710,6 +2851,8 @@ EndFunc
 
 #cs
 # Returns drive type.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DriveGetType.htm
 #
 # @param String $path Path of drive to receive information from.
 # @param Int $operation The drive type operation to perform.
@@ -2726,6 +2869,8 @@ EndFunc
 
 #cs
 # Maps a network drive.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DriveMapAdd.htm
 #
 # @param String $device The device to map, for example "O:" or "LPT1:". If you pass an empty string for this parameter a connection is made but not mapped to a specific drive. If you specify "*" an unused drive letter will be automatically selected.
 # @param String $remote_share The remote share to connect to in the form "\\server\share".
@@ -2746,6 +2891,8 @@ EndFunc
 #cs
 # Disconnects a network drive.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DriveMapDel.htm
+#
 # @param String $device The device to disconnect, e.g. "O:" or "LPT1:".
 #
 # @return 0|1 1 if successful, 0 if the disconnection was unsuccessful.
@@ -2757,6 +2904,8 @@ EndFunc
 #cs
 # Retrieves the details of a mapped drive.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DriveMapGet.htm
+#
 # @param String $device The device to retrieve, e.g. "O:" or "LPT1:".
 #
 # @return String A details of the mapping, e.g. \\server\share
@@ -2767,6 +2916,8 @@ EndFunc
 
 #cs
 # Sets the Volume Label of a drive.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DriveSetLabel.htm
 #
 # @param String $path Path of drive to change.
 # @param String $label New volume label for the drive. (11 characters is usually max length)
@@ -2780,6 +2931,8 @@ EndFunc
 #cs
 # Returns the free disk space of a path in Megabytes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DriveSpaceFree.htm
+#
 # @param String $path Path of drive to receive information from.
 #
 # @return Float The free disk space of the drive
@@ -2790,6 +2943,8 @@ EndFunc
 
 #cs
 # Returns the total disk space of a path in Megabytes.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/DriveSpaceTotal.htm
 #
 # @param String $path Path of drive to receive information from.
 #
@@ -2802,6 +2957,8 @@ EndFunc
 #cs
 # Returns the status of the drive
 #
+# https://www.autoitscript.com/autoit3/docs/functions/DriveStatus.htm
+#
 # @param String $path Path of drive to receive information from.
 #
 # @return String The status of the drive
@@ -2812,6 +2969,8 @@ EndFunc
 
 #cs
 # Retrieves an environment variable.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/EnvGet.htm
 #
 # @param String $envvariable The name of the environment variable to get such as "TEMP" or "PATH".
 #
@@ -2826,6 +2985,8 @@ EndFunc
 #
 # If a value is not used the environment variable will be deleted.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/EnvSet.htm
+#
 # @param String $envvariable The name of the environment variable to set such as "TEMP" or "PATH".
 # @param String $value The value of the environment variable.
 #
@@ -2838,6 +2999,8 @@ EndFunc
 #cs
 # Refreshes the OS environment.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/EnvUpdate.htm
+#
 # @return Void
 #ce
 Func EnvUpdate()
@@ -2846,6 +3009,8 @@ EndFunc
 
 #cs
 # Return the value of the variable defined by a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Eval.htm
 #
 # @param String $variable The name of the variable.
 #
@@ -2858,6 +3023,8 @@ EndFunc
 #cs
 # Execute an expression.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Execute.htm
+#
 # @param String $string The expression to be evaluated.
 #
 # @return Mixed The value of the evaluated expression or empty string and sets the @error flag to non-zero on failure.
@@ -2868,6 +3035,8 @@ EndFunc
 
 #cs
 # Calculates e to the power of a number.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Exp.htm
 #
 # @param Number $expression Any valid numeric expression.
 #
@@ -2880,6 +3049,8 @@ EndFunc
 #cs
 # Changes the current working directory.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileChangeDir.htm
+#
 # @param String $path The path to make the current working directory.
 #
 # @return 0|1 1 if successful, 0 if working directory was not changed.
@@ -2891,6 +3062,8 @@ EndFunc
 #cs
 # Closes a previously opened file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileClose.htm
+#
 # @param Int $filehandle The handle of a file, as returned by a previous call to FileOpen().
 #
 # @return 0|1 1 if successful, 0 if the filehandle is invalid.
@@ -2901,6 +3074,8 @@ EndFunc
 
 #cs
 # Copies one or more files.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileCopy.htm
 #
 # @param String $source The source path of the file(s) to copy.
 # @param String $dest The destination path of the copied file(s).
@@ -2920,6 +3095,8 @@ EndFunc
 #cs
 # Creates an NTFS hardlink to a file or a directory.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileCreateNTFSLink.htm
+#
 # @param String $source Path of the source to which the hardlink will be created.
 # @param String $hardlink Path of the hardlink.
 # @param Int $flag Determines whether to overwrite link if they already exist.
@@ -2936,6 +3113,8 @@ EndFunc
 
 #cs
 # Creates a shortcut (.lnk) to a file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileCreateShortcut.htm
 #
 # @param String $file Full path and file name of file to which the shortcut will point.
 # @param String $lnk Full path and file name of the shortcut.
@@ -2956,6 +3135,8 @@ EndFunc
 #cs
 # Delete one or more files.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileDelete.htm
+#
 # @param String $filename The path of the file(s) to delete.
 #
 # @return 0|1 1 if successful, 0 if files are not deleted or do not exist.
@@ -2966,6 +3147,8 @@ EndFunc
 
 #cs
 # Checks if a file or directory exists.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileExists.htm
 #
 # @param String $path The path of the file or directory to check.
 #
@@ -2978,6 +3161,8 @@ EndFunc
 #cs
 # Creates a search handle, defined by a path and file mask.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileFindFirstFile.htm
+#
 # @param String $filename The path and file mask to search for.
 #
 # @return Handle The search handle or -1 if nothing is found. The value of the @error flag is set to 1 only if the Folder is empty.
@@ -2988,6 +3173,8 @@ EndFunc
 
 #cs
 # Returns the next filename defined by the search handle.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileFindNextFile.htm
 #
 # @param Handle $search The search handle, as returned by FileFindFirstFile().
 # @param Int32 $flag Determines whether to return detailed file attribute information in @extended.
@@ -3003,6 +3190,8 @@ EndFunc
 #cs
 # Flushes the file's buffer to disk.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileFlush.htm
+#
 # @param Handle $filehandle The file handle to flush.
 #
 # @return Boolean True if the buffer was flushed (or did not need to be flushed), False if the buffer could not be flushed.
@@ -3014,6 +3203,8 @@ EndFunc
 #cs
 # Returns a code string representing a file's attributes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetAttrib.htm
+#
 # @param String $filename The path and filename.
 #
 # @return String The code string.
@@ -3024,6 +3215,8 @@ EndFunc
 
 #cs
 # Determines the text encoding used in a file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetEncoding.htm
 #
 # @param String|Handle $file The handle of a file or string filename
 # @param 1|2 $mode The UTF8 detection mode to use.
@@ -3040,6 +3233,8 @@ EndFunc
 #cs
 # Returns the long path+name of the path+name passed.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetLongName.htm
+#
 # @param String $filename Full path and file name to convert
 # @param 0|1 $flag 
 # $FN_FULLPATH (0) - Default
@@ -3054,6 +3249,8 @@ EndFunc
 #cs
 # Retrieves the current file position.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetPos.htm
+#
 # @param Handle $filehandle The file handle
 #
 # @return Int the position offset from the beginning of the file (First index is 0) or 0 and sets the @error flag to non-zero on failure.
@@ -3065,6 +3262,8 @@ EndFunc
 #cs
 # Retrieves details about a shortcut.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetShortcut.htm
+#
 # @param String $lnk The path and filename of the shortcut.
 #
 # @return Array
@@ -3075,6 +3274,8 @@ EndFunc
 
 #cs
 # Returns the short path+name of the path+name passed.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetShortName.htm
 #
 # @param String $filename Full path and file name to convert
 # @param 0|1 $flag 
@@ -3091,6 +3292,8 @@ EndFunc
 #cs
 # Returns the size of a file in bytes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetSize.htm
+#
 # @param String $filename The path and filename.
 #
 # @return Int The file size in bytes or 0 and sets the @error flag to non-zero on failure.
@@ -3101,6 +3304,8 @@ EndFunc
 
 #cs
 # Returns the time a file was last modified.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetTime.htm
 #
 # @param String $filenamem The path and filename.
 # @param 0|1|2 $option Flag to indicate which timestamp
@@ -3123,6 +3328,8 @@ EndFunc
 
 #cs
 # Returns version information stored in a file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileGetVersion.htm
 #
 # @param String $filename The path and filename.
 # @param String $stringname Name of the string field to be retrieved from the header version file info:
@@ -3149,6 +3356,8 @@ EndFunc
 #cs
 # Include and install a file with the compiled script.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileInstall.htm
+#
 # @param String $source The source path of the file to compile. This must be a literal string; it cannot be a variable or the result of a function call. It can be a relative path (using .\ or ..\ in the path) to the source file (.au3).
 # @param String $dest The destination path of the file with trailing backslash if only the directory is defined. This can be a variable.
 # @param 0|1 $flag Determines whether to overwrite files if they already exist:
@@ -3164,6 +3373,8 @@ EndFunc
 
 #cs
 # Moves one or more files.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileMove.htm
 #
 # @param String $source The source path and filename of the file to move. (* wildcards accepted - See Remarks)
 # @param String $dest The destination path and filename of the moved file. (* wildcards accepted - See Remarks)
@@ -3181,6 +3392,8 @@ EndFunc
 
 #cs
 # Opens a file for reading or writing.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileOpen.htm
 #
 # @param String $filename The path and filename.
 # @param 0|1|2 $mode Flag to indicate which mode
@@ -3209,6 +3422,8 @@ EndFunc
 #cs
 # Initiates a Open File Dialog.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileOpenDialog.htm
+#
 # @param String $title Title text of the Dialog GUI.
 # @param String $init_dir Initial directory selected in the GUI file tree.
 # @param String $filter File type single filter such as "All (*.*)" or "Text files (*.txt)" or multiple filter groups such as "All (*.*)|Text files (*.txt)" (See Remarks).
@@ -3230,6 +3445,8 @@ EndFunc
 #cs
 # Read in a number of characters from a previously opened file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileRead.htm
+#
 # @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively you may use a string filename as the first parameter.
 # @param Int $count The number of characters to read.
 #
@@ -3241,6 +3458,8 @@ EndFunc
 
 #cs
 # Read in a line of text from a previously opened text file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileReadLine.htm
 #
 # @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively you may use a string filename as the first parameter.
 # @param Int $line The line number to read. The first line of a text file is line 1 (not zero); the last line is -1.
@@ -3254,6 +3473,8 @@ EndFunc
 #cs
 # Reads the specified file into an array.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileReadToArray.htm
+#
 # @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively you may use a string filename as the first parameter.
 #
 # @return Array A 1 dimension array containing one line of text per element and @extended set to the number of lines read.
@@ -3264,6 +3485,8 @@ EndFunc
 
 #cs
 # Sends a file or directory to the recycle bin.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileRecycle.htm
 #
 # @param String $source The source path of the file(s) or directory to Recycle. (* and ? wildcards accepted - See Remarks)
 #
@@ -3276,6 +3499,8 @@ EndFunc
 #cs
 # Empties the recycle bin.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileRecycleEmpty.htm
+#
 # @param String $source The rootpath to empty - if omitted the recycle bin for all drives is emptied.
 #
 # @return 0|1 1 if successful, 0 (the recycle bin cannot be emptied).
@@ -3286,6 +3511,8 @@ EndFunc
 
 #cs
 # Initiates a Save File Dialog.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileSaveDialog.htm
 #
 # @param String $title Title text of the Dialog GUI.
 # @param String $init_dir Initial directory selected in the GUI file tree.
@@ -3306,6 +3533,8 @@ EndFunc
 #cs
 # Initiates a Browse For Folder dialog.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileSelectFolder.htm
+#
 # @param String $dialog_text Title text of the Dialog GUI.
 # @param String $root_dir Root directory of GUI file tree - use to limit user choice. Setting "" uses Desktop - see remarks below.
 # @param Int $flag
@@ -3325,6 +3554,8 @@ EndFunc
 #cs
 # Sets the attributes of one or more files/directories.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileSetAttrib.htm
+#
 # @param String $file_pattern The path of the file(s) to set, e.g. C:\*.au3, C:\Dir. (* and ? wildcards accepted - See Remarks)
 # @param Int $attributes Attribute(s) to set/clear. e.g. "+A", "+RA-SH"
 # @param 0|1 $recurse
@@ -3340,6 +3571,8 @@ EndFunc
 #cs
 # Sets the end of the file at the current file position.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileSetEnd.htm
+#
 # @param Handle $filehandle The handle of a file, as returned by a previous call to FileOpen().
 #
 # @return Boolean True if successful, False if not.
@@ -3350,6 +3583,8 @@ EndFunc
 
 #cs
 # Sets the current file position.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileSetPos.htm
 #
 # @param Handle $filehandle The handle of a file, as returned by a previous call to FileOpen().
 # @param Int $offset The offset to move from the origin. This value may be positive or negative. Negative values move backwards from the origin.
@@ -3367,6 +3602,8 @@ EndFunc
 
 #cs
 # Sets the timestamp of one of more files.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileSetTime.htm
 #
 # @param String $file_pattern The path of the file(s) to set, e.g. C:\*.au3, C:\Dir. (* and ? wildcards accepted - See Remarks)
 # @param Int $time The new time to set in the format "YYYYMMDDHHMMSS" (Year, month, day, hours (24hr clock), seconds). If the time is blank "" then the current time is used.
@@ -3389,6 +3626,8 @@ EndFunc
 #cs
 # Write text/data to the end of a previously opened file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FileWrite.htm
+#
 # @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively, you may use a string filename as the first parameter.
 # @param String|Binary $data The text/data to write to the file. The text is written as is - no @CR or @LF characters are added. See remark for data type.
 #
@@ -3400,6 +3639,8 @@ EndFunc
 
 #cs
 # Append a line of text to the end of a previously opened text file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FileWriteLine.htm
 #
 # @param Handle|String $file The handle of a file, as returned by a previous call to FileOpen(). Alternatively, you may use a string filename as the first parameter.
 # @param String $line  	The line of text to write to the text file. If the line does NOT end in @CR or @LF then a DOS linefeed (@CRLF) will be automatically added.
@@ -3413,6 +3654,8 @@ EndFunc
 #cs
 # Returns a number rounded down to the closest integer.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Floor.htm
+#
 # @param Number $expression Any valid numeric expression.
 #
 # @return Int Returns the rounded number.
@@ -3423,6 +3666,8 @@ EndFunc
 
 #cs
 # Sets the internet proxy to use for ftp access.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/FtpSetProxy.htm
 #
 # @param 0|1|2 $mode The proxy mode to use:
 # $PROXY_IE (0) = (default) Use current Internet Explorer settings for proxy.
@@ -3442,6 +3687,8 @@ EndFunc
 #cs
 # Returns the name of a function stored in a variable.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/FuncName.htm
+#
 # @param String|Function $Functionvariable A variable containing a Function whose name you want to retrieve.
 #
 # @return String The name of the function
@@ -3452,6 +3699,8 @@ EndFunc
 
 #cs
 # Create a GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICreate.htm
 #
 # @param String $title The title of the dialog box.
 # @param Int $width The width of the client area of the window.
@@ -3475,6 +3724,8 @@ EndFunc
 #cs
 # Creates an AVI video control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateAvi.htm
+#
 # @param String $filename The filename of the video. Only .avi files are supported.
 # @param Int $subfileid id of the subfile to be used. If the file only contains one video then use 0.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3494,6 +3745,8 @@ EndFunc
 
 #cs
 # Creates a Button control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateButton.htm
 #
 # @param String $text The text of the button control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3515,6 +3768,8 @@ EndFunc
 #cs
 # Creates a Checkbox control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateCheckbox.htm
+#
 # @param String $text The text of the checkbox control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3533,6 +3788,8 @@ EndFunc
 
 #cs
 # Creates a ComboBox control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateCombo.htm
 #
 # @param String $text The text of the combobox control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3554,6 +3811,8 @@ EndFunc
 #cs
 # Creates a context menu for a control or entire GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateContextMenu.htm
+#
 # @param Int $controlID Control identifier as returned by a GUICtrlCreate...() function.
 #
 # @return Int The identifier (controlID) of the new control or 0 on failure.
@@ -3564,6 +3823,8 @@ EndFunc
 
 #cs
 # Creates a date control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateDate.htm
 #
 # @param String $text The preselected date (always as "yyyy/mm/dd").
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3585,6 +3846,8 @@ EndFunc
 #cs
 # Creates a Dummy control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateDummy.htm
+#
 # @return Int The identifier (controlID) of the new control or 0 on failure.
 #ce
 Func GUICtrlCreateDummy()
@@ -3593,6 +3856,8 @@ EndFunc
 
 #cs
 # Creates an Edit control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateEdit.htm
 #
 # @param String $text The text of the edit control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3614,6 +3879,8 @@ EndFunc
 #cs
 # Creates a Graphic control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateGraphic.htm
+#
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
 # @param Int $width The width of the control (default is the previously used width).
@@ -3629,6 +3896,8 @@ EndFunc
 
 #cs
 # Creates a Group control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateGroup.htm
 #
 # @param String $text The text of the group control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3648,6 +3917,8 @@ EndFunc
 
 #cs
 # Creates an Icon control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateIcon.htm
 #
 # @param String $filename The filename of the icon to be loaded.
 # @param String $iconName Icon name if the file contains multiple icons. Can be an ordinal name if negative number. Otherwise -1.
@@ -3669,6 +3940,8 @@ EndFunc
 #cs
 # Creates an Input control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateInput.htm
+#
 # @param String $text The text of the input control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3689,6 +3962,8 @@ EndFunc
 #cs
 # Creates a static Label control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateLabel.htm
+#
 # @param String $text The text of the label control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3707,6 +3982,8 @@ EndFunc
 
 #cs
 # Creates a List control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateList.htm
 #
 # @param String $text The text of the list control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3728,6 +4005,8 @@ EndFunc
 #cs
 # Creates a ListView control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateListView.htm
+#
 # @param String $text The text of the list control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3748,6 +4027,8 @@ EndFunc
 #cs
 # Creates a ListView item.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateListViewItem.htm
+#
 # @param String $text subitemtext separated with Opt("GUIDataSeparatorChar").
 # @param Int $listviewID The controlID of the ListView control holding the item.
 #
@@ -3759,6 +4040,8 @@ EndFunc
 
 #cs
 # Creates a Menu control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateMenu.htm
 #
 # @param String $submenutext The submenu text.
 # @param Int $menuID If defined, allows you to create a submenu in the referenced menu. If equal -1 it refers to first level menu.
@@ -3773,6 +4056,8 @@ EndFunc
 #cs
 # Creates a MenuItem control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateMenuItem.htm
+#
 # @param String $text The text of the menu item.
 # @param Int $menuID Allows you to create a submenu in the referenced menu. If equal -1 it refers to the first level menu.
 # @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0.
@@ -3786,6 +4071,8 @@ EndFunc
 
 #cs
 # Creates a month calendar control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateMonthCal.htm
 #
 # @param String $text The preselected date (always as "yyyy/mm/dd").
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3807,6 +4094,8 @@ EndFunc
 #cs
 # Creates an ActiveX control in the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateObj.htm
+#
 # @param String $ObjectVar A variable pointing to a previously opened object
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3821,6 +4110,8 @@ EndFunc
 
 #cs
 # Creates a Picture control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreatePic.htm
 #
 # @param String $filename The  	filename of the picture to be loaded : supported types BMP, JPG, GIF(but not animated).
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3841,6 +4132,8 @@ EndFunc
 #cs
 # Creates a Progress control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateProgress.htm
+#
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
 # @param Int $width The width of the control (default is the previously used width).
@@ -3856,6 +4149,8 @@ EndFunc
 
 #cs
 # Creates a Radio button control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateRadio.htm
 #
 # @param String $text The text of the button control.
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
@@ -3876,6 +4171,8 @@ EndFunc
 #cs
 # Creates a Slider control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateSlider.htm
+#
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
 # @param Int $width The width of the control (default is the previously used width).
@@ -3892,6 +4189,8 @@ EndFunc
 
 #cs
 # Creates a Tab control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateTab.htm
 #
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3911,6 +4210,8 @@ EndFunc
 #cs
 # Creates a TabItem control within an existing tab control in the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateTabItem.htm
+#
 # @param String $text The text of the TabItem control.
 #
 # @return Int The identifier (controlID) of the new control or 0 on failure.
@@ -3921,6 +4222,8 @@ EndFunc
 
 #cs
 # Creates a TreeView control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateTreeView.htm
 #
 # @param Int $left The left side of the control. If -1 is used then left will be computed according to GUICoordMode.
 # @param Int $top The top of the control. If -1 is used then top will be computed according to GUICoordMode.
@@ -3940,6 +4243,8 @@ EndFunc
 #cs
 # Creates a TreeViewItem control for the GUI.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateTreeViewItem.htm
+#
 # @param String $text The text of the TreeViewItem control.
 # @param Int $treeviewID The treeview identifier as return by treeview or treeviewitem creation if subtree is created.
 #
@@ -3951,6 +4256,8 @@ EndFunc
 
 #cs
 # Creates an UpDown control for the GUI.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlCreateUpdown.htm
 #
 # @param Int $inputcontrolID The controlID of the input control in which the updown control will be created, or -1 for the last created control.
 # @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
@@ -3966,6 +4273,8 @@ EndFunc
 #cs
 # Deletes a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlDelete.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 #
 # @return 0|1 1 if successful, 0 if not.
@@ -3976,6 +4285,8 @@ EndFunc
 
 #cs
 # Returns the handle for a control and some special (item) handles (Menu, ContextMenu, TreeViewItem).
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlGetHandle.htm
 #
 # @param String $controlID The control identifier as returned by a GUICtrlCreate...() function.
 #
@@ -3988,6 +4299,8 @@ EndFunc
 #cs
 # Gets the current state of a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlGetState.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 #
 # @return Int The state of the control. See GUICtrlSetState() for values. -1 if control is not defined.
@@ -3998,6 +4311,8 @@ EndFunc
 
 #cs
 # Read state or data of a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlRead.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int Extended information of a control.
@@ -4014,6 +4329,8 @@ EndFunc
 #cs
 # Send a message to a control and retrieve information in lParam.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlRecvMsg.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $msg The type of message to be send to the control as defined in the Windows controls documentation.
 # @param Int $wParam An integer first param to be send to the control.
@@ -4028,6 +4345,8 @@ EndFunc
 #cs
 # Register a user defined function for an internal listview sorting callback function.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlRegisterListViewSort.htm
+#
 # @param String $controlID The listview controlID for which the user function should proceed.
 # @param String $function The name of the user function to call when the sorting callback runs.
 #
@@ -4039,6 +4358,8 @@ EndFunc
 
 #cs
 # Send a message to a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSendMsg.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $msg The type of message to be send to the control as defined in the Windows controls documentation.
@@ -4054,6 +4375,8 @@ EndFunc
 #cs
 # Sends a message to a Dummy control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSendToDummy.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by GUICtrlCreateDummy()
 # @param Mixed $state The value that can be retrieved later on by GUICtrlRead()
 #
@@ -4065,6 +4388,8 @@ EndFunc
 
 #cs
 # Sets the background color of a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetBkColor.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $backgroundcolor The RGB color to use.
@@ -4078,6 +4403,8 @@ EndFunc
 #cs
 # Sets the text color of a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetColor.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $textcolor The RGB color to use.
 #
@@ -4090,6 +4417,8 @@ EndFunc
 #cs
 # Sets the mouse cursor icon for a particular control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetCursor.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $cursorID The cursor ID as used by Windows SetCursor API (use -1 for the default mouse cursor for the control)
 #
@@ -4101,6 +4430,8 @@ EndFunc
 
 #cs
 # Modifies the data for a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetData.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Mixed $data Combo, List, ListView, ListViewItem: An Opt("GUIDataSeparatorChar",...) separated list of items.
@@ -4122,6 +4453,8 @@ EndFunc
 #cs
 # Sets the default background color of all the controls of the GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetDefBkColor.htm
+#
 # @param Int $defbkcolor Default background color for all controls.
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
@@ -4134,6 +4467,8 @@ EndFunc
 #cs
 # Sets the default text color of all the controls of the GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetDefColor.htm
+#
 # @param Int $deftextcolor Default text color for all controls.
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
@@ -4145,6 +4480,8 @@ EndFunc
 
 #cs
 # Sets the font for a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetFont.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $size Fontsize (default is 8.5).
@@ -4187,6 +4524,8 @@ EndFunc
 #cs
 # Modifies the data for a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetGraphic.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreateGraphic() function.
 # @param Mixed $type type of drawing : dot, line, bezier, rect, ellipse, pie.
 # @param Int $par1
@@ -4205,6 +4544,8 @@ EndFunc
 #cs
 # Sets the bitmap or icon image to use for a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetImage.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param String $filename The filename containing the picture to be display on the control.
 # @param String $iconname The icon name if the file contains multiple icons. Can be an ordinal name if negative number. Otherwise -1.
@@ -4220,6 +4561,8 @@ EndFunc
 #cs
 # Limits the number of characters/pixels for a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetLimit.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $max For List controls it is the extent you can scroll horizontally in pixels.
 # For Input/Edit controls it is the max number of characters that can be entered.
@@ -4234,6 +4577,8 @@ EndFunc
 #cs
 # Defines a user-defined function to be called when a control is clicked.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetOnEvent.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param String $function The name of the user function to call.
 #
@@ -4245,6 +4590,8 @@ EndFunc
 
 #cs
 # Changes the position of a control within the GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetPos.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $left The left side of the control.
@@ -4261,6 +4608,8 @@ EndFunc
 #cs
 # Defines the resizing method used by a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetResizing.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $resizing See the Docking Values table for values that can be used (add together multiple values if required).
 #
@@ -4272,6 +4621,8 @@ EndFunc
 
 #cs
 # Changes the state of a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetState.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $state See the State table.
@@ -4285,6 +4636,8 @@ EndFunc
 #cs
 # Changes the style of a control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetStyle.htm
+#
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param Int $style Defines the style of the control. See GUI Control Styles Appendix.
 # @param Int $exStyle Defines the extended Style of the control. See Extended Style Table.
@@ -4297,6 +4650,8 @@ EndFunc
 
 #cs
 # Sets the tip text associated with a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUICtrlSetTip.htm
 #
 # @param String $controlID The control identifier (controlID) as returned by a GUICtrlCreate...() function, or -1 for the last created control.
 # @param String $tiptext Tip text that will be displayed when the mouse is hovered over the control.
@@ -4321,6 +4676,8 @@ EndFunc
 #cs
 # Deletes a GUI window and all controls that it contains.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUIDelete.htm
+#
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
 # @return 0|1 1 if successful, 0 if not.
@@ -4331,6 +4688,8 @@ EndFunc
 
 #cs
 # Gets the mouse cursor position relative to GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUIGetCursorInfo.htm
 #
 # @param Int $winhandle The handle of the window to use. If omitted the "current" window will be used.
 #
@@ -4348,6 +4707,8 @@ EndFunc
 #cs
 # Polls the GUI to see if any events have occurred.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUIGetMsg.htm
+#
 # @param Int $advanced return extended information in an array.
 # $GUI_EVENT_SINGLE (0) = (default) Returns a single event.
 # $GUI_EVENT_ARRAY (1) = returns an array containing the event and extended information.
@@ -4362,6 +4723,8 @@ EndFunc
 #cs
 # Retrieves the styles of a GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUIGetStyle.htm
+#
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
 # @return Array A two-element array that containing the styles information:
@@ -4375,6 +4738,8 @@ EndFunc
 #cs
 # Register a user defined function for a known Windows Message ID (WM_MSG).
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUIRegisterMsg.htm
+#
 # @param Int $msgID A Windows Message ID (see Appendix: Windows Message Codes).
 # @param String $function The name of the user function to call when the message appears or an empty string "" to unregister a message.
 #
@@ -4386,6 +4751,8 @@ EndFunc
 
 #cs
 # Sets the accelerator table to be used in a GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetAccelerators.htm
 #
 # @param String $accelerators  	A 2 dimensional array holding the accelerator table (See remarks).
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
@@ -4399,6 +4766,8 @@ EndFunc
 #cs
 # Sets the background color of the GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetBkColor.htm
+#
 # @param Int $background Background color of the dialog box, in RGB Hex format.
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
@@ -4410,6 +4779,8 @@ EndFunc
 
 #cs
 # Sets absolute coordinates for the next control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetCoord.htm
 #
 # @param Int $left The left side of the control.
 # @param Int $top The top of the control.
@@ -4426,6 +4797,8 @@ EndFunc
 #cs
 # Sets the mouse cursor icon for a GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetCursor.htm
+#
 # @param Int $cursorID Cursor Id (See Remarks).
 # @param Int $override Force the requested mouse cursor even when over controls (see below).
 # $GUI_CURSOR_NOOVERRIDE (0) = (default) Don't override a control's default mouse cursor.
@@ -4441,6 +4814,8 @@ EndFunc
 
 #cs
 # Sets the default font for a GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetFont.htm
 #
 # @param Int $size Fontsize (default is 8.5).
 # @param Int $weight The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used.
@@ -4483,6 +4858,8 @@ EndFunc
 #cs
 # Sets an executable file that will be run when F1 is pressed.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetHelp.htm
+#
 # @param String $helpfile The file that will be run if F1 is pressed when the GUI is active.
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
@@ -4494,6 +4871,8 @@ EndFunc
 
 #cs
 # Sets the icon used in a GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetIcon.htm
 #
 # @param String $iconfile Used to display the icon in the title area.
 # @param Int $iconID The ID of the icon in the iconfile.
@@ -4508,6 +4887,8 @@ EndFunc
 #cs
 # Defines a user function to be called when a system button is clicked.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetOnEvent.htm
+#
 # @param Int $specialID See the Special ID table.
 # @param String $function The name of the user function to call.
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
@@ -4520,6 +4901,8 @@ EndFunc
 
 #cs
 # Changes the state of a GUI window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetState.htm
 #
 # @param Int $flag @SW_SHOW = Shows a previously hidden window (default)
 # @SW_HIDE = Hide window
@@ -4548,6 +4931,8 @@ EndFunc
 #cs
 # Changes the styles of a GUI window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUISetStyle.htm
+#
 # @param Int $Style Defines the style of the window. See GUI Control Styles Appendix.
 # Use -1 to leave it unchanged.
 # @param Int $ExStyle Defines the extended style of the window. See the Extended Style Table. -1 is the default.
@@ -4563,6 +4948,8 @@ EndFunc
 #cs
 # Defines that any subsequent controls that are created will be "grouped" together.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/GUIStartGroup.htm
+#
 # @param Int $winhandle Windows handle as returned by GUICreate() (default is the previously used window).
 #
 # @return 0|1 1 if successful, 0 if not.
@@ -4573,6 +4960,8 @@ EndFunc
 
 #cs
 # Switches the current window used for GUI functions.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/GUISwitch.htm
 #
 # @param Int $winhandle The handle of the window to switch to.
 # @param Int $tabitemID ControlID of the tabitem control to be selected.
@@ -4585,6 +4974,8 @@ EndFunc
 
 #cs
 # Returns a string representation of an integer or of a binary type converted to hexadecimal.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Hex.htm
 #
 # @param Int|Binary $expression The expression to convert.
 # @param Int $length Number of characters to be returned for integer.
@@ -4600,6 +4991,8 @@ EndFunc
 #cs
 # Sets a hotkey that calls a user function.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/HotKeySet.htm
+#
 # @param Int $key The key combination to use as the hotkey. Same format as Send(). See remarks.
 # @param String $function The name of the function to call when the key is pressed. Not specifying this parameter will unset a previous hotkey.
 #
@@ -4611,6 +5004,8 @@ EndFunc
 
 #cs
 # Sets the internet proxy to use for http access.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/HttpSetProxy.htm
 #
 # @param 0|1|2 $mode The proxy mode to use:
 # $PROXY_IE (0) = (default) Use current Internet Explorer settings for proxy.
@@ -4630,6 +5025,8 @@ EndFunc
 #cs
 # Sets the HTTP user-agent string which is sent with all Inet requests.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/HttpSetUserAgent.htm
+#
 # @param String $useragent The string to set as the user-agent. The default user-agent is "AutoIt". Passing an empty string will reset the user-agent back to the default.
 #
 # @return String The previous user agent.
@@ -4640,6 +5037,8 @@ EndFunc
 
 #cs
 # Converts an expression into an HWND handle.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/HWnd.htm
 #
 # @param Any $expression An expression to convert into an HWND handle.
 #
@@ -4652,6 +5051,8 @@ EndFunc
 #cs
 # Closes a handle returned from InetGet().
 #
+# https://www.autoitscript.com/autoit3/docs/functions/InetClose.htm
+#
 # @param Handle $handle The handle to close.
 #
 # @return Boolean True if the handle was found and closed, False if not.
@@ -4662,6 +5063,8 @@ EndFunc
 
 #cs
 # Downloads a file from the internet using the HTTP, HTTPS or FTP protocol.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/InetGet.htm
 #
 # @param String $URL The URL of the file to download.
 # @param String $filename Local filename to download to.
@@ -4687,6 +5090,8 @@ EndFunc
 #cs
 # Returns detailed data for a handle returned from InetGet().
 #
+# https://www.autoitscript.com/autoit3/docs/functions/InetGetInfo.htm
+#
 # @param Handle $handle A handle return from InetGet().
 # @param Int $index The index for the data to retrieve. If this value is -1 an array containing all of the below data will be returned.
 # $INET_DOWNLOADREAD (0) - Bytes read so far (this is updated while the download progresses).
@@ -4706,6 +5111,8 @@ EndFunc
 #cs
 # Returns the size (in bytes) of a file located on the internet.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/InetGetSize.htm
+#
 # @param String $URL The URL of the file to get the size of.
 # @param Int $options $INET_LOCALCACHE (0) = Get the file from local cache if available (default).
 # $INET_FORCERELOAD (1) = Forces a reload from the remote site.
@@ -4722,6 +5129,8 @@ EndFunc
 
 #cs
 # Downloads a file from the internet using the HTTP, HTTPS or FTP protocol.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/InetRead.htm
 #
 # @param String $URL The URL of the file to download.
 # @param Int $options $INET_LOCALCACHE (0) = Get the file from local cache if available (default).
@@ -4741,6 +5150,8 @@ EndFunc
 #cs
 # Deletes a value from a standard format .ini file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IniDelete.htm
+#
 # @param String $filename The filename of the .ini file.
 # @param String $section The section name in the .ini file.
 # @param String $key The key name in the .ini file to delete. If the key name is not given the entire section is deleted. The Default keyword may also be used which will cause the section to be deleted.
@@ -4753,6 +5164,8 @@ EndFunc
 
 #cs
 # Reads a value from a standard format .ini file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IniRead.htm
 #
 # @param String $filename The filename of the .ini file.
 # @param String $section The section name in the .ini file.
@@ -4768,6 +5181,8 @@ EndFunc
 #cs
 # Reads all key/value pairs from a section in a standard format .ini file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IniReadSection.htm
+#
 # @param String $filename The filename of the .ini file.
 # @param String $section The section name in the .ini file.
 #
@@ -4780,6 +5195,8 @@ EndFunc
 #cs
 # Reads all sections in a standard format .ini file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IniReadSectionNames.htm
+#
 # @param String $filename The filename of the .ini file.
 #
 # @return Array An array of section names.
@@ -4790,6 +5207,8 @@ EndFunc
 
 #cs
 # Renames a section in a standard format .ini file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IniRenameSection.htm
 #
 # @param String $filename The filename of the .ini file.
 # @param String $oldSection The old section name in the .ini file.
@@ -4807,6 +5226,8 @@ EndFunc
 #cs
 # Writes a value to a standard format .ini file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IniWrite.htm
+#
 # @param String $filename The filename of the .ini file.
 # @param String $section The section name in the .ini file.
 # @param String $key The key name in the .ini file.
@@ -4821,6 +5242,8 @@ EndFunc
 #cs
 # Writes a section to a standard format .ini file.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IniWriteSection.htm
+#
 # @param String $filename The filename of the .ini file.
 # @param String $section The section name in the .ini file.
 # @param Array $data The data to write. The data can either be a string or an array. If the data is a string, then each key=value pair must be delimited by @LF. If the data is an array, the array must be 2-dimensional and the second dimension must be 2 elements.
@@ -4834,6 +5257,8 @@ EndFunc
 
 #cs
 # Displays an input box to ask the user to enter a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/InputBox.htm
 #
 # @param String $title The title of the input box.
 # @param String $prompt The prompt to display to the user.
@@ -4855,6 +5280,8 @@ EndFunc
 #cs
 # Returns the integer (whole number) representation of an expression.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Int.htm
+#
 # @param String $expression An expression to convert into an integer.
 # @param Int $flag Defines behavior.
 # Can be one of the following:
@@ -4872,6 +5299,8 @@ EndFunc
 #cs
 # Checks if the current user has full administrator privileges.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsAdmin.htm
+#
 # @return 0|1 1 if the current user has administrator privileges or 0 if user lacks admin privileges.
 #ce
 Func IsAdmin()
@@ -4880,6 +5309,8 @@ EndFunc
 
 #cs
 # Checks if a variable is an array type.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsArray.htm
 #
 # @param Mixed $variable The variable to check.
 #
@@ -4892,6 +5323,8 @@ EndFunc
 #cs
 # Checks if a variable or expression is a binary type.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsBinary.htm
+#
 # @param Mixed $variable The variable or expression to check.
 #
 # @return 0|1
@@ -4903,6 +5336,8 @@ EndFunc
 #cs
 # Checks if a variable's base type is boolean.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsBool.htm
+#
 # @param Mixed $variable The variable to check.
 #
 # @return 0|1
@@ -4913,6 +5348,8 @@ EndFunc
 
 #cs
 # Check if a variable has been declared.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsDeclared.htm
 #
 # @param String $expression The variable to check.
 #
@@ -4928,6 +5365,8 @@ EndFunc
 #cs
 # Checks if a variable is a DllStruct type.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsDllStruct.htm
+#
 # @param Mixed $variable The variable to check.
 #
 # @return 0|1
@@ -4938,6 +5377,8 @@ EndFunc
 
 #cs
 # Checks if the value of a variable or expression has a fractional component.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsFloat.htm
 #
 # @param Mixed $variable The variable or expression to check.
 #
@@ -4950,6 +5391,8 @@ EndFunc
 #cs
 # Checks if a variable or expression is a function type.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsFunc.htm
+#
 # @param Mixed $variable The variable or expression to check.
 #
 # @return 0|1|2 1 if the variable is a User-defined function, 2 if the variable is a native function. 0 if expression is not function type.
@@ -4960,6 +5403,8 @@ EndFunc
 
 #cs
 # Checks if a variable's base type is a pointer and window handle.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsHWnd.htm
 #
 # @param Mixed $variable The variable to check.
 #
@@ -4972,6 +5417,8 @@ EndFunc
 #cs
 # Checks if the value of a variable or expression has no fractional component.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsInt.htm
+#
 # @param Mixed $variable The variable or expression to check.
 #
 # @return 0|1
@@ -4982,6 +5429,8 @@ EndFunc
 
 #cs
 # Checks if a variable is a keyword (for example, Default).
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsKeyword.htm
 #
 # @param Mixed $variable The variable to check.
 #
@@ -4997,6 +5446,8 @@ EndFunc
 #cs
 # Checks if a variable is a Map type.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsMap.htm
+#
 # @param Mixed $variable The variable to check.
 #
 # @return 0|1
@@ -5007,6 +5458,8 @@ EndFunc
 
 #cs
 # Checks if a variable's base type is numeric.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsNumber.htm
 #
 # @param Mixed $variable The variable to check.
 #
@@ -5019,6 +5472,8 @@ EndFunc
 #cs
 # Checks if a variable or expression is an object type.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsObj.htm
+#
 # @param Mixed $variable The variable or expression to check.
 #
 # @return 0|1
@@ -5029,6 +5484,8 @@ EndFunc
 
 #cs
 # Checks if a variable's base type is a pointer.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/IsPtr.htm
 #
 # @param Mixed $variable The variable to check.
 #
@@ -5041,6 +5498,8 @@ EndFunc
 #cs
 # Checks if a variable is a string type.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/IsString.htm
+#
 # @param Mixed $variable The variable to check.
 #
 # @return 0|1
@@ -5051,6 +5510,8 @@ EndFunc
 
 #cs
 # Calculates the natural logarithm of a number.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Log.htm
 #
 # @param Number $expression Any positive number.
 #
@@ -5065,6 +5526,8 @@ EndFunc
 #
 # The value will be added using the next available integer key
 #
+# https://www.autoitscript.com/autoit3/docs/functions/MapAppend.htm
+#
 # @param Map $map An existing Map
 # @param Mixed $value The value to add to the Map.
 #
@@ -5076,6 +5539,8 @@ EndFunc
 
 #cs
 # Determine whether a key exists within a Map.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MapExists.htm
 #
 # @param Map $map An existing Map
 # @param String $key The key to check
@@ -5089,6 +5554,8 @@ EndFunc
 #cs
 # Returns an array holding the keys within a Map.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/MapKeys.htm
+#
 # @param Map $map An existing Map
 #
 # @return Array
@@ -5099,6 +5566,8 @@ EndFunc
 
 #cs
 # Remove a key and its associated value from a Map.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MapRemove.htm
 #
 # @param Map $map An existing Map
 # @param String $key The key to remove
@@ -5111,6 +5580,8 @@ EndFunc
 
 #cs
 # Retrieves memory related information.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MemGetStats.htm
 #
 # @return Array A seven-element array containing the memory information:
 # $aArray[$MEM_LOAD] = Memory Load (Percentage of memory in use)
@@ -5128,6 +5599,8 @@ EndFunc
 #cs
 # Performs the modulus operation.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Mod.htm
+#
 # @param Int $value1 The dividend.
 # @param Int $value2 The divisor.
 #
@@ -5139,6 +5612,8 @@ EndFunc
 
 #cs
 # Perform a mouse click operation.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MouseClick.htm
 #
 # @param String $button The button to click:
 # $MOUSE_CLICK_LEFT ("left")
@@ -5162,6 +5637,8 @@ EndFunc
 
 #cs
 # Perform a mouse click and drag operation.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MouseClickDrag.htm
 #
 # @param String $button The button to click:
 # $MOUSE_CLICK_LEFT ("left")
@@ -5187,6 +5664,8 @@ EndFunc
 #cs
 # Perform a mouse down event at the current mouse position.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/MouseDown.htm
+#
 # @param String $button The button to click:
 # $MOUSE_CLICK_LEFT ("left")
 # $MOUSE_CLICK_RIGHT ("right")
@@ -5205,6 +5684,8 @@ EndFunc
 
 #cs
 # Returns the cursor ID Number for the current Mouse Cursor.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MouseGetCursor.htm
 #
 # @return Int Returns a cursor ID Number:
 # $MCID_UNKNOWN (-1) : (@error can be set if the handle to the cursor cannot be found)
@@ -5234,6 +5715,8 @@ EndFunc
 #cs
 # Retrieves the current position of the mouse cursor.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/MouseGetPos.htm
+#
 # @param 0|1 $dimension 0 = X, 1 = Y
 #
 # @return Array|Int [X, Y] or Int if no dimension is specified
@@ -5244,6 +5727,8 @@ EndFunc
 
 #cs
 # Moves the mouse pointer.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MouseMove.htm
 #
 # @param Number $x The screen x coordinate to move the mouse to.
 # @param Number $y The screen y coordinate to move the mouse to.
@@ -5257,6 +5742,8 @@ EndFunc
 
 #cs
 # Perform a mouse up event at the current mouse position.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/MouseUp.htm
 #
 # @param String $button The button to click:
 # $MOUSE_CLICK_LEFT ("left")
@@ -5277,6 +5764,8 @@ EndFunc
 #cs
 # Moves the mouse wheel up or down.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/MouseWheel.htm
+#
 # @param String $direction The direction to move the mouse wheel:
 # $MOUSE_WHEEL_UP ("up")
 # $MOUSE_WHEEL_DOWN ("down")
@@ -5292,6 +5781,8 @@ EndFunc
 #cs
 # Displays a simple message box with optional timeout.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/MsgBox.htm
+#
 # @param String $flag The flag indicates the type of message box and the possible button combinations.
 # @param String $title The title of the message box.
 # @param String $text The text of the message box.
@@ -5306,6 +5797,8 @@ EndFunc
 
 #cs
 # Returns the numeric representation of an expression.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Number.htm
 #
 # @param String $expression The expression to convert into a number.
 # @param Int $flag Can be one of the following:
@@ -5324,6 +5817,8 @@ EndFunc
 #cs
 # Creates a reference to a COM object from the given classname.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ObjCreate.htm
+#
 # @param String $classname The class of the object in the following format: "appname.objectype"
 # It can also be a string representation of the CLSID.
 # @param String $servername The name of a remote computer from which the object must be obtained.
@@ -5340,6 +5835,8 @@ EndFunc
 #cs
 # Creates a reference to an object from the given classname/object pointer, interface identifier and description string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ObjCreateInterface.htm
+#
 # @param String|Ptr $CLSID Class identifier or object pointer. If this is a class identifier it can be in either ProgID or the string representation of the CLSID.
 # @param String $IID String representation of interface identifier.
 # @param String $interface_description String describing v-table of the object. Use keyword Default to access IDispatch for dual interfaces.
@@ -5353,6 +5850,8 @@ EndFunc
 
 #cs
 # Handles incoming events from the given Object.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ObjEvent.htm
 #
 # @param Object|String $ObjectVar A variable containing an Object from which you want to receive events or "AutoIt.Error"
 # @param String $functionprefix The prefix of the functions you define to handle receiving events.
@@ -5369,6 +5868,8 @@ EndFunc
 #cs
 # Retrieves a reference to a COM object from an existing process or filename.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ObjGet.htm
+#
 # @param String $filename The full path and name to the file containing the object (See remarks).
 # @param String $classname Class identifier. Can be in either ProgID or the string representation of the CLSID.
 # @param Unknown $instance Instance of the object for ROT objects of the same (co)class.
@@ -5381,6 +5882,8 @@ EndFunc
 
 #cs
 # Returns the name or interface description of an Object.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ObjName.htm
 #
 # @param Object $Objectvariable A variable containing an Object.
 # @param Int $Flag $OBJ_NAME (1) = (default) The name of the Object
@@ -5401,6 +5904,8 @@ EndFunc
 #cs
 # Registers a function to be called when AutoIt exits.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/OnAutoItExitRegister.htm
+#
 # @param String $function The name of the function to be called when AutoIt exits.
 #
 # @return 0|1 @extended can be set if already registered.
@@ -5411,6 +5916,8 @@ EndFunc
 
 #cs
 # UnRegisters a function that was called when AutoIt exits.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/OnAutoItExitUnRegister.htm
 #
 # @param String $function The name of the function to be unregistered.
 #
@@ -5423,6 +5930,8 @@ EndFunc
 #cs
 # Pings a host and returns the roundtrip-time.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Ping.htm
+#
 # @param String $address The address or hostname to ping.
 # @param Int $timeout The timeout in milliseconds.
 #
@@ -5434,6 +5943,8 @@ EndFunc
 
 #cs
 # Generates a checksum for a region of pixels.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/PixelChecksum.htm
 #
 # @param Int $left The left coordinate of rectangle.
 # @param Int $top The top coordinate of rectangle.
@@ -5452,6 +5963,8 @@ EndFunc
 #cs
 # Returns a pixel color according to x,y pixel coordinates.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/PixelGetColor.htm
+#
 # @param Int $x The x coordinate of the pixel.
 # @param Int $y The y coordinate of the pixel.
 # @param Int $hwnd Window handle to be used. Default is the desktop window. See remark.
@@ -5464,6 +5977,8 @@ EndFunc
 
 #cs
 # Searches a rectangle of pixels for the pixel color provided.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/PixelSearch.htm
 #
 # @param Int $left The left coordinate of rectangle.
 # @param Int $top The top coordinate of rectangle.
@@ -5483,6 +5998,8 @@ EndFunc
 #cs
 # Terminates a named process.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessClose.htm
+#
 # @param String|Int $process The name or PID of the process to terminate.
 #
 # @return 0|1
@@ -5494,6 +6011,8 @@ EndFunc
 #cs
 # Checks to see if a specified process exists.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessExists.htm
+#
 # @param String|Int $process The name or PID of the process to check.
 #
 # @return Int The PID of the process or 0 if process does not exist.
@@ -5504,6 +6023,8 @@ EndFunc
 
 #cs
 # Returns an array about Memory or IO infos of a running process.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessGetStats.htm
 #
 # @param String|Int $process The name or PID of the process to get info from. -1 is the current process.
 # @param 0|1 $PROCESS_STATS_MEMORY (0) = (default) memory infos.
@@ -5518,6 +6039,8 @@ EndFunc
 
 #cs
 # Returns an array listing the currently running processes (names and PIDs).
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessList.htm
 #
 # @param String $name If a name is given only processes of the same name will be returned.
 #
@@ -5539,6 +6062,8 @@ EndFunc
 #cs
 # Changes the priority of a process.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessSetPriority.htm
+#
 # @param String|Int $process The name or PID of the process to change.
 # @param Int $priority A flag which determines what priority to set
 # $PROCESS_LOW (0) = Idle/Low
@@ -5558,6 +6083,8 @@ EndFunc
 #cs
 # Pauses script execution until a given process exists.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessWait.htm
+#
 # @param String $process The name of the process to check.
 # @param Int $timeout The maximum number of seconds to wait for the process to exist. 0 means no timeout.
 #
@@ -5569,6 +6096,8 @@ EndFunc
 
 #cs
 # Pauses script execution until a given process does not exist.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ProcessWaitClose.htm
 #
 # @param String $process The name of the process to check.
 # @param Int $timeout The maximum number of seconds to wait for the process to exist. 0 means no timeout.
@@ -5582,6 +6111,8 @@ EndFunc
 #cs
 # Turns Progress window off.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ProgressOff.htm
+#
 # @return Void
 #ce
 Func ProgressOff()
@@ -5590,6 +6121,8 @@ EndFunc
 
 #cs
 # Creates a customizable progress bar window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ProgressOn.htm
 #
 # @param String $title The title of the progress bar window.
 # @param String $maintext The main text of the progress bar window.
@@ -5612,6 +6145,8 @@ EndFunc
 #cs
 # Sets the position and/or text of a previously created Progress bar window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ProgressSet.htm
+#
 # @param Int $percent The percentage of the progress bar window. (value between 0. and 100)
 # @param String $subtext The sub text of the progress bar window.
 # @param String $maintext The main text of the progress bar window.
@@ -5625,6 +6160,8 @@ EndFunc
 #cs
 # Converts an expression into a pointer variant.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Ptr.htm
+#
 # @param Any $expression An expression to convert into a pointer variant.
 #
 # @return Ptr
@@ -5635,6 +6172,8 @@ EndFunc
 
 #cs
 # Generates a pseudo-random float-type number.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Random.htm
 #
 # @param Int $min The minimum value of the random number.
 # @param Int $max The maximum value of the random number.
@@ -5649,6 +6188,8 @@ EndFunc
 #cs
 # Deletes a key or value from the registry.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/RegDelete.htm
+#
 # @param String $keyname The name of the key to delete.
 # @param String $valuename The name of the value to delete.
 #
@@ -5660,6 +6201,8 @@ EndFunc
 
 #cs
 # Reads the name of a subkey according to its instance.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/RegEnumKey.htm
 #
 # @param String $keyname The name of the key to read.
 # @param Int $instance The 1-based key instance of the subkey to read.
@@ -5673,6 +6216,8 @@ EndFunc
 #cs
 # Reads the name of a value according to its instance.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/RegEnumVal.htm
+#
 # @param String $keyname The name of the key to read.
 # @param Int $instance The 1-based value instance of the value to read.
 #
@@ -5685,6 +6230,8 @@ EndFunc
 #cs
 # Reads a value from the registry.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/RegRead.htm
+#
 # @param String $keyname The name of the key to read.
 # @param String $valuename The name of the value to read.
 #
@@ -5696,6 +6243,8 @@ EndFunc
 
 #cs
 # Creates a key or value in the registry.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/RegWrite.htm
 #
 # @param String $keyname The name of the key to create. If no other parameters are specified this key will simply be created.
 # @param String $valuename The name of the value to create.
@@ -5711,6 +6260,8 @@ EndFunc
 #cs
 # Returns a number rounded to a specified number of decimal places.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Round.htm
+#
 # @param Number $expression The number to round.
 # @param Int $decimalplaces The number of decimal places to round to.
 #
@@ -5722,6 +6273,8 @@ EndFunc
 
 #cs
 # Runs an external program.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Run.htm
 #
 # @param String $program The name of the program to run.
 # @param String $workingdir The working directory of the program.
@@ -5743,6 +6296,8 @@ EndFunc
 
 #cs
 # Runs an external program under the context of a different user.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/RunAs.htm
 #
 # @param String $username The username to use.
 # @param String $domain The domain to use.
@@ -5773,6 +6328,8 @@ EndFunc
 #cs
 # Runs an external program under the context of a different user and pauses script execution until the program finishes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/RunAsWait.htm
+#
 # @param String $username The username to use.
 # @param String $domain The domain to use.
 # @param String $password The password to use.
@@ -5797,6 +6354,8 @@ EndFunc
 #cs
 # Runs an external program and pauses script execution until the program finishes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/RunWait.htm
+#
 # @param String $program The name of the program to run.
 # @param String $workingdir The working directory of the program.
 # @param Int $show_flag The "show" flag of the program.
@@ -5811,6 +6370,8 @@ EndFunc
 
 #cs
 # Sends simulated keystrokes to the active window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Send.htm
 #
 # @param String $keys The sequence of keys to send.
 # @param Int $flag Changes how "keys" is processed:
@@ -5827,6 +6388,8 @@ EndFunc
 #cs
 # Attempts to keep a specified window active during Send().
 #
+# https://www.autoitscript.com/autoit3/docs/functions/SendKeepActive.htm
+#
 # @param String $title The title/hWnd/class of the window to activate. See Title special definition. Use a blank title to disable the function.
 # @param String $text The text of the window to keep active.
 #
@@ -5838,6 +6401,8 @@ EndFunc
 
 #cs
 # Manually set the value of the @error macro (and optionally @extended, and "Return Value").
+#
+# https://www.autoitscript.com/autoit3/docs/functions/SetError.htm
 #
 # @param Int $code The error code to set.
 # @param Int $extended The extended error code to set.
@@ -5852,6 +6417,8 @@ EndFunc
 #cs
 # Manually set the value of the @extended macro.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/SetExtended.htm
+#
 # @param Int $code The extended error code to set.
 # @param Mixed $return_value The value to be returned by the function.
 #
@@ -5863,6 +6430,8 @@ EndFunc
 
 #cs
 # Runs an external program using the ShellExecute API.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ShellExecute.htm
 #
 # @param String $filename The name of the file to run (EXE, .txt, .lnk, etc).
 # @param String $parameters The parameters to pass to the program.
@@ -5885,6 +6454,8 @@ EndFunc
 #cs
 # Runs an external program using the ShellExecute API and pauses script execution until it finishes.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/ShellExecuteWait.htm
+#
 # @param String $filename The name of the file to run (EXE, .txt, .lnk, etc).
 # @param String $parameters The parameters to pass to the program.
 # @param String $workingdir The working directory of the program. Blank ("") uses the current working directory.
@@ -5906,6 +6477,8 @@ EndFunc
 #cs
 # Shuts down the system.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Shutdown.htm
+#
 # @param Int $code A combination of shutdown codes. See "remarks".
 #
 # @return 0|1
@@ -5916,6 +6489,8 @@ EndFunc
 
 #cs
 # Calculates the sine of a number.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Sin.htm
 #
 # @param Number $expression Value in radians.
 #
@@ -5928,6 +6503,8 @@ EndFunc
 #cs
 # Pause script execution.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Sleep.htm
+#
 # @param Int $delay The number of milliseconds to pause. Between 10 and 2147483647
 #
 # @return Void
@@ -5938,6 +6515,8 @@ EndFunc
 
 #cs
 # Play a sound file.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/SoundPlay.htm
 #
 # @param String $filename The name of the file to play. (typically a WAV or MP3)
 # @param Int $wait This flag determines if the script should wait for the sound to finish before continuing:
@@ -5954,6 +6533,8 @@ EndFunc
 #cs
 # Sets the system wave volume by percent.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/SoundSetWaveVolume.htm
+#
 # @param Int $percent The volume to set. Between 0 and 100
 #
 # @return 0|1
@@ -5964,6 +6545,8 @@ EndFunc
 
 #cs
 # Creates a customizable image popup window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/SplashImageOn.htm
 #
 # @param String $title The title of the popup window.
 # @param String $file Full path\filename of image (BMP, GIF, or JPG)
@@ -5987,6 +6570,8 @@ EndFunc
 #cs
 # Turns SplashText or SplashImage off.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/SplashOff.htm
+#
 # @return Void
 #ce
 Func SplashOff()
@@ -5995,6 +6580,8 @@ EndFunc
 
 #cs
 # Creates a customizable text popup window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/SplashTextOn.htm
 #
 # @param String $title The title of the popup window.
 # @param String $text The text of the popup window.
@@ -6036,6 +6623,8 @@ EndFunc
 #cs
 # Calculates the square-root of a number.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/Sqrt.htm
+#
 # @param Float $expression The number to calculate the square-root of.
 #
 # @return Float -1.#IND if parameter is negative.
@@ -6047,6 +6636,8 @@ EndFunc
 #cs
 # Set Seed for random number generation.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/SRandom.htm
+#
 # @param Int $seed Seed value for random number generation. Number between -2^31 and 2^31-1
 #
 # @return Void
@@ -6057,6 +6648,8 @@ EndFunc
 
 #cs
 # Retrieves the text from a standard status bar control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StatusbarGetText.htm
 #
 # @param String|Hwnd $title The title/hWnd/class of the window to check.
 # @param String $text The text of the window to check.
@@ -6071,6 +6664,8 @@ EndFunc
 #cs
 # Reads from the STDERR stream of a previously run child process.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StderrRead.htm
+#
 # @param Int $process_id The process ID of the child process.
 # @param Bool $peek If true, return the next character without removing it from the buffer.
 # @param Bool $binary If true, read the data as binary instead of text.
@@ -6084,6 +6679,8 @@ EndFunc
 #cs
 # Writes a number of characters to the STDIN stream of a previously run child process.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StdinWrite.htm
+#
 # @param Int $process_id The process ID of the child process.
 # @param String|Binary $data The data to write.
 #
@@ -6096,6 +6693,8 @@ EndFunc
 #cs
 # Closes all resources associated with a process previously run with STDIO redirection.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StdioClose.htm
+#
 # @param Int $process_id The process ID of the child process.
 #
 # @return Int 0 if the process did not have STDIO redirection or was already closed.
@@ -6106,6 +6705,8 @@ EndFunc
 
 #cs
 # Reads from the STDOUT stream of a previously run child process.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StdoutRead.htm
 #
 # @param Int $process_id The process ID of the child process.
 # @param Bool $peek If true, return the next character without removing it from the buffer.
@@ -6120,6 +6721,8 @@ EndFunc
 #cs
 # Returns the string representation of an expression.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/String.htm
+#
 # @param String $expression The expression to convert into a string.
 #
 # @return String
@@ -6131,6 +6734,8 @@ EndFunc
 #cs
 # Takes a string and prefixes all linefeed characters ( Chr(10) ) with a carriage return character ( Chr(13) ).
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringAddCR.htm
+#
 # @param String $string The string to process.
 #
 # @return String
@@ -6141,6 +6746,8 @@ EndFunc
 
 #cs
 # Compares two strings with options.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringCompare.htm
 #
 # @param String $string1 The first string to compare.
 # @param String $string2 The second string to compare.
@@ -6158,6 +6765,8 @@ EndFunc
 
 #cs
 # Returns a formatted string (similar to the C sprintf() function).
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringFormat.htm
 #
 # @param String $format The format string.
 # @param Mixed $var1
@@ -6202,6 +6811,8 @@ EndFunc
 #cs
 # Converts an array of ASCII codes to a string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringFromASCIIArray.htm
+#
 # @param Array $array An array of ASCII codes.
 # @param Int $start The zero-based start index.
 # @param Int $end The zero-based end index. Note that the character at this index is NOT included in the output.
@@ -6219,6 +6830,8 @@ EndFunc
 
 #cs
 # Checks if a string contains a given substring.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringInStr.htm
 #
 # @param String $string The string to check.
 # @param String $substring The substring to check for.
@@ -6240,6 +6853,8 @@ EndFunc
 #cs
 # Checks if a string contains only alphanumeric characters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsAlNum.htm
+#
 # @param String $string The string to check.
 #
 # @return 0|1
@@ -6250,6 +6865,8 @@ EndFunc
 
 #cs
 # Checks if a string contains only alphabetic characters.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsAlpha.htm
 #
 # @param String $string The string to check.
 #
@@ -6262,6 +6879,8 @@ EndFunc
 #cs
 # Checks if a string contains only ASCII characters in the range 0x00 - 0x7f (0 - 127).
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsASCII.htm
+#
 # @param String $string The string to check.
 #
 # @return 0|1
@@ -6272,6 +6891,8 @@ EndFunc
 
 #cs
 # Checks if a string contains only digit (0-9) characters.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsDigit.htm
 #
 # @param String $string The string to check.
 #
@@ -6284,6 +6905,8 @@ EndFunc
 #cs
 # Checks if a string is a floating point number.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsFloat.htm
+#
 # @param String $string The string to check.
 #
 # @return 0|1
@@ -6294,6 +6917,8 @@ EndFunc
 
 #cs
 # Checks if a string is an integer.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsInt.htm
 #
 # @param String $string The string to check.
 #
@@ -6306,6 +6931,8 @@ EndFunc
 #cs
 # Checks if a string contains only lowercase characters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsLower.htm
+#
 # @param String $string The string to check.
 #
 # @return 0|1
@@ -6316,6 +6943,8 @@ EndFunc
 
 #cs
 # Checks if a string contains only whitespace characters.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsSpace.htm
 #
 # @param String $string The string to check.
 #
@@ -6328,6 +6957,8 @@ EndFunc
 #cs
 # Checks if a string contains only uppercase characters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsUpper.htm
+#
 # @param String $string The string to check.
 #
 # @return 0|1
@@ -6339,6 +6970,8 @@ EndFunc
 #cs
 # Checks if a string contains only hexadecimal digit (0-9, A-F) characters.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringIsXDigit.htm
+#
 # @param String $string The string to check.
 #
 # @return 0|1
@@ -6349,6 +6982,8 @@ EndFunc
 
 #cs
 # Returns a number of characters from the left-hand side of a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringLeft.htm
 #
 # @param String $string The string to process.
 # @param Int $count The number of characters to return.
@@ -6362,6 +6997,8 @@ EndFunc
 #cs
 # Returns the number of characters in a string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringLen.htm
+#
 # @param String $string The string to process.
 #
 # @return Int
@@ -6373,6 +7010,8 @@ EndFunc
 #cs
 # Converts a string to lowercase.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringLower.htm
+#
 # @param String $string The string to convert.
 #
 # @return String
@@ -6383,6 +7022,8 @@ EndFunc
 
 #cs
 # Extracts a number of characters from a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringMid.htm
 #
 # @param String $string The string to process.
 # @param Int $start The 1-based start index of the extraction.
@@ -6396,6 +7037,8 @@ EndFunc
 
 #cs
 # Check if a string fits a given regular expression pattern.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringRegExp.htm
 #
 # @param String $string The string to check.
 # @param String $pattern The pattern to match against.
@@ -6411,6 +7054,8 @@ EndFunc
 #cs
 # Replace text in a string based on regular expressions.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringRegExpReplace.htm
+#
 # @param String $string The string to process.
 # @param String $pattern The pattern to match against.
 # @param String $replace The replacement string. To insert matched group text, \0 - \9 (or $0 - $9) can be used as back-references. (See remarks).
@@ -6424,6 +7069,8 @@ EndFunc
 
 #cs
 # Replaces substrings in a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringReplace.htm
 #
 # @param String $string The string to process.
 # @param String|Int $find The substring to search for or the character position to start the replacement.
@@ -6444,6 +7091,8 @@ EndFunc
 #cs
 # Reverses the contents of the specified string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringReverse.htm
+#
 # @param String $string The string to process.
 # @param Int $flag Changes the way the string is reversed
 # $STR_UTF16 (0) = reversed in full UTF-16 mode.
@@ -6459,6 +7108,8 @@ EndFunc
 #cs
 # Returns a number of characters from the right-hand side of a string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringRight.htm
+#
 # @param String $string The string to process.
 # @param Int $count The number of characters to return.
 #
@@ -6470,6 +7121,8 @@ EndFunc
 
 #cs
 # Splits up a string into substrings depending on the given delimiters.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringSplit.htm
 #
 # @param String $string The string to process.
 # @param String $delimiters The delimiters to use.
@@ -6488,6 +7141,8 @@ EndFunc
 #cs
 # Removes all carriage return values ( Chr(13) ) from a string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringStripCR.htm
+#
 # @param String $string The string to process.
 #
 # @return String
@@ -6498,6 +7153,8 @@ EndFunc
 
 #cs
 # Strips the white space in a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringStripWS.htm
 #
 # @param String $string The string to process.
 # @param Int $flag Flag to indicate the type of stripping that should be performed (add the flags together for multiple operations):
@@ -6515,6 +7172,8 @@ EndFunc
 
 #cs
 # Converts a string to an array containing the ASCII code of each character.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringToASCIIArray.htm
 #
 # @param String $string The string to process.
 # @param Int $start The zero-based start index.
@@ -6534,6 +7193,8 @@ EndFunc
 #cs
 # Converts a string into binary data.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringToBinary.htm
+#
 # @param String $string The string to process.
 # @param Int $flag Changes how the string is stored as binary:
 # $SB_ANSI (1) = string data is ANSI (default)
@@ -6551,6 +7212,8 @@ EndFunc
 #cs
 # Trims a number of characters from the left hand side of a string.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringTrimLeft.htm
+#
 # @param String $string The string to process.
 # @param Int $count The number of characters to trim.
 #
@@ -6562,6 +7225,8 @@ EndFunc
 
 #cs
 # Trims a number of characters from the right hand side of a string.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/StringTrimRight.htm
 #
 # @param String $string The string to process.
 # @param Int $count The number of characters to trim.
@@ -6575,6 +7240,8 @@ EndFunc
 #cs
 # Converts a string to uppercase.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/StringUpper.htm
+#
 # @param String $string The string to convert.
 #
 # @return String
@@ -6585,6 +7252,8 @@ EndFunc
 
 #cs
 # Calculates the tangent of a number.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/Tan.htm
 #
 # @param Number $number Value in radians.
 #
@@ -6597,6 +7266,8 @@ EndFunc
 #cs
 # Permits an incoming connection attempt on a socket.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPAccept.htm
+#
 # @param Int $socket The main socket identifier (SocketID) as returned by a TCPListen() function.
 #
 # @return Int The connected socket identifier or -1 if an error occurred.
@@ -6607,6 +7278,8 @@ EndFunc
 
 #cs
 # Closes a TCP socket.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TCPCloseSocket.htm
 #
 # @param Int $socket The socket identifier (SocketID) as returned by a TCPListen(),TCPConnect() or TCPAccept() functions.
 #
@@ -6619,6 +7292,8 @@ EndFunc
 #cs
 # Create a socket connected to an existing server.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPConnect.htm
+#
 # @param String $host The IPv4 address to connect to.
 # @param Int $port The port number to connect to.
 #
@@ -6630,6 +7305,8 @@ EndFunc
 
 #cs
 # Creates a socket listening for an incoming connection.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TCPListen.htm
 #
 # @param String $host The IPv4 address to listen on.
 # @param Int $port The port number to listen on.
@@ -6644,6 +7321,8 @@ EndFunc
 #cs
 # Converts an Internet name to IP address.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPNameToIP.htm
+#
 # @param String $host The Internet name to convert.
 #
 # @return String
@@ -6654,6 +7333,8 @@ EndFunc
 
 #cs
 # Receives data from a connected socket.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TCPRecv.htm
 #
 # @param Int $socket The connected socket identifier (SocketID) as returned by a TCPAccept() or a TCPConnect() function.
 # @param Int $maxlen The maximum number of characters to receive.
@@ -6671,6 +7352,8 @@ EndFunc
 #cs
 # Sends data on a connected socket.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPSend.htm
+#
 # @param Int $socket The connected socket identifier (SocketID) as returned by a TCPConnect() function.
 # @param String|Binary $data The data to send.
 #
@@ -6683,6 +7366,8 @@ EndFunc
 #cs
 # Stops TCP services.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPShutdown.htm
+#
 # @return 0|1
 #ce
 Func TCPShutdown()
@@ -6691,6 +7376,8 @@ EndFunc
 
 #cs
 # Stops UDP services.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TCPShutdown.htm
 #
 # @return 0|1
 #ce
@@ -6701,6 +7388,8 @@ EndFunc
 #cs
 # Starts TCP services.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPStartup.htm
+#
 # @return 0|1
 #ce
 Func TCPStartup()
@@ -6710,6 +7399,8 @@ EndFunc
 #cs
 # Starts UDP services.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TCPStartup.htm
+#
 # @return 0|1
 #ce
 Func UDPStartup()
@@ -6718,6 +7409,8 @@ EndFunc
 
 #cs
 # Returns the difference in time from a previous call to TimerInit().
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TimerDiff.htm
 #
 # @param Handle $handle The handle of a timer, as returned by a previous call to TimerInit().
 #
@@ -6730,6 +7423,8 @@ EndFunc
 #cs
 # Returns a handle that can be passed to TimerDiff() to calculate the difference in milliseconds.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TimerInit.htm
+#
 # @return Handle A handle that can be passed to TimerDiff() to calculate the difference in milliseconds.
 #ce
 Func TimerInit()
@@ -6738,6 +7433,8 @@ EndFunc
 
 #cs
 # Creates a tooltip anywhere on the screen.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/ToolTip.htm
 #
 # @param String $text The text to show in the tooltip. (An empty string clears a displaying tooltip)
 # @param Int $x The horizontal position of the tooltip, in pixels.
@@ -6764,6 +7461,8 @@ EndFunc
 #cs
 # Creates a menuitem control for the tray.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayCreateItem.htm
+#
 # @param String $text The text to show in the menuitem.
 # @param Int $menuID Allows you to create a submenu in the referenced menu. If equal -1 it will be added 'behind' the last created item.
 # @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0. If equal -1 it will be added 'behind' the last created entry.
@@ -6780,6 +7479,8 @@ EndFunc
 #cs
 # Creates a menu control for the tray menu.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayCreateMenu.htm
+#
 # @param String $text The text to show in the menu.
 # @param Int $menuID If defined, allows you to create a submenu in the referenced menu. -1 refers to first level menu.
 # @param Int $menuentry Allows you to define the entry number to be created. The entries are numbered starting at 0. -1 at the bottom.
@@ -6793,6 +7494,8 @@ EndFunc
 #cs
 # Polls the tray to see if any events have occurred.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayGetMsg.htm
+#
 # @return Int
 #ce
 Func TrayGetMsg()
@@ -6801,6 +7504,8 @@ EndFunc
 
 #cs
 # Deletes a menu/item control from the tray menu.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemDelete.htm
 #
 # @param Int $controlID The identifier (controlID) of the tray menuitem to delete.
 #
@@ -6813,6 +7518,8 @@ EndFunc
 #cs
 # Returns the handle for a tray menu(item).
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemGetHandle.htm
+#
 # @param Int $controlID The identifier (controlID) of the tray menuitem.
 #
 # @return Int The handle of the given control ID or 0 on failure.
@@ -6823,6 +7530,8 @@ EndFunc
 
 #cs
 # Gets the current state of a control.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemGetState.htm
 #
 # @param Int $controlID The identifier (controlID) of the tray menuitem.
 #
@@ -6835,6 +7544,8 @@ EndFunc
 #cs
 # Gets the itemtext of a tray menu/item control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemGetText.htm
+#
 # @param Int $controlID The identifier (controlID) of the tray menuitem.
 #
 # @return String
@@ -6845,6 +7556,8 @@ EndFunc
 
 #cs
 # Defines a user-defined function to be called when a tray item is clicked.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemSetOnEvent.htm
 #
 # @param Int $itemID The identifier (controlID) of the tray menuitem.
 # @param String $function The name of the user function to call when the tray item is clicked.
@@ -6858,6 +7571,8 @@ EndFunc
 #cs
 # Sets the state of a tray menu/item control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemSetState.htm
+#
 # @param Int $controlID The identifier (controlID) of the tray menuitem.
 # @param Int $state The state to set.
 #
@@ -6870,6 +7585,8 @@ EndFunc
 #cs
 # Sets the itemtext of a tray menu/item control.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TrayItemSetText.htm
+#
 # @param Int $controlID The identifier (controlID) of the tray menuitem.
 # @param String $text The text to set.
 #
@@ -6881,6 +7598,8 @@ EndFunc
 
 #cs
 # Sets the clickmode of the tray icon - what mouseclicks will display the tray menu.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TraySetClick.htm
 #
 # @param Int $flag $TRAY_CLICK_SHOW (0) = Tray menu will never be shown through a mouseclick
 # $TRAY_CLICK_PRIMARYDOWN (1) = Pressing primary mouse button
@@ -6901,6 +7620,8 @@ EndFunc
 #cs
 # Loads/Sets a specified tray icon.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TraySetIcon.htm
+#
 # @param String $filename The filename of the icon to load.
 # @param Int $iconID The identifier if the file contains multiple icons.
 #
@@ -6912,6 +7633,8 @@ EndFunc
 
 #cs
 # Defines a user function to be called when a special tray action happens.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TraySetOnEvent.htm
 #
 # @param Int $specialID The special tray event identifier.
 # @param String $function The name of the user function to call when the event occurs.
@@ -6925,6 +7648,8 @@ EndFunc
 #cs
 # Loads/Sets a specified tray pause icon.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TraySetPauseIcon.htm
+#
 # @param String $filename The filename of the icon to load.
 # @param Int $iconID The identifier if the file contains multiple icons.
 #
@@ -6936,6 +7661,8 @@ EndFunc
 
 #cs
 # Sets the state of the tray icon.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TraySetState.htm
 #
 # @param Int $flag A combination of the following:
 # $TRAY_ICONSTATE_SHOW (1) = Shows the tray icon (default)
@@ -6954,6 +7681,8 @@ EndFunc
 #cs
 # (Re)Sets the tooltip text for the tray icon.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/TraySetToolTip.htm
+#
 # @param String $text The new text to be displayed as tooltip. The length is limited - see Remarks.
 #
 # @return 0|1
@@ -6964,6 +7693,8 @@ EndFunc
 
 #cs
 # Displays a balloon tip from the AutoIt Icon.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/TrayTip.htm
 #
 # @param String $title The title of the tooltip. (63 characters maximum)
 # @param String $text The text to show in the tooltip. (255 characters maximum)
@@ -6984,6 +7715,8 @@ EndFunc
 #cs
 # Returns the size of array dimensions or the number of keys in a map.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/UBound.htm
+#
 # @param Array|Map $array The array to check.
 # @param Int $dimension For an array - Which dimension size to return:
 # $UBOUND_DIMENSIONS (0) = Number of subscripts in the array
@@ -7002,6 +7735,8 @@ EndFunc
 #cs
 # Create a socket bound to an incoming connection.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/UDPBind.htm
+#
 # @param String $host The IPv4 address to bind to.
 # @param Int $port The port to bind to.
 #
@@ -7014,6 +7749,8 @@ EndFunc
 #cs
 # Close a UDP socket.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/UDPCloseSocket.htm
+#
 # @param Array $socketarray The socket/array as returned by a UDPBind() or UDPOpen() functions.
 #
 # @return 0|1
@@ -7024,6 +7761,8 @@ EndFunc
 
 #cs
 # Open a socket connected to an existing server .
+#
+# https://www.autoitscript.com/autoit3/docs/functions/UDPOpen.htm
 #
 # @param String $host The IPv4 address to connect to.
 # @param Int $port The port to connect to.
@@ -7039,6 +7778,8 @@ EndFunc
 
 #cs
 # Receives data from an opened socket.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/UDPRecv.htm
 #
 # @param Array $socketarray The socket/array as returned by a UDPBind() function.
 # @param Int $maxlen The maximum number of characters to receive.
@@ -7057,6 +7798,8 @@ EndFunc
 #cs
 # Sends data on an opened socket.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/UDPSend.htm
+#
 # @param Array $socketarray The socket/array as returned by a UDPOpen() function.
 # @param String|Binary $data The data to send.
 #
@@ -7069,6 +7812,8 @@ EndFunc
 #cs
 # Returns the internal type representation of a variant.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/VarGetType.htm
+#
 # @param Mixed $variant The variant to get the type of.
 #
 # @return String A string representing the type of the expression.
@@ -7079,6 +7824,8 @@ EndFunc
 
 #cs
 # Activates (gives focus to) a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinActivate.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7092,6 +7839,8 @@ EndFunc
 #cs
 # Checks to see if a specified window exists and is currently active.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinActive.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7103,6 +7852,8 @@ EndFunc
 
 #cs
 # Closes a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinClose.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7116,6 +7867,8 @@ EndFunc
 #cs
 # Checks to see if a specified window exists.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinExists.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7127,6 +7880,8 @@ EndFunc
 
 #cs
 # Flashes a window in the taskbar.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinFlash.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7142,6 +7897,8 @@ EndFunc
 #cs
 # Returns the coordinates of the caret in the foreground window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetCaretPos.htm
+#
 # @return Array $aArray[0] contains the X coordinate and $aArray[1] contains the Y coordinate.
 #ce
 Func WinGetCaretPos()
@@ -7150,6 +7907,8 @@ EndFunc
 
 #cs
 # Retrieves the classes from a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetClassList.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7163,6 +7922,8 @@ EndFunc
 #cs
 # Retrieves the size of a given window's client area.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetClientSize.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7174,6 +7935,8 @@ EndFunc
 
 #cs
 # Retrieves the internal handle of a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetHandle.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7187,6 +7950,8 @@ EndFunc
 #cs
 # Retrieves the position and size of a given window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetPos.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7198,6 +7963,8 @@ EndFunc
 
 #cs
 # Retrieves the Process ID (PID) associated with a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetProcess.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7211,6 +7978,8 @@ EndFunc
 #cs
 # Retrieves the state of a given window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetState.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7222,6 +7991,8 @@ EndFunc
 
 #cs
 # Retrieves the text from a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetText.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7235,6 +8006,8 @@ EndFunc
 #cs
 # Retrieves the full title from a window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinGetTitle.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7246,6 +8019,8 @@ EndFunc
 
 #cs
 # Forces a window to close.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinKill.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7261,6 +8036,8 @@ EndFunc
 #
 # If no title and text is given then all top-level windows are returned.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinList.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 #
@@ -7272,6 +8049,8 @@ EndFunc
 
 #cs
 # Invokes a menu item of a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinMenuSelectItem.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7292,6 +8071,8 @@ EndFunc
 #cs
 # Minimizes all windows.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinMinimizeAll.htm
+#
 # @return Void
 #ce
 Func WinMinimizeAll()
@@ -7301,6 +8082,8 @@ EndFunc
 #cs
 # Undoes a previous WinMinimizeAll function.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinMinimizeAllUndo.htm
+#
 # @return Void
 #ce
 Func WinMinimizeAllUndo()
@@ -7309,6 +8092,8 @@ EndFunc
 
 #cs
 # Moves and/or resizes a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinMove.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7327,6 +8112,8 @@ EndFunc
 #cs
 # Change a window's "Always On Top" attribute.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinSetOnTop.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param Int $flag Determines whether the window should have the "TOPMOST" flag set.
@@ -7343,6 +8130,8 @@ EndFunc
 #cs
 # Shows, hides, minimizes, maximizes, or restores a window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinSetState.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param Int $state The "show" flag of the executed program.
@@ -7355,6 +8144,8 @@ EndFunc
 
 #cs
 # Changes the title of a window.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinSetTitle.htm
 #
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
@@ -7369,6 +8160,8 @@ EndFunc
 #cs
 # Sets the transparency of a window.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinSetTrans.htm
+#
 # @param String|hWnd $title The title/hWnd/class of the window to access. See Title special definition.
 # @param String $text The text of the window to access. See Text special definition.
 # @param Int $transparency The new transparency of the window in the range 0 - 255.  255 = Solid, 0 = Invisible.
@@ -7381,6 +8174,8 @@ EndFunc
 
 #cs
 # Pauses execution of the script until the requested window exists.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinWait.htm
 #
 # @param String $title The title of the window to wait for.
 # @param String $text The text of the window to wait for.
@@ -7395,6 +8190,8 @@ EndFunc
 #cs
 # Pauses execution of the script until the requested window is active.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinWaitActive.htm
+#
 # @param String $title The title of the window to wait for.
 # @param String $text The text of the window to wait for.
 # @param Int $timeout The maximum time to wait in seconds. 0 = infinite.
@@ -7408,6 +8205,8 @@ EndFunc
 #cs
 # Pauses execution of the script until the requested window does not exist.
 #
+# https://www.autoitscript.com/autoit3/docs/functions/WinWaitClose.htm
+#
 # @param String $title The title of the window to wait for.
 # @param String $text The text of the window to wait for.
 # @param Int $timeout The maximum time to wait in seconds. 0 = infinite.
@@ -7420,6 +8219,8 @@ EndFunc
 
 #cs
 # Pauses execution of the script until the requested window is not active.
+#
+# https://www.autoitscript.com/autoit3/docs/functions/WinWaitNotActive.htm
 #
 # @param String $title The title of the window to wait for.
 # @param String $text The text of the window to wait for.
