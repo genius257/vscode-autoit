@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Native function Au3Doc descriptions now include links to the online documentation
 
+### Changed
+
+- Function signatures with many parameters (e.g. the native `BitAND`, `Call` and `DllCall` emulations) are now truncated in hover text, completion suggestion details and signature help, showing the first and last parameters with an ellipsis placeholder for the middle ones
+
 ## [1.9.0] - 2027-09-04
 
 ### Added

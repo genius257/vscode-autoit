@@ -7,6 +7,7 @@ import * as Parser from '../autoit/Parser';
 import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
 import { getScopeLabel } from '../autoit/DeclarationScope';
+import buildSignatureLabel from '../utils/signatureParams';
 
 const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
     .map(([, nativeSuggestion]) => ({
@@ -143,7 +144,7 @@ export class CompletionItemBridge {
             }
             case 'FunctionDeclaration':
             {
-                value = `\`\`\`au3\nFunc ${declarator.id.name}(${Parser.AstArrayToStringArray(declarator.params).join(', ')})\n\`\`\``;
+                value = `\`\`\`au3\n${buildSignatureLabel(`Func ${declarator.id.name}`, Parser.AstArrayToStringArray(declarator.params)).label}\n\`\`\``;
 
                 const docBlock = symbol.getDocblocks().get(declaration);
 

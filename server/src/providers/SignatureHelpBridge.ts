@@ -1,5 +1,6 @@
 import { Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
 import { Workspace } from '../autoit/Workspace';
+import buildSignatureLabel from '../utils/signatureParams';
 import { LocationRange, SyntaxError, type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from '../autoit/PositionHelper';
 import * as Parser from '../autoit/Parser';
@@ -136,15 +137,23 @@ export class SignatureHelpBridge {
 
         const activeParameterIndex = callExpressionHelper.getParameterIndexFromPosition(position);
 
+        const signatureLabel = buildSignatureLabel(
+            declarator.id.name,
+            Parser.AstArrayToStringArray(declarator.params),
+        );
+
         return {
             activeSignature: 0,
             activeParameter: activeParameterIndex,
             signatures: [
                 {
-                    label: declarator.id.name + '(' + Parser.AstArrayToStringArray(declarator.params).join(', ') + ')',
+                    label: signatureLabel.label,
                     documentation: resolvedExpression.callee.name,
-                    parameters: declarator.params.map((parameter: AutoIt3.FormalParameter) => ({
-                        label: '$' + parameter.id.name,
+                    parameters: declarator.params.map((parameter: AutoIt3.FormalParameter, parameterIndex: number) => ({
+                        label: signatureLabel.parameterRanges[parameterIndex] ?? [
+                            signatureLabel.label.length,
+                            signatureLabel.label.length,
+                        ],
                         documentation: undefined,
                     })),
                 },

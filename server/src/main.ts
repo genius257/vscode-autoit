@@ -10,6 +10,7 @@ import * as Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
 import { CompletionItemBridge } from './providers/CompletionItemBridge';
 import { canReuseSignatureHelpCache, type CachedSignatureHelpBridge, SignatureHelpBridge } from './providers/SignatureHelpBridge';
+import buildSignatureLabel from './utils/signatureParams';
 
 // eslint-disable-next-line no-console
 console.log('running server autoit3-lsp-web-extension');
@@ -279,7 +280,7 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
                         }
                         case 'FunctionDeclaration':
                         {
-                            header = `Func ${declarator.id.name}(${Parser.AstArrayToStringArray(declarator.params).join(', ')})`;
+                            header = buildSignatureLabel(`Func ${declarator.id.name}`, Parser.AstArrayToStringArray(declarator.params)).label;
 
                             break;
                         }
