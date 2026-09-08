@@ -3959,7 +3959,7 @@ EndFunc
 #
 # @return Int The identifier (controlID) of the new control or 0 on failure.
 #ce
-Func GUICtrlCreateUpDown($inputcontrolID, $style = -1)
+Func GUICtrlCreateUpdown($inputcontrolID, $style = -1)
     #native code
 EndFunc
 
