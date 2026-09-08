@@ -1883,7 +1883,7 @@ EndFunc
 # @param String $hex The hexadecimal string to convert.
 # @param 0|1|2|3 $flag Defines behavior.
 # Can be one of the following:
-# $NUMBER_AUTO (0 ) = string is interpreted as an integer (Default). See remarks.
+# $NUMBER_AUTO (0) = string is interpreted as an integer (Default). See remarks.
 # $NUMBER_32BIT (1) = string is interpreted as a 32bit integer
 # $NUMBER_64BIT (2) = string is interpreted as a 64bit integer
 # $NUMBER_DOUBLE (3) = string is interpreted as a double
