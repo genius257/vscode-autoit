@@ -2,7 +2,7 @@ import { expect, test, vi } from 'vitest';
 import Script, { type Include } from './Script';
 import { AutoIt3Configuration, IndexingProgressNotification, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
-import { Connection, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
+import { Connection, FileChangeType, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
 import DependencyGraph from './DependencyGraph';
 import type { SymbolKey } from './Scope';
 
@@ -753,4 +753,176 @@ test('getManagedRootUris collects workspace folders, installDir Include and libr
         URI.file('C:/AutoIt3/Include'),
         URI.file('D:/libs'),
     ]);
+});
+
+type ProcessFileEventsInternals = {
+    pendingFileEvents: Map<string, FileChangeType>,
+    processFileEvents(): Promise<void>,
+};
+
+const createFileEventWorkspace = (
+    sendRequest: Connection['sendRequest'],
+    associations: Record<string, string> | null = null,
+): { workspace: Workspace, internals: ProcessFileEventsInternals } => {
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+            getConfiguration: (section: string) => (section === 'files' ? Promise.resolve({ associations: associations ?? {} }) : Promise.resolve(createConfiguration())),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const internals = workspace as unknown as ProcessFileEventsInternals;
+
+    return { workspace, internals };
+};
+
+test('processFileEvents ignores changes to non-AutoIt files', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    internals.pendingFileEvents.set('file:///ws/package.json', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).not.toHaveBeenCalled();
+});
+
+test('processFileEvents reads changed .au3 files', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/script.au3');
+});
+
+test('processFileEvents reads changed files already tracked by the dependency manager', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { workspace, internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    // A file with a custom extension, loaded e.g. via include resolution, is tracked
+    workspace.add(new Script('Global $custom = 1', URI.file('/ws/data.myext')));
+
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/data.myext');
+});
+
+test('processFileEvents reads created files associated with the au3 language', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest'], { '*.myext': 'au3', '*.json': 'json' });
+
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Created);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/data.myext');
+});
+
+test('processFileEvents ignores created files not associated with the au3 language', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest'], { '*.json': 'json' });
+
+    internals.pendingFileEvents.set('file:///ws/data.json', FileChangeType.Created);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).not.toHaveBeenCalled();
+});
+
+test('processFileEvents ignores deletion of untracked files', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>(null));
+
+    const { workspace, internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    const diagnosticsSpy = vi.fn();
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
+
+    internals.pendingFileEvents.set('file:///ws/gone.au3', FileChangeType.Deleted);
+
+    await internals.processFileEvents();
+
+    expect(diagnosticsSpy).not.toHaveBeenCalled();
+});
+
+test('repeated read failures for the same file are reported only once within the window', async () => {
+    vi.useFakeTimers();
+
+    try {
+        const showErrorMessage = vi.fn();
+
+        const sendRequest = vi.fn(() => Promise.reject(new Error('read failed')));
+
+        const connection: Partial<Connection> = {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            workspace: {
+                getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
+            sendRequest: sendRequest as unknown as Connection['sendRequest'],
+            window: { showErrorMessage } as unknown as Connection['window'],
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onInitialized: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeConfiguration: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        };
+
+        const workspace = new Workspace(connection as Connection);
+
+        const internals = workspace as unknown as ProcessFileEventsInternals;
+
+        internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+        await internals.processFileEvents();
+
+        // Allow the rejected read to settle
+        await vi.advanceTimersByTimeAsync(0);
+
+        internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+        await internals.processFileEvents();
+
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(showErrorMessage).toHaveBeenCalledTimes(1);
+
+        expect(String(showErrorMessage.mock.calls[0]?.[0])).toContain('failed to read file');
+
+        // After the suppression window has passed, the failure is reported again
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+        await internals.processFileEvents();
+
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(showErrorMessage).toHaveBeenCalledTimes(2);
+    } finally {
+        vi.useRealTimers();
+    }
 });
