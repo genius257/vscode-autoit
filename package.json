@@ -88,6 +88,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "When enabled, go to definition shows all matching declarations across scopes and included files. When disabled, only the closest matching declaration is shown."
+                },
+                "autoit3.workspaceCompletions": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When enabled, completion suggestions include functions and global variables from all workspace files, even when not included. Suggestions are ranked after included and native suggestions, and only appear once text has been typed. Accepting such a suggestion inserts the required #include after the last top-level include statement."
                 }
             }
         },

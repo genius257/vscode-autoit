@@ -1,5 +1,7 @@
 import { CompletionItem, CompletionItemKind, CompletionList, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
 import { type AutoIt3, type Location } from 'autoit3-pegjs';
+import { URI, Utils } from 'vscode-uri';
+import { relativePath } from '../autoit/Path';
 import { Workspace } from '../autoit/Workspace';
 import Symbol from '../autoit/Symbol';
 import * as PositionHelper from '../autoit/PositionHelper';
@@ -24,6 +26,35 @@ const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions
 
         // labelDetails: {description: nativeSuggestion.detail},
     }));
+
+/**
+ * Lowercase titles of all native suggestions, so workspace symbols clashing
+ * with a native name are not offered additionally.
+ */
+const nativeNames = new Set(Object.values(nativeSuggestions).map((nativeSuggestion) => nativeSuggestion.title.toLowerCase()));
+
+/**
+ * Case-insensitive subsequence match: every character of `prefix` must appear
+ * in `label` in the same order.
+ */
+function isFuzzyMatch(prefix: string, label: string): boolean {
+    const lowerLabel = label.toLowerCase();
+    const lowerPrefix = prefix.toLowerCase();
+
+    let index = 0;
+
+    for (const char of lowerPrefix) {
+        index = lowerLabel.indexOf(char, index);
+
+        if (index === -1) {
+            return false;
+        }
+
+        index++;
+    }
+
+    return true;
+}
 
 /**
  * Bridge between the CompletionItemProvider and the Script
@@ -77,13 +108,21 @@ export class CompletionItemBridge {
             }
         }
 
-        return Array.from(symbols.values())
+        const items = Array.from(symbols.values())
             .map<CompletionItem>((symbol) => ({
                 label: symbol.getDisplayName(),
                 kind: this.resolveCompletionItemKind(symbol),
                 documentation: this.resolveCompletionItemDocumentation(symbol),
-            }))
-            .concat(this.getNativeSuggestions());
+            }));
+
+        const nativeItems = this.getNativeSuggestions();
+        const workspaceItems = this.getWorkspaceSuggestions(textDocumentUri, position, symbols);
+
+        return [
+            ...items,
+            ...nativeItems,
+            ...workspaceItems,
+        ];
     }
 
     public resolveCompletionItemDocumentation(symbol: Symbol): MarkupContent | undefined {
@@ -192,6 +231,141 @@ export class CompletionItemBridge {
 
     public getNativeSuggestions() {
         return nativeCompletionItems;
+    }
+
+    /**
+     * Builds completion suggestions for symbols declared in workspace files
+     * that are not (yet) part of the current document's include closure.
+     *
+     * Flooding is avoided by:
+     * - only offering symbols once at least one identifier character has been
+     *   typed at the cursor (prefix gate), and
+     * - demoting the items with a penalized sortText, so included, local and
+     *   native suggestions always rank first.
+     */
+    protected getWorkspaceSuggestions(
+        textDocumentUri: string,
+        position: Position,
+        existingSymbols: Map<string, Symbol>,
+    ): CompletionItem[] {
+        const configuration = this.workpspace.getConfiguration();
+
+        if (configuration?.workspaceCompletions === false) {
+            return [];
+        }
+
+        const prefix = this.getTypedPrefix(textDocumentUri, position);
+
+        if (prefix === null || prefix.length === 0) {
+            return [];
+        }
+
+        const ignoreInternal = configuration?.ignoreInternalInIncludes === true;
+        const items: CompletionItem[] = [];
+
+        for (const entry of this.workpspace.getWorkspaceSymbols()) {
+            // Already offered via the document scopes or includes
+            if (existingSymbols.has(entry.key) || entry.uri.toString() === textDocumentUri) {
+                continue;
+            }
+
+            const displayName = entry.symbol.getDisplayName();
+
+            if (ignoreInternal && displayName.startsWith('__')) {
+                continue;
+            }
+
+            if (nativeNames.has(displayName.toLowerCase())) {
+                continue;
+            }
+
+            if (!isFuzzyMatch(prefix, displayName)) {
+                continue;
+            }
+
+            const targetUri = this.resolveWorkspaceSymbolUri(entry.symbol);
+
+            if (targetUri === null) {
+                continue;
+            }
+
+            const includeEdit = this.workpspace.getIncludeInsertionEdit(textDocumentUri, targetUri.toString());
+
+            items.push({
+                label: displayName,
+                kind: this.resolveCompletionItemKind(entry.symbol),
+                documentation: this.resolveCompletionItemDocumentation(entry.symbol),
+                labelDetails: { description: this.resolveProvenance(textDocumentUri, targetUri) },
+                sortText: `zzzz${displayName.toLowerCase()}`,
+                additionalTextEdits: includeEdit === null
+                    ? undefined
+                    : [includeEdit],
+            });
+        }
+
+        return items;
+    }
+
+    /**
+     * Extracts the identifier characters immediately before the cursor, or
+     * null when the document is unknown or the position is out of range.
+     */
+    protected getTypedPrefix(textDocumentUri: string, position: Position): string | null {
+        const script = this.workpspace.get(textDocumentUri);
+
+        if (script === undefined) {
+            return null;
+        }
+
+        const text = script.getText();
+
+        let offset: number;
+
+        try {
+            offset = PositionHelper.positionToOffset(position, text);
+        } catch {
+            return null;
+        }
+
+        const identifierPattern = /[A-Za-z0-9_$]/;
+        let start = offset;
+
+        while (start > 0 && identifierPattern.test(text[start - 1] ?? '')) {
+            start--;
+        }
+
+        return text.slice(start, offset);
+    }
+
+    /**
+     * Returns the URI of the file a workspace symbol is declared (or first
+     * assigned) in, or null when the symbol has no located nodes.
+     */
+    protected resolveWorkspaceSymbolUri(symbol: Symbol): URI | null {
+        const declarations = symbol.getDeclarations();
+        const assignments = symbol.getAssignments();
+        const node = declarations.values().next().value ??
+            assignments.values().next().value;
+
+        if (node === undefined) {
+            return null;
+        }
+
+        return URI.parse(node.location.source.toString());
+    }
+
+    /**
+     * Human readable source description for a workspace symbol: relative to
+     * the current document when below it, otherwise the file's base name.
+     */
+    protected resolveProvenance(textDocumentUri: string, targetUri: URI): string {
+        const relative = relativePath(Utils.dirname(URI.parse(textDocumentUri)).path, targetUri.path);
+
+        if (!relative.startsWith('..')) {
+            return relative.replace(/\//g, '\\');
+        }
+
+        return targetUri.path.split('/').pop() ?? targetUri.path;
     }
 
     /**
