@@ -31,3 +31,33 @@ export function resolvePath(path: string | URI, ...paths: string[]): URI {
 
     return Utils.resolvePath(path, ...paths);
 }
+
+/**
+ * Computes a posix-style relative path from a directory path to a target path.
+ * Both inputs are absolute paths using forward slashes (e.g. URI.path values).
+ * Returns a path relative to `fromDir`, using `..` segments when the target is
+ * not contained in `fromDir`.
+ */
+export function relativePath(fromDir: string, toPath: string): string {
+    const fromSegments = removeTrailingSlash(fromDir).split('/')
+        .filter((segment) => segment !== '');
+    const toSegments = toPath.split('/')
+        .filter((segment) => segment !== '');
+
+    let common = 0;
+
+    while (
+        common < fromSegments.length &&
+        common < toSegments.length &&
+        fromSegments[common]?.toLowerCase() === toSegments[common]?.toLowerCase()
+    ) {
+        common++;
+    }
+
+    const up = fromSegments.slice(common).map(() => '..');
+    const down = toSegments.slice(common);
+
+    const relative = [...up, ...down].join('/');
+
+    return relative === '' ? '.' : relative;
+}

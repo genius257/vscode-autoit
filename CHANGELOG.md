@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Native function Au3Doc descriptions now include links to the online documentation
+- Completion suggestions now include functions and global variables from all indexed workspace files, even when not included. Such suggestions are ranked after included, local and native suggestions, appear only once an identifier has been typed, show the source file in the suggestion description, and accepting one inserts the required `#include` after the last top-level include statement. Controlled by the new `autoit3.workspaceCompletions` setting (enabled by default)
 
 ### Changed
 
