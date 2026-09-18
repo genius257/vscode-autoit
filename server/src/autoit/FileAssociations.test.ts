@@ -75,3 +75,23 @@ test('matchAssociationPattern keeps matching valid patterns after an invalid pat
     expect(matchAssociationPattern('/ws/onea.myext', 'one[z-a].myext')).toBe(false);
     expect(matchAssociationPattern('/ws/one.myext', '*.myext')).toBe(true);
 });
+
+test('matchAssociationPattern collapses redundant star runs and adjacent globstar segments', () => {
+    expect(matchAssociationPattern('/ws/one.myext', '****.myext')).toBe(true);
+    expect(matchAssociationPattern('/ws/deep/nested/one.myext', '**/**/**/one.myext')).toBe(true);
+});
+
+test('matchAssociationPattern rejects patterns exceeding the complexity bound', () => {
+    // More than the allowed total number of asterisks: the pattern would otherwise match, but is rejected
+    const manyAsterisks = `${'*a'.repeat(17)}.myext`;
+
+    expect(matchAssociationPattern('/ws/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a.myext', manyAsterisks)).toBe(false);
+
+    // Longer than the allowed pattern length
+    const longPattern = `${'x'.repeat(300)}.myext`;
+
+    expect(matchAssociationPattern('/ws/xxx.myext', longPattern)).toBe(false);
+
+    // Patterns within the bound keep matching
+    expect(matchAssociationPattern('/ws/one.myext', '**/*.myext')).toBe(true);
+});

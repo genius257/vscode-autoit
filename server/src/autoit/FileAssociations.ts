@@ -7,6 +7,12 @@
 
 const associationRegExpCache = new Map<string, RegExp | null>();
 
+/** Maximum accepted glob pattern length, part of the pattern complexity bound. */
+const maxAssociationPatternLength = 256;
+
+/** Maximum total number of asterisks in a glob pattern, part of the pattern complexity bound. */
+const maxAssociationPatternAsterisks = 16;
+
 /**
  * Extracts all `files.associations` glob patterns mapped to the `au3` language.
  * @param associations The `files.associations` setting value.
@@ -68,8 +74,9 @@ export function matchAssociationPattern(path: string, pattern: string): boolean 
 /**
  * Returns a cached regular expression for the given glob pattern, or null when
  * the pattern does not compile into a valid regular expression (e.g. a
- * reversed character range). Non-compiling patterns are cached as nonmatching,
- * so invalid patterns never throw and never match.
+ * reversed character range) or exceeds the complexity bound. Non-compiling
+ * and rejected patterns are cached as nonmatching, so they never throw and
+ * never match.
  */
 function getPatternRegExp(pattern: string): RegExp | null {
     const cached = associationRegExpCache.get(pattern);
@@ -80,15 +87,46 @@ function getPatternRegExp(pattern: string): RegExp | null {
 
     let regExp: RegExp | null;
 
-    try {
-        regExp = new RegExp(`^${globToRegExpSource(pattern)}$`, 'i');
-    } catch {
+    if (isAssociationPatternComplexityAcceptable(pattern)) {
+        try {
+            regExp = new RegExp(`^${globToRegExpSource(normalizeAssociationPattern(pattern))}$`, 'i');
+        } catch {
+            regExp = null;
+        }
+    } else {
         regExp = null;
     }
 
     associationRegExpCache.set(pattern, regExp);
 
     return regExp;
+}
+
+/**
+ * Normalizes a glob pattern before conversion, collapsing redundant star runs
+ * of three or more asterisks and adjacent globstar segments, so no adjacent
+ * greedy expressions (which could backtrack heavily on non-matching paths)
+ * can be produced by the conversion.
+ */
+function normalizeAssociationPattern(pattern: string): string {
+    return pattern
+        .replace(/\*{3,}/g, '**')
+        .replace(/(?:\*\*\/)+/g, '**/');
+}
+
+/**
+ * Whether the pattern is within the defined complexity bound. Patterns with
+ * excessive repeated globstars could otherwise produce regular expressions
+ * with a high backtracking degree on non-matching paths.
+ */
+function isAssociationPatternComplexityAcceptable(pattern: string): boolean {
+    if (pattern.length > maxAssociationPatternLength) {
+        return false;
+    }
+
+    const asterisks = pattern.match(/\*/g)?.length ?? 0;
+
+    return asterisks <= maxAssociationPatternAsterisks;
 }
 
 /**
