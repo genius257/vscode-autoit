@@ -5,7 +5,7 @@
  * except `/`), `[abc]` character classes and `{a,b}` alternation.
  */
 
-const associationRegExpCache = new Map<string, RegExp>();
+const associationRegExpCache = new Map<string, RegExp | null>();
 
 /**
  * Extracts all `files.associations` glob patterns mapped to the `au3` language.
@@ -44,6 +44,10 @@ export function matchAssociationPattern(path: string, pattern: string): boolean 
 
     const regExp = getPatternRegExp(pattern);
 
+    if (regExp === null) {
+        return false;
+    }
+
     if (regExp.test(normalizedPath)) {
         return true;
     }
@@ -56,20 +60,31 @@ export function matchAssociationPattern(path: string, pattern: string): boolean 
     }
 
     // Slash-ful relative patterns additionally match at any depth
-    return getPatternRegExp(`**/${pattern}`).test(normalizedPath);
+    const anyDepthRegExp = getPatternRegExp(`**/${pattern}`);
+
+    return anyDepthRegExp?.test(normalizedPath) ?? false;
 }
 
 /**
- * Returns a cached regular expression for the given glob pattern.
+ * Returns a cached regular expression for the given glob pattern, or null when
+ * the pattern does not compile into a valid regular expression (e.g. a
+ * reversed character range). Non-compiling patterns are cached as nonmatching,
+ * so invalid patterns never throw and never match.
  */
-function getPatternRegExp(pattern: string): RegExp {
+function getPatternRegExp(pattern: string): RegExp | null {
     const cached = associationRegExpCache.get(pattern);
 
     if (cached !== undefined) {
         return cached;
     }
 
-    const regExp = new RegExp(`^${globToRegExpSource(pattern)}$`, 'i');
+    let regExp: RegExp | null;
+
+    try {
+        regExp = new RegExp(`^${globToRegExpSource(pattern)}$`, 'i');
+    } catch {
+        regExp = null;
+    }
 
     associationRegExpCache.set(pattern, regExp);
 

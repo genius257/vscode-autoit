@@ -62,3 +62,16 @@ test('matchAssociationPattern supports question mark, character classes and alte
     expect(matchAssociationPattern('/ws/one.tsv', '*.{dat,tsv}')).toBe(true);
     expect(matchAssociationPattern('/ws/one.csv', '*.{dat,tsv}')).toBe(false);
 });
+
+test('matchAssociationPattern returns false for patterns that do not compile to valid regular expressions', () => {
+    // A reversed character range produces an invalid regular expression
+    expect(matchAssociationPattern('/ws/onea.myext', 'one[z-a].myext')).toBe(false);
+
+    // The pattern is cached as nonmatching, so repeated matching stays safe
+    expect(matchAssociationPattern('/ws/oneb.myext', 'one[z-a].myext')).toBe(false);
+});
+
+test('matchAssociationPattern keeps matching valid patterns after an invalid pattern was cached', () => {
+    expect(matchAssociationPattern('/ws/onea.myext', 'one[z-a].myext')).toBe(false);
+    expect(matchAssociationPattern('/ws/one.myext', '*.myext')).toBe(true);
+});
