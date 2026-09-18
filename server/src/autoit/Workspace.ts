@@ -902,11 +902,22 @@ export class Workspace {
 
         const pendingUris = new Set<string>();
 
+        const associationPatterns = await this.getAu3AssociationPatterns();
+
         for (const rootUri of rootUris) {
             const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
 
             for (const uri of uris) {
                 if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
+                    continue;
+                }
+
+                /*
+                 * The client lists every file it walks, so it is up to the server
+                 * to only index AutoIt3 files (.au3 or associated with the `au3`
+                 * language), mirroring the file watcher event handling.
+                 */
+                if (!this.isAutoIt3FileUri(uri, associationPatterns)) {
                     continue;
                 }
 

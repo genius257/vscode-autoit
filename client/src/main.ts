@@ -111,7 +111,8 @@ export function activate(context: ExtensionContext) {
 
                     if (type === FileType.Directory) {
                         await walk(child);
-                    } else if (name.toLowerCase().endsWith('.au3')) {
+                    } else {
+                        // Every file is listed; the server decides which files are indexed (.au3 or au3-associated files)
                         files.push(child.toString());
                     }
                 }

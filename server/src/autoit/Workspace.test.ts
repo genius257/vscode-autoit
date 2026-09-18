@@ -926,3 +926,67 @@ test('repeated read failures for the same file are reported only once within the
         vi.useRealTimers();
     }
 });
+
+test('preloadWorkspace indexes only .au3 and au3-associated files', async () => {
+    const sendNotification = vi.fn();
+
+    const sendRequest = vi.fn((type: string): Promise<unknown> => {
+        if (type === 'fs/listFiles') {
+            return Promise.resolve([
+                'file:///ws/script.au3',
+                'file:///ws/data.myext',
+                'file:///ws/notes.txt',
+            ]);
+        }
+
+        return Promise.resolve('Global $x = 1');
+    });
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([]),
+            getConfiguration: (section: string) => (section === 'files' ? Promise.resolve({ associations: { '*.myext': 'au3' } }) : Promise.resolve(createConfiguration())),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        sendNotification: sendNotification as unknown as Connection['sendNotification'],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        window: {
+            createWorkDoneProgress: (): Promise<{ begin(): void, report(percentage: number, message?: string): void, done(): void }> => {
+                const progress = { begin: vi.fn(), report: vi.fn(), done: vi.fn() };
+
+                return Promise.resolve(progress);
+            },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type PreloadInternals = { preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> };
+
+    const internals = workspace as unknown as PreloadInternals;
+
+    await internals.preloadWorkspace(createConfiguration());
+
+    // Allow any pending promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(workspace.get('file:///ws/script.au3')).toBeDefined();
+    expect(workspace.get('file:///ws/data.myext')).toBeDefined();
+    expect(workspace.get('file:///ws/notes.txt')).toBeUndefined();
+
+    // Only the two AutoIt3 files were read
+    expect(sendRequest).toHaveBeenCalledTimes(3); // 1x fs/listFiles + 2x fs/readFile
+
+    expect(sendNotification).toHaveBeenNthCalledWith(1, IndexingProgressNotification, { loaded: 0, total: 2 });
+    expect(sendNotification).toHaveBeenLastCalledWith(IndexingProgressNotification, { loaded: 2, total: 2 });
+    expect(sendNotification).toHaveBeenCalledTimes(3);
+});
