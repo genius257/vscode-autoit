@@ -809,15 +809,27 @@ export class Workspace {
 
         this.failedReadErrors.set(key, Date.now());
 
-        // Prune stale entries, so the map cannot grow without bounds
-        if (this.failedReadErrors.size > failedReadErrorCacheLimit) {
-            const now = Date.now();
+        /*
+         * Prune stale entries first, then evict the oldest remaining entries in
+         * insertion order until the cache size is capped, so the map cannot grow
+         * without bounds during bursts of failures for many distinct files.
+         */
+        const now = Date.now();
 
-            for (const [failedKey, reportedAt] of this.failedReadErrors) {
-                if (now - reportedAt >= readErrorReportInterval) {
-                    this.failedReadErrors.delete(failedKey);
-                }
+        for (const [failedKey, reportedAt] of this.failedReadErrors) {
+            if (now - reportedAt >= readErrorReportInterval) {
+                this.failedReadErrors.delete(failedKey);
             }
+        }
+
+        while (this.failedReadErrors.size > failedReadErrorCacheLimit) {
+            const oldest = this.failedReadErrors.keys().next();
+
+            if (oldest.done === true) {
+                break;
+            }
+
+            this.failedReadErrors.delete(oldest.value);
         }
 
         this.connection?.window.showErrorMessage(`AutoIt3: failed to read ${description} "${uri.fsPath}": ${error instanceof Error ? error.message : String(error)}`);

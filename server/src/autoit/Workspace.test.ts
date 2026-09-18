@@ -990,3 +990,60 @@ test('preloadWorkspace indexes only .au3 and au3-associated files', async () => 
     expect(sendNotification).toHaveBeenLastCalledWith(IndexingProgressNotification, { loaded: 2, total: 2 });
     expect(sendNotification).toHaveBeenCalledTimes(3);
 });
+
+test('reportReadFailure prunes expired entries and caps the cache size by evicting the oldest entries', () => {
+    vi.useFakeTimers();
+
+    try {
+        const showErrorMessage = vi.fn();
+
+        const connection: Partial<Connection> = {
+            sendRequest: vi.fn() as unknown as Connection['sendRequest'],
+            window: { showErrorMessage } as unknown as Connection['window'],
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onInitialized: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeConfiguration: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        };
+
+        const workspace = new Workspace(connection as Connection);
+
+        type ReportReadFailureInternals = {
+            failedReadErrors: Map<string, number>,
+            reportReadFailure(description: string, uri: URI, error: unknown): void,
+        };
+
+        const internals = workspace as unknown as ReportReadFailureInternals;
+
+        const now = Date.now();
+
+        // Seed the cache with expired and fresh entries beyond the cache limit
+        for (let i = 0; i < 120; i++) {
+            internals.failedReadErrors.set(`file:///ws/stale${i}.au3`, now - 31_000);
+        }
+
+        for (let i = 0; i < 120; i++) {
+            internals.failedReadErrors.set(`file:///ws/fresh${i}.au3`, now);
+        }
+
+        internals.reportReadFailure('file', URI.file('/ws/current.au3'), new Error('read failed'));
+
+        // Expired entries were pruned and the cache was capped at the limit
+        expect(internals.failedReadErrors.size).toBe(100);
+        expect(internals.failedReadErrors.has('file:///ws/current.au3')).toBe(true);
+        expect(internals.failedReadErrors.has('file:///ws/stale0.au3')).toBe(false);
+
+        // The oldest fresh entries were evicted in insertion order, the newest survived
+        expect(internals.failedReadErrors.has('file:///ws/fresh0.au3')).toBe(false);
+        expect(internals.failedReadErrors.has('file:///ws/fresh20.au3')).toBe(false);
+        expect(internals.failedReadErrors.has('file:///ws/fresh21.au3')).toBe(true);
+        expect(internals.failedReadErrors.has('file:///ws/fresh119.au3')).toBe(true);
+
+        // The new failure was reported
+        expect(showErrorMessage).toHaveBeenCalledTimes(1);
+    } finally {
+        vi.useRealTimers();
+    }
+});
