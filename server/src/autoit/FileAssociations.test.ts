@@ -127,3 +127,15 @@ test('isAssociationPatternSupported reports whether a pattern can be used for ma
     expect(isAssociationPatternSupported('one[z-a].myext')).toBe(false);
     expect(isAssociationPatternSupported(`{${'a,'.repeat(9)}}.myext`)).toBe(false);
 });
+
+test('isAssociationPatternSupported validates the any-depth variant for slash-ful patterns', () => {
+    // The pattern fits the length bound, but the `**/`-prefixed any-depth variant exceeds it
+    const pattern = `${'x'.repeat(247)}/*.myext`;
+
+    expect(pattern.length).toBe(255);
+    expect(isAssociationPatternSupported(pattern)).toBe(false);
+    expect(isAssociationPatternSupported(`**/${pattern}`)).toBe(false);
+
+    // Shorter slash-ful patterns remain supported
+    expect(isAssociationPatternSupported(`${'x'.repeat(100)}/*.myext`)).toBe(true);
+});

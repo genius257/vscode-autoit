@@ -84,13 +84,25 @@ export function matchAssociationPattern(path: string, pattern: string): boolean 
 /**
  * Whether the given glob pattern can be used for matching: it tokenizes
  * within the complexity bound and with valid syntax (e.g. no reversed
- * character ranges). Rejected patterns never match, so files matched by
- * them are not indexed.
+ * character ranges), including the prefixed any-depth variant (a leading
+ * globstar segment) used by matchAssociationPattern for slash-ful patterns.
+ * Rejected patterns never match, so files matched by them are not indexed.
  * @param pattern The glob pattern to check.
  * @returns Whether the pattern can be used for matching.
  */
 export function isAssociationPatternSupported(pattern: string): boolean {
-    return getPatternTokens(pattern) !== null;
+    const variants = getPatternTokens(pattern);
+
+    if (variants === null) {
+        return false;
+    }
+
+    if (!pattern.includes('/')) {
+        return true;
+    }
+
+    // Slash-ful patterns are matched at any depth through the prefixed variant, so it must be usable as well
+    return getPatternTokens(`**/${pattern}`) !== null;
 }
 
 /**
