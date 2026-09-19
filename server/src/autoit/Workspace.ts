@@ -11,6 +11,7 @@ import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
 import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
 import Deprecation from './docBlock/Deprecation';
+import { getAu3AssociationPatterns, isAssociationPatternSupported, matchAssociationPattern } from './FileAssociations';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -46,12 +47,23 @@ export type AutoIt3Configuration = {
     showAllDeclarations: boolean,
 };
 
+type FilesConfiguration = {
+    /** The `files.associations` mapping of glob patterns to language identifiers */
+    associations?: unknown,
+};
+
 export type IndexingProgress = { loaded: number, total: number };
 
 export const IndexingProgressNotification = new ProtocolNotificationType<IndexingProgress, void>('autoit3/indexingProgress');
 
 /** Maximum number of concurrent file reads during startup preloading. */
 const preloadConcurrency = 8;
+
+/** Minimum time between repeated read failure reports for the same URI. */
+const readErrorReportInterval = 30_000;
+
+/** Maximum number of remembered read failure reports, so the cache does not grow unbounded. */
+const failedReadErrorCacheLimit = 100;
 
 export class Workspace {
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
@@ -66,6 +78,8 @@ export class Workspace {
     protected fileEventTimer: ReturnType<typeof setTimeout> | null = null;
     protected readingFiles = new Set<string>();
     protected fileEventRevisions = new Map<string, number>();
+    protected failedReadErrors = new Map<string, number>();
+    protected warnedInvalidAssociationPatterns = new Set<string>();
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -569,7 +583,7 @@ export class Workspace {
 
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve }))
             .catch((error: unknown) => {
-                this.connection?.window.showErrorMessage(`AutoIt3: failed to read include "${uri.toString()}": ${error instanceof Error ? error.message : String(error)}`);
+                this.reportReadFailure('include', uri, error);
 
                 return null;
             }) ?? Promise.resolve(null);
@@ -711,19 +725,139 @@ export class Workspace {
 
         this.pendingFileEvents.clear();
 
+        /*
+         * `files.associations` entries mapped to the `au3` language are fetched once
+         * per batch, so every event can check them without extra configuration requests.
+         */
+        const associationPatterns = await this.getAu3AssociationPatterns();
+
         for (const [uri, type] of events) {
+            if (type === FileChangeType.Deleted) {
+                /*
+                 * Only tracked files can be removed from the dependency manager,
+                 * so events for untracked URIs (e.g. files that were never
+                 * loaded) are ignored.
+                 */
+                if (this.exists(uri)) {
+                    this.handleFileDeleted(uri);
+                }
+
+                continue;
+            }
+
             const managed = await this.isManagedUri(uri);
 
             if (!managed) {
                 continue;
             }
 
-            if (type === FileChangeType.Deleted) {
-                this.handleFileDeleted(uri);
-            } else {
+            /*
+             * The watcher reports every file in managed locations, but only AutoIt3
+             * files (`.au3` or associated with the `au3` language) and files already
+             * tracked by the dependency manager (e.g. includes with a custom
+             * extension) are read and parsed.
+             */
+            if (this.exists(uri) || this.isAutoIt3FileUri(uri, associationPatterns)) {
                 this.handleFileChangedOrCreated(uri);
             }
         }
+    }
+
+    /**
+     * Whether a watcher event URI refers to an AutoIt3 file: either by the
+     * `.au3` extension, or by a `files.associations` pattern mapping the file
+     * to the `au3` language.
+     */
+    protected isAutoIt3FileUri(uri: string, associationPatterns: string[]): boolean {
+        const path = URI.parse(uri).path;
+
+        if (path.toLowerCase().endsWith('.au3')) {
+            return true;
+        }
+
+        return associationPatterns.some((pattern) => matchAssociationPattern(path, pattern));
+    }
+
+    /**
+     * Fetches `files.associations` patterns mapped to the `au3` language.
+     * Returns an empty list on any failure, so watcher events simply fall
+     * back to `.au3` extension matching.
+     */
+    protected async getAu3AssociationPatterns(): Promise<string[]> {
+        try {
+            const associations = await this.connection?.workspace.getConfiguration('files').then((configuration: FilesConfiguration) => configuration.associations) ?? null;
+
+            const patterns = getAu3AssociationPatterns(associations);
+
+            this.reportInvalidAssociationPatterns(patterns);
+
+            return patterns;
+        } catch {
+            return [];
+        }
+    }
+
+    /**
+     * Reports association patterns that are rejected, e.g. patterns that do not
+     * compile into a valid regular expression or exceed the complexity bound,
+     * since files matched by them are silently not indexed. Each pattern is
+     * reported only once per session.
+     */
+    protected reportInvalidAssociationPatterns(patterns: string[]): void {
+        const invalidPatterns = patterns.filter((pattern) => !this.warnedInvalidAssociationPatterns.has(pattern) && !isAssociationPatternSupported(pattern));
+
+        if (invalidPatterns.length === 0) {
+            return;
+        }
+
+        for (const pattern of invalidPatterns) {
+            this.warnedInvalidAssociationPatterns.add(pattern);
+        }
+
+        this.connection?.window.showWarningMessage(`AutoIt3: ignoring files.associations patterns mapped to 'au3' that cannot be used: ${invalidPatterns.join(', ')}`);
+    }
+
+    /**
+     * Reports a file read failure to the user, showing the file system path
+     * instead of the percent-encoded URI. Repeated failures for the same file
+     * within a short window are reported only once, so a file that cannot be
+     * read does not spam identical messages on every watcher event.
+     */
+    protected reportReadFailure(description: string, uri: URI, error: unknown): void {
+        const key = uri.toString();
+
+        const lastReported = this.failedReadErrors.get(key);
+
+        if (lastReported !== undefined && Date.now() - lastReported < readErrorReportInterval) {
+            return;
+        }
+
+        this.failedReadErrors.set(key, Date.now());
+
+        /*
+         * Prune stale entries first, then evict the oldest remaining entries in
+         * insertion order until the cache size is capped, so the map cannot grow
+         * without bounds during bursts of failures for many distinct files.
+         */
+        const now = Date.now();
+
+        for (const [failedKey, reportedAt] of this.failedReadErrors) {
+            if (now - reportedAt >= readErrorReportInterval) {
+                this.failedReadErrors.delete(failedKey);
+            }
+        }
+
+        while (this.failedReadErrors.size > failedReadErrorCacheLimit) {
+            const oldest = this.failedReadErrors.keys().next();
+
+            if (oldest.done === true) {
+                break;
+            }
+
+            this.failedReadErrors.delete(oldest.value);
+        }
+
+        this.connection?.window.showErrorMessage(`AutoIt3: failed to read ${description} "${uri.fsPath}": ${error instanceof Error ? error.message : String(error)}`);
     }
 
     /**
@@ -742,7 +876,7 @@ export class Workspace {
 
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uriString).then<string | null>((text) => text)
             .catch((error: unknown) => {
-                this.connection?.window.showErrorMessage(`AutoIt3: failed to read file "${uriString}": ${error instanceof Error ? error.message : String(error)}`);
+                this.reportReadFailure('file', uri, error);
 
                 return null;
             }) ?? Promise.resolve(null);
@@ -805,11 +939,22 @@ export class Workspace {
 
         const pendingUris = new Set<string>();
 
+        const associationPatterns = await this.getAu3AssociationPatterns();
+
         for (const rootUri of rootUris) {
             const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
 
             for (const uri of uris) {
                 if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
+                    continue;
+                }
+
+                /*
+                 * The client lists every file it walks, so it is up to the server
+                 * to only index AutoIt3 files (.au3 or associated with the `au3`
+                 * language), mirroring the file watcher event handling.
+                 */
+                if (!this.isAutoIt3FileUri(uri, associationPatterns)) {
                     continue;
                 }
 

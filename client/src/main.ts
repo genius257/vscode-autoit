@@ -49,10 +49,13 @@ export function activate(context: ExtensionContext) {
                 content = await workspace.fs.readFile(file);
             } catch (error) {
                 /*
-                 * File does not exist is an expected outcome during include resolution,
-                 * so it is reported as null, letting the server try fallback locations.
+                 * Expected outcomes are reported as null, letting the server try fallback
+                 * locations or skip the file: missing files during include resolution, and
+                 * directories, which the recursive file watcher reports as change events as
+                 * well (e.g. the node_modules and .git folders), but which are never
+                 * readable as files.
                  */
-                if (error instanceof FileSystemError && error.code === 'FileNotFound') {
+                if (error instanceof FileSystemError && (error.code === 'FileNotFound' || error.code === 'FileIsADirectory' || error.code === 'FileNotADirectory')) {
                     return null;
                 }
 
@@ -108,7 +111,8 @@ export function activate(context: ExtensionContext) {
 
                     if (type === FileType.Directory) {
                         await walk(child);
-                    } else if (name.toLowerCase().endsWith('.au3')) {
+                    } else {
+                        // Every file is listed; the server decides which files are indexed (.au3 or au3-associated files)
                         files.push(child.toString());
                     }
                 }
