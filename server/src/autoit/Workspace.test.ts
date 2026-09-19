@@ -1047,3 +1047,48 @@ test('reportReadFailure prunes expired entries and caps the cache size by evicti
         vi.useRealTimers();
     }
 });
+
+test('processFileEvents warns once about rejected association patterns', async () => {
+    const showWarningMessage = vi.fn();
+
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+            getConfiguration: (section: string) => (section === 'files' ? Promise.resolve({ associations: { 'one[z-a].myext': 'au3', '*.myext': 'au3' } }) : Promise.resolve(createConfiguration())),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        window: { showErrorMessage: vi.fn(), showWarningMessage } as unknown as Connection['window'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const internals = workspace as unknown as ProcessFileEventsInternals;
+
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Created);
+
+    await internals.processFileEvents();
+
+    expect(showWarningMessage).toHaveBeenCalledTimes(1);
+
+    expect(String(showWarningMessage.mock.calls[0]?.[0])).toContain('one[z-a].myext');
+
+    // Files matching the valid pattern are still read
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/data.myext');
+
+    // A second batch does not warn again
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(showWarningMessage).toHaveBeenCalledTimes(1);
+});

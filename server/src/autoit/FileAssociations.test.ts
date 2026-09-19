@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { getAu3AssociationPatterns, matchAssociationPattern } from './FileAssociations';
+import { getAu3AssociationPatterns, isAssociationPatternSupported, matchAssociationPattern } from './FileAssociations';
 
 test('getAu3AssociationPatterns extracts patterns mapped to the au3 language', () => {
     const patterns = getAu3AssociationPatterns({
@@ -94,4 +94,11 @@ test('matchAssociationPattern rejects patterns exceeding the complexity bound', 
 
     // Patterns within the bound keep matching
     expect(matchAssociationPattern('/ws/one.myext', '**/*.myext')).toBe(true);
+});
+
+test('isAssociationPatternSupported reports whether a pattern can be used for matching', () => {
+    expect(isAssociationPatternSupported('*.myext')).toBe(true);
+    expect(isAssociationPatternSupported('**/*.myext')).toBe(true);
+    expect(isAssociationPatternSupported('one[z-a].myext')).toBe(false);
+    expect(isAssociationPatternSupported(`${'a*'.repeat(17)}.myext`)).toBe(false);
 });

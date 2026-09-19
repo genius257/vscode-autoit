@@ -72,6 +72,17 @@ export function matchAssociationPattern(path: string, pattern: string): boolean 
 }
 
 /**
+ * Whether the given glob pattern can be used for matching: it compiles into a
+ * valid regular expression and is within the complexity bound. Rejected
+ * patterns never match, so files matched by them are not indexed.
+ * @param pattern The glob pattern to check.
+ * @returns Whether the pattern can be used for matching.
+ */
+export function isAssociationPatternSupported(pattern: string): boolean {
+    return getPatternRegExp(pattern) !== null;
+}
+
+/**
  * Returns a cached regular expression for the given glob pattern, or null when
  * the pattern does not compile into a valid regular expression (e.g. a
  * reversed character range) or exceeds the complexity bound. Non-compiling

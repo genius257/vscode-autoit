@@ -11,7 +11,7 @@ import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
 import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
 import Deprecation from './docBlock/Deprecation';
-import { getAu3AssociationPatterns, matchAssociationPattern } from './FileAssociations';
+import { getAu3AssociationPatterns, isAssociationPatternSupported, matchAssociationPattern } from './FileAssociations';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -79,6 +79,7 @@ export class Workspace {
     protected readingFiles = new Set<string>();
     protected fileEventRevisions = new Map<string, number>();
     protected failedReadErrors = new Map<string, number>();
+    protected warnedInvalidAssociationPatterns = new Set<string>();
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -786,10 +787,34 @@ export class Workspace {
         try {
             const associations = await this.connection?.workspace.getConfiguration('files').then((configuration: FilesConfiguration) => configuration.associations) ?? null;
 
-            return getAu3AssociationPatterns(associations);
+            const patterns = getAu3AssociationPatterns(associations);
+
+            this.reportInvalidAssociationPatterns(patterns);
+
+            return patterns;
         } catch {
             return [];
         }
+    }
+
+    /**
+     * Reports association patterns that are rejected, e.g. patterns that do not
+     * compile into a valid regular expression or exceed the complexity bound,
+     * since files matched by them are silently not indexed. Each pattern is
+     * reported only once per session.
+     */
+    protected reportInvalidAssociationPatterns(patterns: string[]): void {
+        const invalidPatterns = patterns.filter((pattern) => !this.warnedInvalidAssociationPatterns.has(pattern) && !isAssociationPatternSupported(pattern));
+
+        if (invalidPatterns.length === 0) {
+            return;
+        }
+
+        for (const pattern of invalidPatterns) {
+            this.warnedInvalidAssociationPatterns.add(pattern);
+        }
+
+        this.connection?.window.showWarningMessage(`AutoIt3: ignoring files.associations patterns mapped to 'au3' that cannot be used: ${invalidPatterns.join(', ')}`);
     }
 
     /**
