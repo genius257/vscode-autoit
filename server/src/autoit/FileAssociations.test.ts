@@ -63,8 +63,8 @@ test('matchAssociationPattern supports question mark, character classes and alte
     expect(matchAssociationPattern('/ws/one.csv', '*.{dat,tsv}')).toBe(false);
 });
 
-test('matchAssociationPattern returns false for patterns that do not compile to valid regular expressions', () => {
-    // A reversed character range produces an invalid regular expression
+test('matchAssociationPattern returns false for patterns that cannot be tokenized', () => {
+    // A reversed character range cannot be tokenized into a valid matcher
     expect(matchAssociationPattern('/ws/onea.myext', 'one[z-a].myext')).toBe(false);
 
     // The pattern is cached as nonmatching, so repeated matching stays safe
@@ -82,23 +82,48 @@ test('matchAssociationPattern collapses redundant star runs and adjacent globsta
 });
 
 test('matchAssociationPattern rejects patterns exceeding the complexity bound', () => {
-    // More than the allowed total number of asterisks: the pattern would otherwise match, but is rejected
-    const manyAsterisks = `${'*a'.repeat(17)}.myext`;
-
-    expect(matchAssociationPattern('/ws/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a.myext', manyAsterisks)).toBe(false);
-
     // Longer than the allowed pattern length
     const longPattern = `${'x'.repeat(300)}.myext`;
 
     expect(matchAssociationPattern('/ws/xxx.myext', longPattern)).toBe(false);
 
+    // More brace variants than the allowed maximum
+    const manyVariants = `{${'a,'.repeat(9)}}.myext`;
+
+    expect(matchAssociationPattern('/ws/a.myext', manyVariants)).toBe(false);
+
+    // Nested braces are rejected
+    expect(matchAssociationPattern('/ws/ab.myext', '{a{b,c}}.myext')).toBe(false);
+
     // Patterns within the bound keep matching
     expect(matchAssociationPattern('/ws/one.myext', '**/*.myext')).toBe(true);
+});
+
+test('matchAssociationPattern matches patterns with many separated stars', () => {
+    // Previously rejected by the asterisk count; the bounded matcher handles it
+    const manyAsterisks = `${'*a'.repeat(17)}.myext`;
+
+    expect(isAssociationPatternSupported(manyAsterisks)).toBe(true);
+    expect(matchAssociationPattern('/ws/' + 'a'.repeat(17) + '.myext', manyAsterisks)).toBe(true);
+});
+
+test('matchAssociationPattern completes bounded matching on a long near-miss path', () => {
+    const pattern = '**/a/**/b/**/c/*.myext';
+
+    // A long path matching the pattern structure except for the final segment
+    const nearMissPath = `/ws/${'a/'.repeat(256)}b/${'c/'.repeat(256)}missing.myext2`;
+
+    const start = Date.now();
+
+    expect(matchAssociationPattern(nearMissPath, pattern)).toBe(false);
+
+    // The memoized matcher completes in bounded time; a backtracking matcher would not
+    expect(Date.now() - start).toBeLessThan(1000);
 });
 
 test('isAssociationPatternSupported reports whether a pattern can be used for matching', () => {
     expect(isAssociationPatternSupported('*.myext')).toBe(true);
     expect(isAssociationPatternSupported('**/*.myext')).toBe(true);
     expect(isAssociationPatternSupported('one[z-a].myext')).toBe(false);
-    expect(isAssociationPatternSupported(`${'a*'.repeat(17)}.myext`)).toBe(false);
+    expect(isAssociationPatternSupported(`{${'a,'.repeat(9)}}.myext`)).toBe(false);
 });
