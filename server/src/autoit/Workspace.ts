@@ -11,6 +11,7 @@ import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
 import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
 import Deprecation from './docBlock/Deprecation';
+import { getAu3AssociationPatterns, isAssociationPatternSupported, matchAssociationPattern } from './FileAssociations';
 
 /** The key is the script URI */
 export type ScriptList = Map<string, Script>;
@@ -46,12 +47,23 @@ export type AutoIt3Configuration = {
     showAllDeclarations: boolean,
 };
 
+type FilesConfiguration = {
+    /** The `files.associations` mapping of glob patterns to language identifiers */
+    associations?: unknown,
+};
+
 export type IndexingProgress = { loaded: number, total: number };
 
 export const IndexingProgressNotification = new ProtocolNotificationType<IndexingProgress, void>('autoit3/indexingProgress');
 
 /** Maximum number of concurrent file reads during startup preloading. */
 const preloadConcurrency = 8;
+
+/** Minimum time between repeated read failure reports for the same URI. */
+const readErrorReportInterval = 30_000;
+
+/** Maximum number of remembered read failure reports, so the cache does not grow unbounded. */
+const failedReadErrorCacheLimit = 100;
 
 export class Workspace {
     public readonly eventEmitter = new EventEmitter<{ diagnostics: { uri: string, diagnostics: Diagnostic[] } }>();
@@ -65,7 +77,12 @@ export class Workspace {
     protected pendingFileEvents = new Map<string, FileChangeType>();
     protected fileEventTimer: ReturnType<typeof setTimeout> | null = null;
     protected readingFiles = new Set<string>();
+    protected readingPromises = new Map<string, Promise<string | null>>();
     protected fileEventRevisions = new Map<string, number>();
+    protected failedReadErrors = new Map<string, number>();
+    protected warnedInvalidAssociationPatterns = new Set<string>();
+    protected diagnosticsDeferred = false;
+    protected deferredDiagnosticPayloads = new Map<string, Diagnostic[]>();
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -271,6 +288,9 @@ export class Workspace {
         this.dependencyGraph.removeScript(uri);
         this.scripts.delete(uri);
 
+        // The deletion clears the file's diagnostics immediately; any buffered diagnostics from the deferral would otherwise be re-published when the preload finishes
+        this.deferredDiagnosticPayloads.delete(uri);
+
         this.eventEmitter.emit('diagnostics', { uri: uri, diagnostics: [] });
 
         for (const dependentUri of dependents) {
@@ -319,7 +339,11 @@ export class Workspace {
     public resolveInclude(
         include: AutoIt3.IncludeStatement,
     ): Promise<IncludeResolve | null> {
-        const promise = this.connection?.workspace.getConfiguration('autoit3').then((configuration: AutoIt3Configuration) => {
+        const configurationPromise = this.configuration !== null
+            ? Promise.resolve(this.configuration)
+            : this.connection?.workspace.getConfiguration('autoit3');
+
+        const promise = configurationPromise?.then((configuration: AutoIt3Configuration) => {
             let promise: IncludePromise = Promise.resolve(null);
 
             const fileUri = include.file.replace(/\\/g, '/');
@@ -352,6 +376,22 @@ export class Workspace {
          */
 
         return promise;
+    }
+
+    /**
+     * Emits diagnostics, or defers them while the startup preload is running,
+     * so the preload does not flood the client with per-file diagnostic
+     * updates. Deferred diagnostics are coalesced per URI and flushed once
+     * the preload finishes.
+     */
+    public emitDiagnostics(payload: { uri: string, diagnostics: Diagnostic[] }): void {
+        if (this.diagnosticsDeferred) {
+            this.deferredDiagnosticPayloads.set(payload.uri, payload.diagnostics);
+
+            return;
+        }
+
+        this.eventEmitter.emit('diagnostics', payload);
     }
 
     public getConfiguration(): AutoIt3Configuration | null {
@@ -567,9 +607,24 @@ export class Workspace {
             return resolvingInclude;
         }
 
+        const pendingRead = this.readingPromises.get(uri.toString());
+
+        if (pendingRead !== undefined) {
+            /*
+             * A read of this URI is already in flight, e.g. started by the
+             * preload. The pending read owns the createOrUpdate call, so the
+             * include resolution reuses it instead of reading and parsing the
+             * file a second time. An unreadable pending read resolves to null,
+             * matching a failed include read, so the location chains fall
+             * through to the next location and the include is not recorded as
+             * resolved.
+             */
+            return pendingRead.then((text) => (text === null ? null : { uri: uri, text: text }));
+        }
+
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve }))
             .catch((error: unknown) => {
-                this.connection?.window.showErrorMessage(`AutoIt3: failed to read include "${uri.toString()}": ${error instanceof Error ? error.message : String(error)}`);
+                this.reportReadFailure('include', uri, error);
 
                 return null;
             }) ?? Promise.resolve(null);
@@ -711,19 +766,139 @@ export class Workspace {
 
         this.pendingFileEvents.clear();
 
+        /*
+         * `files.associations` entries mapped to the `au3` language are fetched once
+         * per batch, so every event can check them without extra configuration requests.
+         */
+        const associationPatterns = await this.getAu3AssociationPatterns();
+
         for (const [uri, type] of events) {
+            if (type === FileChangeType.Deleted) {
+                /*
+                 * Only tracked files can be removed from the dependency manager,
+                 * so events for untracked URIs (e.g. files that were never
+                 * loaded) are ignored.
+                 */
+                if (this.exists(uri)) {
+                    this.handleFileDeleted(uri);
+                }
+
+                continue;
+            }
+
             const managed = await this.isManagedUri(uri);
 
             if (!managed) {
                 continue;
             }
 
-            if (type === FileChangeType.Deleted) {
-                this.handleFileDeleted(uri);
-            } else {
+            /*
+             * The watcher reports every file in managed locations, but only AutoIt3
+             * files (`.au3` or associated with the `au3` language) and files already
+             * tracked by the dependency manager (e.g. includes with a custom
+             * extension) are read and parsed.
+             */
+            if (this.exists(uri) || this.isAutoIt3FileUri(uri, associationPatterns)) {
                 this.handleFileChangedOrCreated(uri);
             }
         }
+    }
+
+    /**
+     * Whether a watcher event URI refers to an AutoIt3 file: either by the
+     * `.au3` extension, or by a `files.associations` pattern mapping the file
+     * to the `au3` language.
+     */
+    protected isAutoIt3FileUri(uri: string, associationPatterns: string[]): boolean {
+        const path = URI.parse(uri).path;
+
+        if (path.toLowerCase().endsWith('.au3')) {
+            return true;
+        }
+
+        return associationPatterns.some((pattern) => matchAssociationPattern(path, pattern));
+    }
+
+    /**
+     * Fetches `files.associations` patterns mapped to the `au3` language.
+     * Returns an empty list on any failure, so watcher events simply fall
+     * back to `.au3` extension matching.
+     */
+    protected async getAu3AssociationPatterns(): Promise<string[]> {
+        try {
+            const associations = await this.connection?.workspace.getConfiguration('files').then((configuration: FilesConfiguration) => configuration.associations) ?? null;
+
+            const patterns = getAu3AssociationPatterns(associations);
+
+            this.reportInvalidAssociationPatterns(patterns);
+
+            return patterns;
+        } catch {
+            return [];
+        }
+    }
+
+    /**
+     * Reports association patterns that are rejected, e.g. patterns that do not
+     * compile into a valid regular expression or exceed the complexity bound,
+     * since files matched by them are silently not indexed. Each pattern is
+     * reported only once per session.
+     */
+    protected reportInvalidAssociationPatterns(patterns: string[]): void {
+        const invalidPatterns = patterns.filter((pattern) => !this.warnedInvalidAssociationPatterns.has(pattern) && !isAssociationPatternSupported(pattern));
+
+        if (invalidPatterns.length === 0) {
+            return;
+        }
+
+        for (const pattern of invalidPatterns) {
+            this.warnedInvalidAssociationPatterns.add(pattern);
+        }
+
+        this.connection?.window.showWarningMessage(`AutoIt3: ignoring files.associations patterns mapped to 'au3' that cannot be used: ${invalidPatterns.join(', ')}`);
+    }
+
+    /**
+     * Reports a file read failure to the user, showing the file system path
+     * instead of the percent-encoded URI. Repeated failures for the same file
+     * within a short window are reported only once, so a file that cannot be
+     * read does not spam identical messages on every watcher event.
+     */
+    protected reportReadFailure(description: string, uri: URI, error: unknown): void {
+        const key = uri.toString();
+
+        const lastReported = this.failedReadErrors.get(key);
+
+        if (lastReported !== undefined && Date.now() - lastReported < readErrorReportInterval) {
+            return;
+        }
+
+        this.failedReadErrors.set(key, Date.now());
+
+        /*
+         * Prune stale entries first, then evict the oldest remaining entries in
+         * insertion order until the cache size is capped, so the map cannot grow
+         * without bounds during bursts of failures for many distinct files.
+         */
+        const now = Date.now();
+
+        for (const [failedKey, reportedAt] of this.failedReadErrors) {
+            if (now - reportedAt >= readErrorReportInterval) {
+                this.failedReadErrors.delete(failedKey);
+            }
+        }
+
+        while (this.failedReadErrors.size > failedReadErrorCacheLimit) {
+            const oldest = this.failedReadErrors.keys().next();
+
+            if (oldest.done === true) {
+                break;
+            }
+
+            this.failedReadErrors.delete(oldest.value);
+        }
+
+        this.connection?.window.showErrorMessage(`AutoIt3: failed to read ${description} "${uri.fsPath}": ${error instanceof Error ? error.message : String(error)}`);
     }
 
     /**
@@ -742,14 +917,18 @@ export class Workspace {
 
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uriString).then<string | null>((text) => text)
             .catch((error: unknown) => {
-                this.connection?.window.showErrorMessage(`AutoIt3: failed to read file "${uriString}": ${error instanceof Error ? error.message : String(error)}`);
+                this.reportReadFailure('file', uri, error);
 
                 return null;
             }) ?? Promise.resolve(null);
 
+        this.readingPromises.set(uriString, promise);
+
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         promise.then((text) => {
             this.readingFiles.delete(uriString);
+
+            this.readingPromises.delete(uriString);
 
             onSettled?.();
 
@@ -801,93 +980,141 @@ export class Workspace {
      * synchronization owns them.
      */
     protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
-        const rootUris = await this.getManagedRootUris(configuration);
+        this.setDiagnosticsDeferred(true);
 
-        const pendingUris = new Set<string>();
+        try {
+            const rootUris = await this.getManagedRootUris(configuration);
 
-        for (const rootUri of rootUris) {
-            const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
+            const pendingUris = new Set<string>();
 
-            for (const uri of uris) {
-                if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
-                    continue;
-                }
+            const associationPatterns = await this.getAu3AssociationPatterns();
 
-                pendingUris.add(uri);
-            }
-        }
+            for (const rootUri of rootUris) {
+                const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
 
-        const total = pendingUris.size;
-
-        const notifyProgress = (loaded: number): void => {
-            void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });
-        };
-
-        notifyProgress(0);
-
-        if (total === 0) {
-            return;
-        }
-
-        const progress = await this.createIndexingProgress();
-
-        let loaded = 0;
-
-        const onSettled = (): void => {
-            loaded++;
-
-            notifyProgress(loaded);
-
-            if (progress !== null) {
-                progress.report(Math.round(loaded / total * 100), `Loading ${loaded} of ${total} files`);
-
-                if (loaded === total) {
-                    progress.done();
-                }
-            }
-        };
-
-        progress?.begin('Indexing AutoIt3 scripts');
-
-        /*
-         * Bounded worker pool: keep at most `preloadConcurrency` reads active at a
-         * time, starting the next URI only when an active read settles, so a huge
-         * workspace does not flood the client with simultaneous fs/readFile requests.
-         */
-        const urisIterator = pendingUris.values();
-
-        const worker = async (): Promise<void> => {
-            for (;;) {
-                const next = urisIterator.next();
-
-                if (next.done === true) {
-                    return;
-                }
-
-                await new Promise<void>((resolve) => {
-                    const uriString = URI.parse(next.value).toString();
+                for (const uri of uris) {
+                    if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
+                        continue;
+                    }
 
                     /*
-                     * A file event may have started a read of this URI between the
-                     * filtering above and now; readFileIntoWorkspace would skip it
-                     * without invoking onSettled, so treat it as settled instead.
+                     * The client lists every file it walks, so it is up to the server
+                     * to only index AutoIt3 files (.au3 or associated with the `au3`
+                     * language), mirroring the file watcher event handling.
                      */
-                    if (this.readingFiles.has(uriString)) {
-                        resolve();
+                    if (!this.isAutoIt3FileUri(uri, associationPatterns)) {
+                        continue;
+                    }
 
+                    pendingUris.add(uri);
+                }
+            }
+
+            const total = pendingUris.size;
+
+            const notifyProgress = (loaded: number): void => {
+                void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });
+            };
+
+            notifyProgress(0);
+
+            if (total === 0) {
+                return;
+            }
+
+            const progress = await this.createIndexingProgress();
+
+            let loaded = 0;
+
+            const onSettled = (): void => {
+                loaded++;
+
+                notifyProgress(loaded);
+
+                if (progress !== null) {
+                    progress.report(Math.round(loaded / total * 100), `Loading ${loaded} of ${total} files`);
+
+                    if (loaded === total) {
+                        progress.done();
+                    }
+                }
+            };
+
+            progress?.begin('Indexing AutoIt3 scripts');
+
+            /*
+             * Bounded worker pool: keep at most `preloadConcurrency` reads active at a
+             * time, starting the next URI only when an active read settles, so a huge
+             * workspace does not flood the client with simultaneous fs/readFile requests.
+             */
+            const urisIterator = pendingUris.values();
+
+            const worker = async (): Promise<void> => {
+                for (;;) {
+                    const next = urisIterator.next();
+
+                    if (next.done === true) {
                         return;
                     }
 
-                    this.readFileIntoWorkspace(URI.parse(uriString), () => {
-                        onSettled();
+                    await new Promise<void>((resolve) => {
+                        const uriString = URI.parse(next.value).toString();
 
-                        resolve();
+                        /*
+                         * The file may have been loaded in the meantime, e.g. by an
+                         * include resolution racing the preload, so it does not need
+                         * to be read and parsed again.
+                         */
+                        if (this.exists(uriString)) {
+                            onSettled();
+
+                            resolve();
+
+                            return;
+                        }
+
+                        /*
+                         * A file event may have started a read of this URI between the
+                         * filtering above and now; that read settles on its own, so
+                         * only the progress counter is advanced here.
+                         */
+                        if (this.readingFiles.has(uriString)) {
+                            onSettled();
+
+                            resolve();
+
+                            return;
+                        }
+
+                        this.readFileIntoWorkspace(URI.parse(uriString), () => {
+                            onSettled();
+
+                            resolve();
+                        });
                     });
-                });
-            }
-        };
+                }
+            };
 
-        await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
+            await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
+        } finally {
+            this.setDiagnosticsDeferred(false);
+        }
+    }
+
+    /**
+     * Defers or flushes diagnostic emissions. Flushing emits the coalesced
+     * deferred diagnostics once.
+     */
+    protected setDiagnosticsDeferred(deferred: boolean): void {
+        this.diagnosticsDeferred = deferred;
+
+        const deferredPayloads = this.deferredDiagnosticPayloads;
+
+        this.deferredDiagnosticPayloads = new Map();
+
+        for (const [uri, diagnostics] of deferredPayloads) {
+            this.eventEmitter.emit('diagnostics', { uri: uri, diagnostics: diagnostics });
+        }
     }
 
     /**

@@ -2,7 +2,7 @@ import { expect, test, vi } from 'vitest';
 import Script, { type Include } from './Script';
 import { AutoIt3Configuration, IndexingProgressNotification, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
-import { Connection, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
+import { Connection, Diagnostic, FileChangeType, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
 import DependencyGraph from './DependencyGraph';
 import type { SymbolKey } from './Scope';
 
@@ -247,6 +247,8 @@ test('superseded analysis cannot retain a stale could-not-resolve include error'
     script.workspace = {
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
         eventEmitter: { emit: () => {} },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        emitDiagnostics: () => {},
         resolveInclude: () => new Promise<null>((resolve) => {
             resolvers.push(resolve);
         }),
@@ -377,6 +379,60 @@ test('handleFileDeleted preserves active scripts', () => {
 
     expect(workspace.get(scriptUri.toString())).toBe(script);
     expect(diagnosticsSpy).not.toHaveBeenCalled();
+});
+
+test('handleFileDeleted removes deferred diagnostics for the deleted file', () => {
+    const diagnosticsSpy = vi.fn();
+
+    const connection: Partial<Connection> = {
+        sendRequest: vi.fn() as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const scriptUri = URI.file('/ws/doomed.au3');
+
+    workspace.add(new Script('Global $x = 1', scriptUri));
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
+
+    type DeferredDiagnosticsInternals = {
+        deferredDiagnosticPayloads: Map<string, Diagnostic[]>,
+        diagnosticsDeferred: boolean,
+        setDiagnosticsDeferred(deferred: boolean): void,
+    };
+
+    const internals = workspace as unknown as DeferredDiagnosticsInternals;
+
+    const staleDiagnostic: Diagnostic = {
+        message: 'stale',
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+    };
+
+    // Deferred state: a preload diagnostic for the file is buffered
+    internals.diagnosticsDeferred = true;
+
+    workspace.emitDiagnostics({ uri: scriptUri.toString(), diagnostics: [staleDiagnostic] });
+
+    expect(internals.deferredDiagnosticPayloads.has(scriptUri.toString())).toBe(true);
+
+    // Deleting the file emits the empty payload and drops the buffered stale diagnostics
+    workspace.handleFileDeleted(scriptUri.toString());
+
+    expect(diagnosticsSpy).toHaveBeenCalledWith({ uri: scriptUri.toString(), diagnostics: [] });
+    expect(internals.deferredDiagnosticPayloads.has(scriptUri.toString())).toBe(false);
+
+    // Flushing after the preload must not resurrect the stale diagnostics
+    internals.setDiagnosticsDeferred(false);
+
+    expect(diagnosticsSpy).toHaveBeenCalledTimes(1);
 });
 
 test('DependencyGraph.removeScript removes stale reverse dependency edges', () => {
@@ -753,4 +809,420 @@ test('getManagedRootUris collects workspace folders, installDir Include and libr
         URI.file('C:/AutoIt3/Include'),
         URI.file('D:/libs'),
     ]);
+});
+
+type ProcessFileEventsInternals = {
+    pendingFileEvents: Map<string, FileChangeType>,
+    processFileEvents(): Promise<void>,
+};
+
+const createFileEventWorkspace = (
+    sendRequest: Connection['sendRequest'],
+    associations: Record<string, string> | null = null,
+): { workspace: Workspace, internals: ProcessFileEventsInternals } => {
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+            getConfiguration: (section: string) => (section === 'files' ? Promise.resolve({ associations: associations ?? {} }) : Promise.resolve(createConfiguration())),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const internals = workspace as unknown as ProcessFileEventsInternals;
+
+    return { workspace, internals };
+};
+
+test('processFileEvents ignores changes to non-AutoIt files', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    internals.pendingFileEvents.set('file:///ws/package.json', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).not.toHaveBeenCalled();
+});
+
+test('processFileEvents reads changed .au3 files', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/script.au3');
+});
+
+test('processFileEvents reads changed files already tracked by the dependency manager', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { workspace, internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    // A file with a custom extension, loaded e.g. via include resolution, is tracked
+    workspace.add(new Script('Global $custom = 1', URI.file('/ws/data.myext')));
+
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/data.myext');
+});
+
+test('processFileEvents reads created files associated with the au3 language', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest'], { '*.myext': 'au3', '*.json': 'json' });
+
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Created);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/data.myext');
+});
+
+test('processFileEvents ignores created files not associated with the au3 language', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const { internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest'], { '*.json': 'json' });
+
+    internals.pendingFileEvents.set('file:///ws/data.json', FileChangeType.Created);
+
+    await internals.processFileEvents();
+
+    expect(sendRequest).not.toHaveBeenCalled();
+});
+
+test('processFileEvents ignores deletion of untracked files', async () => {
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>(null));
+
+    const { workspace, internals } = createFileEventWorkspace(sendRequest as unknown as Connection['sendRequest']);
+
+    const diagnosticsSpy = vi.fn();
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
+
+    internals.pendingFileEvents.set('file:///ws/gone.au3', FileChangeType.Deleted);
+
+    await internals.processFileEvents();
+
+    expect(diagnosticsSpy).not.toHaveBeenCalled();
+});
+
+test('repeated read failures for the same file are reported only once within the window', async () => {
+    vi.useFakeTimers();
+
+    try {
+        const showErrorMessage = vi.fn();
+
+        const sendRequest = vi.fn(() => Promise.reject(new Error('read failed')));
+
+        const connection: Partial<Connection> = {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            workspace: {
+                getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
+            sendRequest: sendRequest as unknown as Connection['sendRequest'],
+            window: { showErrorMessage } as unknown as Connection['window'],
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onInitialized: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeConfiguration: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        };
+
+        const workspace = new Workspace(connection as Connection);
+
+        const internals = workspace as unknown as ProcessFileEventsInternals;
+
+        internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+        await internals.processFileEvents();
+
+        // Allow the rejected read to settle
+        await vi.advanceTimersByTimeAsync(0);
+
+        internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+        await internals.processFileEvents();
+
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(showErrorMessage).toHaveBeenCalledTimes(1);
+
+        expect(String(showErrorMessage.mock.calls[0]?.[0])).toContain('failed to read file');
+
+        // After the suppression window has passed, the failure is reported again
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        internals.pendingFileEvents.set('file:///ws/script.au3', FileChangeType.Changed);
+
+        await internals.processFileEvents();
+
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(showErrorMessage).toHaveBeenCalledTimes(2);
+    } finally {
+        vi.useRealTimers();
+    }
+});
+
+test('preloadWorkspace indexes only .au3 and au3-associated files', async () => {
+    const sendNotification = vi.fn();
+
+    const sendRequest = vi.fn((type: string): Promise<unknown> => {
+        if (type === 'fs/listFiles') {
+            return Promise.resolve([
+                'file:///ws/script.au3',
+                'file:///ws/data.myext',
+                'file:///ws/notes.txt',
+            ]);
+        }
+
+        return Promise.resolve('Global $x = 1');
+    });
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([]),
+            getConfiguration: (section: string) => (section === 'files' ? Promise.resolve({ associations: { '*.myext': 'au3' } }) : Promise.resolve(createConfiguration())),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        sendNotification: sendNotification as unknown as Connection['sendNotification'],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        window: {
+            createWorkDoneProgress: (): Promise<{ begin(): void, report(percentage: number, message?: string): void, done(): void }> => {
+                const progress = { begin: vi.fn(), report: vi.fn(), done: vi.fn() };
+
+                return Promise.resolve(progress);
+            },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    type PreloadInternals = { preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> };
+
+    const internals = workspace as unknown as PreloadInternals;
+
+    await internals.preloadWorkspace(createConfiguration());
+
+    // Allow any pending promise chain to settle
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(workspace.get('file:///ws/script.au3')).toBeDefined();
+    expect(workspace.get('file:///ws/data.myext')).toBeDefined();
+    expect(workspace.get('file:///ws/notes.txt')).toBeUndefined();
+
+    // Only the two AutoIt3 files were read
+    expect(sendRequest).toHaveBeenCalledTimes(3); // 1x fs/listFiles + 2x fs/readFile
+
+    expect(sendNotification).toHaveBeenNthCalledWith(1, IndexingProgressNotification, { loaded: 0, total: 2 });
+    expect(sendNotification).toHaveBeenLastCalledWith(IndexingProgressNotification, { loaded: 2, total: 2 });
+    expect(sendNotification).toHaveBeenCalledTimes(3);
+});
+
+test('reportReadFailure prunes expired entries and caps the cache size by evicting the oldest entries', () => {
+    vi.useFakeTimers();
+
+    try {
+        const showErrorMessage = vi.fn();
+
+        const connection: Partial<Connection> = {
+            sendRequest: vi.fn() as unknown as Connection['sendRequest'],
+            window: { showErrorMessage } as unknown as Connection['window'],
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onInitialized: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeConfiguration: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        };
+
+        const workspace = new Workspace(connection as Connection);
+
+        type ReportReadFailureInternals = {
+            failedReadErrors: Map<string, number>,
+            reportReadFailure(description: string, uri: URI, error: unknown): void,
+        };
+
+        const internals = workspace as unknown as ReportReadFailureInternals;
+
+        const now = Date.now();
+
+        // Seed the cache with expired and fresh entries beyond the cache limit
+        for (let i = 0; i < 120; i++) {
+            internals.failedReadErrors.set(`file:///ws/stale${i}.au3`, now - 31_000);
+        }
+
+        for (let i = 0; i < 120; i++) {
+            internals.failedReadErrors.set(`file:///ws/fresh${i}.au3`, now);
+        }
+
+        internals.reportReadFailure('file', URI.file('/ws/current.au3'), new Error('read failed'));
+
+        // Expired entries were pruned and the cache was capped at the limit
+        expect(internals.failedReadErrors.size).toBe(100);
+        expect(internals.failedReadErrors.has('file:///ws/current.au3')).toBe(true);
+        expect(internals.failedReadErrors.has('file:///ws/stale0.au3')).toBe(false);
+
+        // The oldest fresh entries were evicted in insertion order, the newest survived
+        expect(internals.failedReadErrors.has('file:///ws/fresh0.au3')).toBe(false);
+        expect(internals.failedReadErrors.has('file:///ws/fresh20.au3')).toBe(false);
+        expect(internals.failedReadErrors.has('file:///ws/fresh21.au3')).toBe(true);
+        expect(internals.failedReadErrors.has('file:///ws/fresh119.au3')).toBe(true);
+
+        // The new failure was reported
+        expect(showErrorMessage).toHaveBeenCalledTimes(1);
+    } finally {
+        vi.useRealTimers();
+    }
+});
+
+test('processFileEvents warns once about rejected association patterns', async () => {
+    const showWarningMessage = vi.fn();
+
+    const sendRequest = vi.fn(() => Promise.resolve<string | null>('Global $x = 1'));
+
+    const connection: Partial<Connection> = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        workspace: {
+            getWorkspaceFolders: (): Promise<{ uri: string }[]> => Promise.resolve([{ uri: 'file:///ws' }]),
+            getConfiguration: (section: string) => (section === 'files' ? Promise.resolve({ associations: { 'one[z-a].myext': 'au3', '*.myext': 'au3' } }) : Promise.resolve(createConfiguration())),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        window: { showErrorMessage: vi.fn(), showWarningMessage } as unknown as Connection['window'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const internals = workspace as unknown as ProcessFileEventsInternals;
+
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Created);
+
+    await internals.processFileEvents();
+
+    expect(showWarningMessage).toHaveBeenCalledTimes(1);
+
+    expect(String(showWarningMessage.mock.calls[0]?.[0])).toContain('one[z-a].myext');
+
+    // Files matching the valid pattern are still read
+    expect(sendRequest).toHaveBeenCalledWith('fs/readFile', 'file:///ws/data.myext');
+
+    // A second batch does not warn again
+    internals.pendingFileEvents.set('file:///ws/data.myext', FileChangeType.Changed);
+
+    await internals.processFileEvents();
+
+    expect(showWarningMessage).toHaveBeenCalledTimes(1);
+});
+
+test('openTextDocument reuses an in-flight preload read instead of parsing twice', async () => {
+    let resolveRead: (text: string | null) => void = () => undefined;
+
+    const sendRequest = vi.fn(() => new Promise<string | null>((resolve) => {
+        resolveRead = resolve;
+    }));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const uri = URI.file('/ws/raced.au3');
+
+    const createOrUpdateSpy = vi.spyOn(workspace, 'createOrUpdate');
+
+    // Start a preload-style read of the file
+    workspace.handleFileChangedOrCreated(uri.toString());
+
+    // An include resolution racing the same file piggybacks on the pending read
+    const includePromise = workspace.openTextDocument(uri);
+
+    resolveRead('Global $x = 1');
+
+    const value = await includePromise;
+
+    expect(value).toEqual({ uri: uri, text: 'Global $x = 1' });
+
+    // Only one read request was made
+    expect(sendRequest).toHaveBeenCalledTimes(1);
+
+    // The pending read owns the parse, so the file is parsed exactly once
+    expect(createOrUpdateSpy).toHaveBeenCalledTimes(1);
+
+    expect(workspace.get(uri.toString())).toBeDefined();
+});
+
+test('openTextDocument returns null when the pending read produces no text', async () => {
+    let resolveRead: (text: string | null) => void = () => undefined;
+
+    const sendRequest = vi.fn(() => new Promise<string | null>((resolve) => {
+        resolveRead = resolve;
+    }));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const uri = URI.file('/ws/unreadable.au3');
+
+    // Start a preload-style read of the file
+    workspace.handleFileChangedOrCreated(uri.toString());
+
+    const includePromise = workspace.openTextDocument(uri);
+
+    resolveRead(null);
+
+    const value = await includePromise;
+
+    // An unreadable pending read is reported as unresolved, like a failed include read
+    expect(value).toBeNull();
 });
