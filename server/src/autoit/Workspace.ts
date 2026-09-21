@@ -288,6 +288,9 @@ export class Workspace {
         this.dependencyGraph.removeScript(uri);
         this.scripts.delete(uri);
 
+        // The deletion clears the file's diagnostics immediately; any buffered diagnostics from the deferral would otherwise be re-published when the preload finishes
+        this.deferredDiagnosticPayloads.delete(uri);
+
         this.eventEmitter.emit('diagnostics', { uri: uri, diagnostics: [] });
 
         for (const dependentUri of dependents) {

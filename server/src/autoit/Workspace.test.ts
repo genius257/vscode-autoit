@@ -2,7 +2,7 @@ import { expect, test, vi } from 'vitest';
 import Script, { type Include } from './Script';
 import { AutoIt3Configuration, IndexingProgressNotification, Workspace } from './Workspace';
 import { URI /* , Utils*/ } from 'vscode-uri';
-import { Connection, FileChangeType, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
+import { Connection, Diagnostic, FileChangeType, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
 import DependencyGraph from './DependencyGraph';
 import type { SymbolKey } from './Scope';
 
@@ -379,6 +379,60 @@ test('handleFileDeleted preserves active scripts', () => {
 
     expect(workspace.get(scriptUri.toString())).toBe(script);
     expect(diagnosticsSpy).not.toHaveBeenCalled();
+});
+
+test('handleFileDeleted removes deferred diagnostics for the deleted file', () => {
+    const diagnosticsSpy = vi.fn();
+
+    const connection: Partial<Connection> = {
+        sendRequest: vi.fn() as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const scriptUri = URI.file('/ws/doomed.au3');
+
+    workspace.add(new Script('Global $x = 1', scriptUri));
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
+
+    type DeferredDiagnosticsInternals = {
+        deferredDiagnosticPayloads: Map<string, Diagnostic[]>,
+        diagnosticsDeferred: boolean,
+        setDiagnosticsDeferred(deferred: boolean): void,
+    };
+
+    const internals = workspace as unknown as DeferredDiagnosticsInternals;
+
+    const staleDiagnostic: Diagnostic = {
+        message: 'stale',
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+    };
+
+    // Deferred state: a preload diagnostic for the file is buffered
+    internals.diagnosticsDeferred = true;
+
+    workspace.emitDiagnostics({ uri: scriptUri.toString(), diagnostics: [staleDiagnostic] });
+
+    expect(internals.deferredDiagnosticPayloads.has(scriptUri.toString())).toBe(true);
+
+    // Deleting the file emits the empty payload and drops the buffered stale diagnostics
+    workspace.handleFileDeleted(scriptUri.toString());
+
+    expect(diagnosticsSpy).toHaveBeenCalledWith({ uri: scriptUri.toString(), diagnostics: [] });
+    expect(internals.deferredDiagnosticPayloads.has(scriptUri.toString())).toBe(false);
+
+    // Flushing after the preload must not resurrect the stale diagnostics
+    internals.setDiagnosticsDeferred(false);
+
+    expect(diagnosticsSpy).toHaveBeenCalledTimes(1);
 });
 
 test('DependencyGraph.removeScript removes stale reverse dependency edges', () => {
