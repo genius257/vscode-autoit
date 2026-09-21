@@ -976,123 +976,123 @@ export class Workspace {
     protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
         this.setDiagnosticsDeferred(true);
 
-        const rootUris = await this.getManagedRootUris(configuration);
+        try {
+            const rootUris = await this.getManagedRootUris(configuration);
 
-        const pendingUris = new Set<string>();
+            const pendingUris = new Set<string>();
 
-        const associationPatterns = await this.getAu3AssociationPatterns();
+            const associationPatterns = await this.getAu3AssociationPatterns();
 
-        for (const rootUri of rootUris) {
-            const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
+            for (const rootUri of rootUris) {
+                const uris = await this.connection?.sendRequest<string[]>('fs/listFiles', rootUri.toString()).catch(() => []) ?? [];
 
-            for (const uri of uris) {
-                if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
-                    continue;
-                }
-
-                /*
-                 * The client lists every file it walks, so it is up to the server
-                 * to only index AutoIt3 files (.au3 or associated with the `au3`
-                 * language), mirroring the file watcher event handling.
-                 */
-                if (!this.isAutoIt3FileUri(uri, associationPatterns)) {
-                    continue;
-                }
-
-                pendingUris.add(uri);
-            }
-        }
-
-        const total = pendingUris.size;
-
-        const notifyProgress = (loaded: number): void => {
-            void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });
-        };
-
-        notifyProgress(0);
-
-        if (total === 0) {
-            this.setDiagnosticsDeferred(false);
-
-            return;
-        }
-
-        const progress = await this.createIndexingProgress();
-
-        let loaded = 0;
-
-        const onSettled = (): void => {
-            loaded++;
-
-            notifyProgress(loaded);
-
-            if (progress !== null) {
-                progress.report(Math.round(loaded / total * 100), `Loading ${loaded} of ${total} files`);
-
-                if (loaded === total) {
-                    progress.done();
-                }
-            }
-        };
-
-        progress?.begin('Indexing AutoIt3 scripts');
-
-        /*
-         * Bounded worker pool: keep at most `preloadConcurrency` reads active at a
-         * time, starting the next URI only when an active read settles, so a huge
-         * workspace does not flood the client with simultaneous fs/readFile requests.
-         */
-        const urisIterator = pendingUris.values();
-
-        const worker = async (): Promise<void> => {
-            for (;;) {
-                const next = urisIterator.next();
-
-                if (next.done === true) {
-                    return;
-                }
-
-                await new Promise<void>((resolve) => {
-                    const uriString = URI.parse(next.value).toString();
-
-                    /*
-                     * The file may have been loaded in the meantime, e.g. by an
-                     * include resolution racing the preload, so it does not need
-                     * to be read and parsed again.
-                     */
-                    if (this.exists(uriString)) {
-                        onSettled();
-
-                        resolve();
-
-                        return;
+                for (const uri of uris) {
+                    if (this.activeScripts.has(uri) || this.exists(uri) || this.readingFiles.has(uri)) {
+                        continue;
                     }
 
                     /*
-                     * A file event may have started a read of this URI between the
-                     * filtering above and now; that read settles on its own, so
-                     * only the progress counter is advanced here.
+                     * The client lists every file it walks, so it is up to the server
+                     * to only index AutoIt3 files (.au3 or associated with the `au3`
+                     * language), mirroring the file watcher event handling.
                      */
-                    if (this.readingFiles.has(uriString)) {
-                        onSettled();
+                    if (!this.isAutoIt3FileUri(uri, associationPatterns)) {
+                        continue;
+                    }
 
-                        resolve();
+                    pendingUris.add(uri);
+                }
+            }
 
+            const total = pendingUris.size;
+
+            const notifyProgress = (loaded: number): void => {
+                void this.connection?.sendNotification(IndexingProgressNotification, { loaded, total });
+            };
+
+            notifyProgress(0);
+
+            if (total === 0) {
+                return;
+            }
+
+            const progress = await this.createIndexingProgress();
+
+            let loaded = 0;
+
+            const onSettled = (): void => {
+                loaded++;
+
+                notifyProgress(loaded);
+
+                if (progress !== null) {
+                    progress.report(Math.round(loaded / total * 100), `Loading ${loaded} of ${total} files`);
+
+                    if (loaded === total) {
+                        progress.done();
+                    }
+                }
+            };
+
+            progress?.begin('Indexing AutoIt3 scripts');
+
+            /*
+             * Bounded worker pool: keep at most `preloadConcurrency` reads active at a
+             * time, starting the next URI only when an active read settles, so a huge
+             * workspace does not flood the client with simultaneous fs/readFile requests.
+             */
+            const urisIterator = pendingUris.values();
+
+            const worker = async (): Promise<void> => {
+                for (;;) {
+                    const next = urisIterator.next();
+
+                    if (next.done === true) {
                         return;
                     }
 
-                    this.readFileIntoWorkspace(URI.parse(uriString), () => {
-                        onSettled();
+                    await new Promise<void>((resolve) => {
+                        const uriString = URI.parse(next.value).toString();
 
-                        resolve();
+                        /*
+                         * The file may have been loaded in the meantime, e.g. by an
+                         * include resolution racing the preload, so it does not need
+                         * to be read and parsed again.
+                         */
+                        if (this.exists(uriString)) {
+                            onSettled();
+
+                            resolve();
+
+                            return;
+                        }
+
+                        /*
+                         * A file event may have started a read of this URI between the
+                         * filtering above and now; that read settles on its own, so
+                         * only the progress counter is advanced here.
+                         */
+                        if (this.readingFiles.has(uriString)) {
+                            onSettled();
+
+                            resolve();
+
+                            return;
+                        }
+
+                        this.readFileIntoWorkspace(URI.parse(uriString), () => {
+                            onSettled();
+
+                            resolve();
+                        });
                     });
-                });
-            }
-        };
+                }
+            };
 
-        await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
-
-        this.setDiagnosticsDeferred(false);
+            await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
+        } finally {
+            this.setDiagnosticsDeferred(false);
+        }
     }
 
     /**
