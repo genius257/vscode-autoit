@@ -247,6 +247,8 @@ test('superseded analysis cannot retain a stale could-not-resolve include error'
     script.workspace = {
         // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
         eventEmitter: { emit: () => {} },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        emitDiagnostics: () => {},
         resolveInclude: () => new Promise<null>((resolve) => {
             resolvers.push(resolve);
         }),
@@ -1091,4 +1093,48 @@ test('processFileEvents warns once about rejected association patterns', async (
     await internals.processFileEvents();
 
     expect(showWarningMessage).toHaveBeenCalledTimes(1);
+});
+
+test('openTextDocument reuses an in-flight preload read instead of parsing twice', async () => {
+    let resolveRead: (text: string | null) => void = () => undefined;
+
+    const sendRequest = vi.fn(() => new Promise<string | null>((resolve) => {
+        resolveRead = resolve;
+    }));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const uri = URI.file('/ws/raced.au3');
+
+    const createOrUpdateSpy = vi.spyOn(workspace, 'createOrUpdate');
+
+    // Start a preload-style read of the file
+    workspace.handleFileChangedOrCreated(uri.toString());
+
+    // An include resolution racing the same file piggybacks on the pending read
+    const includePromise = workspace.openTextDocument(uri);
+
+    resolveRead('Global $x = 1');
+
+    const value = await includePromise;
+
+    expect(value).toEqual({ uri: uri, text: 'Global $x = 1' });
+
+    // Only one read request was made
+    expect(sendRequest).toHaveBeenCalledTimes(1);
+
+    // The pending read owns the parse, so the file is parsed exactly once
+    expect(createOrUpdateSpy).toHaveBeenCalledTimes(1);
+
+    expect(workspace.get(uri.toString())).toBeDefined();
 });

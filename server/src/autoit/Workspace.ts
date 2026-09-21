@@ -77,9 +77,12 @@ export class Workspace {
     protected pendingFileEvents = new Map<string, FileChangeType>();
     protected fileEventTimer: ReturnType<typeof setTimeout> | null = null;
     protected readingFiles = new Set<string>();
+    protected readingPromises = new Map<string, Promise<string | null>>();
     protected fileEventRevisions = new Map<string, number>();
     protected failedReadErrors = new Map<string, number>();
     protected warnedInvalidAssociationPatterns = new Set<string>();
+    protected diagnosticsDeferred = false;
+    protected deferredDiagnosticPayloads = new Map<string, Diagnostic[]>();
 
     public constructor(connection: Connection | null = null) {
         this.connection = connection;
@@ -333,7 +336,11 @@ export class Workspace {
     public resolveInclude(
         include: AutoIt3.IncludeStatement,
     ): Promise<IncludeResolve | null> {
-        const promise = this.connection?.workspace.getConfiguration('autoit3').then((configuration: AutoIt3Configuration) => {
+        const configurationPromise = this.configuration !== null
+            ? Promise.resolve(this.configuration)
+            : this.connection?.workspace.getConfiguration('autoit3');
+
+        const promise = configurationPromise?.then((configuration: AutoIt3Configuration) => {
             let promise: IncludePromise = Promise.resolve(null);
 
             const fileUri = include.file.replace(/\\/g, '/');
@@ -366,6 +373,22 @@ export class Workspace {
          */
 
         return promise;
+    }
+
+    /**
+     * Emits diagnostics, or defers them while the startup preload is running,
+     * so the preload does not flood the client with per-file diagnostic
+     * updates. Deferred diagnostics are coalesced per URI and flushed once
+     * the preload finishes.
+     */
+    public emitDiagnostics(payload: { uri: string, diagnostics: Diagnostic[] }): void {
+        if (this.diagnosticsDeferred) {
+            this.deferredDiagnosticPayloads.set(payload.uri, payload.diagnostics);
+
+            return;
+        }
+
+        this.eventEmitter.emit('diagnostics', payload);
     }
 
     public getConfiguration(): AutoIt3Configuration | null {
@@ -579,6 +602,18 @@ export class Workspace {
 
         if (resolvingInclude !== undefined) {
             return resolvingInclude;
+        }
+
+        const pendingRead = this.readingPromises.get(uri.toString());
+
+        if (pendingRead !== undefined) {
+            /*
+             * A read of this URI is already in flight, e.g. started by the
+             * preload. The pending read owns the createOrUpdate call, so the
+             * include resolution reuses it instead of reading and parsing the
+             * file a second time.
+             */
+            return pendingRead.then((text) => ({ uri: uri, text: text }));
         }
 
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve }))
@@ -881,9 +916,13 @@ export class Workspace {
                 return null;
             }) ?? Promise.resolve(null);
 
+        this.readingPromises.set(uriString, promise);
+
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         promise.then((text) => {
             this.readingFiles.delete(uriString);
+
+            this.readingPromises.delete(uriString);
 
             onSettled?.();
 
@@ -935,6 +974,8 @@ export class Workspace {
      * synchronization owns them.
      */
     protected async preloadWorkspace(configuration: AutoIt3Configuration): Promise<void> {
+        this.setDiagnosticsDeferred(true);
+
         const rootUris = await this.getManagedRootUris(configuration);
 
         const pendingUris = new Set<string>();
@@ -971,6 +1012,8 @@ export class Workspace {
         notifyProgress(0);
 
         if (total === 0) {
+            this.setDiagnosticsDeferred(false);
+
             return;
         }
 
@@ -1013,11 +1056,26 @@ export class Workspace {
                     const uriString = URI.parse(next.value).toString();
 
                     /*
+                     * The file may have been loaded in the meantime, e.g. by an
+                     * include resolution racing the preload, so it does not need
+                     * to be read and parsed again.
+                     */
+                    if (this.exists(uriString)) {
+                        onSettled();
+
+                        resolve();
+
+                        return;
+                    }
+
+                    /*
                      * A file event may have started a read of this URI between the
-                     * filtering above and now; readFileIntoWorkspace would skip it
-                     * without invoking onSettled, so treat it as settled instead.
+                     * filtering above and now; that read settles on its own, so
+                     * only the progress counter is advanced here.
                      */
                     if (this.readingFiles.has(uriString)) {
+                        onSettled();
+
                         resolve();
 
                         return;
@@ -1033,6 +1091,24 @@ export class Workspace {
         };
 
         await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
+
+        this.setDiagnosticsDeferred(false);
+    }
+
+    /**
+     * Defers or flushes diagnostic emissions. Flushing emits the coalesced
+     * deferred diagnostics once.
+     */
+    protected setDiagnosticsDeferred(deferred: boolean): void {
+        this.diagnosticsDeferred = deferred;
+
+        const deferredPayloads = this.deferredDiagnosticPayloads;
+
+        this.deferredDiagnosticPayloads = new Map();
+
+        for (const [uri, diagnostics] of deferredPayloads) {
+            this.eventEmitter.emit('diagnostics', { uri: uri, diagnostics: diagnostics });
+        }
     }
 
     /**
