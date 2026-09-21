@@ -611,9 +611,12 @@ export class Workspace {
              * A read of this URI is already in flight, e.g. started by the
              * preload. The pending read owns the createOrUpdate call, so the
              * include resolution reuses it instead of reading and parsing the
-             * file a second time.
+             * file a second time. An unreadable pending read resolves to null,
+             * matching a failed include read, so the location chains fall
+             * through to the next location and the include is not recorded as
+             * resolved.
              */
-            return pendingRead.then((text) => ({ uri: uri, text: text }));
+            return pendingRead.then((text) => (text === null ? null : { uri: uri, text: text }));
         }
 
         const promise = this.connection?.sendRequest<string | null>('fs/readFile', uri.toString()).then<IncludeResolve | null>((resolve) => (resolve === null ? resolve : { uri: uri, text: resolve }))

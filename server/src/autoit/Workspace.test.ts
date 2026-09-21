@@ -1138,3 +1138,37 @@ test('openTextDocument reuses an in-flight preload read instead of parsing twice
 
     expect(workspace.get(uri.toString())).toBeDefined();
 });
+
+test('openTextDocument returns null when the pending read produces no text', async () => {
+    let resolveRead: (text: string | null) => void = () => undefined;
+
+    const sendRequest = vi.fn(() => new Promise<string | null>((resolve) => {
+        resolveRead = resolve;
+    }));
+
+    const connection: Partial<Connection> = {
+        sendRequest: sendRequest as unknown as Connection['sendRequest'],
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onInitialized: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeConfiguration: () => ({ dispose: () => {} }),
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+        onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+    };
+
+    const workspace = new Workspace(connection as Connection);
+
+    const uri = URI.file('/ws/unreadable.au3');
+
+    // Start a preload-style read of the file
+    workspace.handleFileChangedOrCreated(uri.toString());
+
+    const includePromise = workspace.openTextDocument(uri);
+
+    resolveRead(null);
+
+    const value = await includePromise;
+
+    // An unreadable pending read is reported as unresolved, like a failed include read
+    expect(value).toBeNull();
+});
