@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function signatures with many parameters (e.g. the native `BitAND`, `Call` and `DllCall` emulations) are now truncated in hover text, completion suggestion details and signature help, showing the first and last parameters with an ellipsis placeholder for the middle ones
 - Read failure error messages now show the file system path instead of the percent-encoded URI
 - Repeated read failures for the same file are now reported only once within a 30 second window
+- Startup indexing no longer reads and parses files that have already been loaded by include resolution, and include resolution now reuses the cached configuration
+- Diagnostic updates produced while startup indexing is running are now emitted once indexing completes, instead of one update per loaded file
 
 ### Fixed
 
