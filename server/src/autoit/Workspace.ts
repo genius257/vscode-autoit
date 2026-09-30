@@ -1,15 +1,15 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, ProtocolNotificationType, type RelativePattern, Range, type WorkDoneProgressServerReporter } from 'vscode-languageserver';
+import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, ProtocolNotificationType, type RelativePattern, Range, type TextEdit, type WorkDoneProgressServerReporter } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
-import { isAbsolutePath } from './Path';
+import { isAbsolutePath, relativePath } from './Path';
 import EventEmitter from '@utils/EventEmitter';
 import Symbol, { type Node as SymbolNode } from './Symbol';
 import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
 import { Position } from 'vscode-languageserver';
-import { isPositionWithinLocationRange, locationToPosition } from './PositionHelper';
+import { isPositionWithinLocationRange, isLocationBeforeOrEqual, locationToPosition } from './PositionHelper';
 import Deprecation from './docBlock/Deprecation';
 import { getAu3AssociationPatterns, isAssociationPatternSupported, matchAssociationPattern } from './FileAssociations';
 
@@ -17,6 +17,16 @@ import { getAu3AssociationPatterns, isAssociationPatternSupported, matchAssociat
 export type ScriptList = Map<string, Script>;
 
 type uri = string | URI | { toString: () => string };
+
+/**
+ * A symbol declared in the global scope of a file-backed script in the workspace.
+ */
+export type WorkspaceSymbolEntry = {
+    /** Lowercase symbol key, matching `Symbol.name` and scope symbol keys */
+    key: string,
+    symbol: Symbol,
+    uri: URI,
+};
 
 /**
  * Normalizes a file path or URI into a glob-compatible string:
@@ -45,6 +55,13 @@ export type AutoIt3Configuration = {
 
     /** When enabled, go to definition shows all matching declarations across scopes and included files. When disabled, only the closest matching declaration is shown. */
     showAllDeclarations: boolean,
+
+    /**
+     * When enabled, completion suggestions include functions and global variables
+     * from all workspace files, even when not included. Accepting such a suggestion
+     * inserts the required #include after the last top-level include.
+     */
+    workspaceCompletions?: boolean,
 };
 
 type FilesConfiguration = {
@@ -79,6 +96,7 @@ export class Workspace {
     protected readingFiles = new Set<string>();
     protected readingPromises = new Map<string, Promise<string | null>>();
     protected fileEventRevisions = new Map<string, number>();
+    protected workspaceSymbolIndex: WorkspaceSymbolEntry[] | null = null;
     protected failedReadErrors = new Map<string, number>();
     protected warnedInvalidAssociationPatterns = new Set<string>();
     protected diagnosticsDeferred = false;
@@ -169,6 +187,7 @@ export class Workspace {
 
         script.workspace = this;
         this.scripts.set(uri.toString(), script);
+        this.workspaceSymbolIndex = null;
     }
 
     public get(uri: uri): Script | undefined {
@@ -209,6 +228,8 @@ export class Workspace {
          * This ensures old edges are cleaned up via setDependencies
          */
         this.updateDependencies(script);
+
+        this.workspaceSymbolIndex = null;
 
         return script;
     }
@@ -287,6 +308,7 @@ export class Workspace {
 
         this.dependencyGraph.removeScript(uri);
         this.scripts.delete(uri);
+        this.workspaceSymbolIndex = null;
 
         // The deletion clears the file's diagnostics immediately; any buffered diagnostics from the deferral would otherwise be re-published when the preload finishes
         this.deferredDiagnosticPayloads.delete(uri);
@@ -318,6 +340,7 @@ export class Workspace {
 
     public remove(uri: uri): void {
         this.scripts.delete(uri.toString());
+        this.workspaceSymbolIndex = null;
     }
 
     /**
@@ -443,6 +466,119 @@ export class Workspace {
         return scopes;
     }
 
+    /**
+     * Returns symbols declared (or assigned) in the global scope of every
+     * file-backed script in the workspace: functions and global variables.
+     * The native library and non-file URIs are excluded. When a symbol name is
+     * declared in multiple files, the script with the lexically smallest URI is
+     * kept, so the result does not depend on the order the scripts were added.
+     * The index is cached and rebuilt lazily after any script change.
+     */
+    public getWorkspaceSymbols(): WorkspaceSymbolEntry[] {
+        if (this.workspaceSymbolIndex === null) {
+            const entries: WorkspaceSymbolEntry[] = [];
+            const seenKeys = new Set<string>();
+
+            /*
+             * Iterate in a stable URI order so that a symbol name declared in
+             * multiple files always resolves to the same source file, no matter
+             * in which order the scripts happened to be added to the workspace
+             */
+            const uriStrings = Array.from(this.scripts.keys()).sort();
+
+            for (const uriString of uriStrings) {
+                const uri = URI.parse(uriString);
+
+                if (uri.scheme !== 'file') {
+                    continue;
+                }
+
+                const script = this.scripts.get(uriString);
+
+                if (script === undefined) {
+                    continue;
+                }
+
+                for (const symbolPair of script.getScope().getSymbols()) {
+                    const [, scopeSymbol] = symbolPair;
+
+                    // Skip symbols that are only referenced, not declared or assigned
+                    if (scopeSymbol.getDeclarations().size === 0 && scopeSymbol.getAssignments().size === 0) {
+                        continue;
+                    }
+
+                    if (seenKeys.has(scopeSymbol.name)) {
+                        continue;
+                    }
+
+                    seenKeys.add(scopeSymbol.name);
+                    entries.push({ key: scopeSymbol.name, symbol: scopeSymbol, uri });
+                }
+            }
+
+            entries.sort((a, b) => {
+                const uriComparison = a.uri.toString() < b.uri.toString() ? -1 : a.uri.toString() > b.uri.toString() ? 1 : 0;
+
+                if (uriComparison !== 0) {
+                    return uriComparison;
+                }
+
+                return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
+            });
+
+            this.workspaceSymbolIndex = entries;
+        }
+
+        return this.workspaceSymbolIndex;
+    }
+
+    /**
+     * Computes the `#include` insertion edit that makes a declaration from
+     * `targetUri` available in the script at `scriptUri`. The include path is
+     * resolved as a standard library / user defined library include when the
+     * target is contained in one of those roots, and as a script-relative path
+     * otherwise. The statement is inserted on the line after the last top-level
+     * include statement, or at the very top of the file when none exist.
+     */
+    public getIncludeInsertionEdit(scriptUri: string, targetUri: string): TextEdit | null {
+        const script = this.scripts.get(scriptUri);
+
+        if (script === undefined) {
+            return null;
+        }
+
+        const scriptFile = script.getUri();
+        const target = URI.parse(targetUri);
+
+        if (scriptFile === undefined || target.toString() === scriptFile.toString()) {
+            return null;
+        }
+
+        const includePath = this.resolveIncludePathForEdit(scriptFile, target);
+
+        if (includePath === null) {
+            return null;
+        }
+
+        const includes = script.getIncludes();
+
+        let insertPosition: Position = { line: 0, character: 0 };
+
+        if (includes.length > 0) {
+            const last = includes.reduce((a, b) => (isLocationBeforeOrEqual(a.statement.location.end, b.statement.location.end) ? b : a));
+
+            insertPosition = {
+                line: last.statement.location.end.line,
+                character: 0,
+            };
+        }
+
+        return {
+            range: { start: insertPosition, end: insertPosition },
+            newText: `#include ${includePath}\n`,
+        };
+    }
+
     public getSymbol(uri: string, symbolKey: SymbolKey, position?: Position) {
         const symbol: Symbol = new Symbol(symbolKey);
 
@@ -557,6 +693,85 @@ export class Workspace {
         configuration: AutoIt3Configuration | null,
     ): IncludePromise {
         return promise.then((includeResolve) => (includeResolve === null && typeof configuration?.installDir === 'string' ? this.openTextDocument(Utils.resolvePath(URI.file(configuration.installDir), 'Include', uri)) : includeResolve));
+    }
+
+    /**
+     * Resolves the include path text for a target file, relative to the managed
+     * roots, or returns null when the target cannot be included.
+     */
+    protected resolveIncludePathForEdit(scriptUri: URI, targetUri: URI): string | null {
+        if (targetUri.scheme !== 'file' || scriptUri.scheme !== 'file') {
+            return null;
+        }
+
+        const configuration = this.configuration;
+        const targetPath = targetUri.path.replace(/\/+$/, '');
+
+        const containedIn = (rootPath: string): string | null => {
+            const rootFilePath = URI.file(rootPath.replace(/\\/g, '/').replace(/\/+$/, '')).path.replace(/\/+$/, '');
+
+            /*
+             * Containment is compared case-sensitively on every platform: the
+             * extension runs on the user's file system, which may be
+             * case-sensitive even on Windows, while AutoIt itself only ever runs
+             * on Windows. This also keeps the comparison consistent with the
+             * case-sensitive include resolution used elsewhere in the extension.
+             * A false negative only falls back to the relative include form,
+             * which is still correct.
+             */
+            if (targetPath === rootFilePath || targetPath.startsWith(`${rootFilePath}/`)) {
+                return targetPath.slice(rootFilePath.length).replace(/^\//, '');
+            }
+
+            return null;
+        };
+
+        /*
+         * Standard library include: <relative\path.au3>
+         *
+         * Only the root is resolved here. A target can be contained in at most
+         * one root, so the user defined libraries below compare the relative path
+         * against the standard library root to detect a collision.
+         */
+        const standardLibraryRoot = typeof configuration?.installDir === 'string'
+            ? `${normalizeGlob(configuration.installDir)}/Include`
+            : null;
+
+        // User defined library include: <relative\path.au3>
+        for (const library of configuration?.userDefinedLibraries ?? []) {
+            const relative = containedIn(normalizeGlob(library));
+
+            if (relative === null) {
+                continue;
+            }
+
+            /*
+             * The same relative path may also exist in the standard library, in
+             * which case `<...>` cannot address the intended file unambiguously
+             * and would resolve to whichever file the search order prefers. Emit
+             * the absolute path instead, which both this extension and the AutoIt
+             * compiler resolve to exactly one file. The resolution precedence
+             * itself is deliberately left untouched.
+             */
+            if (standardLibraryRoot !== null && this.exists(Utils.resolvePath(URI.file(standardLibraryRoot), relative).toString())) {
+                return `"${targetUri.fsPath.replace(/\//g, '\\')}"`;
+            }
+
+            return `<${relative.replace(/\//g, '\\')}>`;
+        }
+
+        if (standardLibraryRoot !== null) {
+            const relative = containedIn(standardLibraryRoot);
+
+            if (relative !== null) {
+                return `<${relative.replace(/\//g, '\\')}>`;
+            }
+        }
+
+        // Local include relative to the script directory: "relative\path.au3"
+        const relative = relativePath(Utils.dirname(scriptUri).path, targetUri.path);
+
+        return `"${relative.replace(/\//g, '\\')}"`;
     }
 
     protected includeUserDefined(
