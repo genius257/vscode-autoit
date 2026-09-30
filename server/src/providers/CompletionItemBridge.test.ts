@@ -180,6 +180,27 @@ test('suggests workspace global variables demoted', () => {
     expect(cache?.labelDetails?.description).toBe('other.au3');
 });
 
+test('does not suggest workspace symbols for untitled documents', () => {
+    const workspace = new Workspace();
+    const otherUri = URI.file('/ws/other.au3');
+    const untitledUri = URI.parse('untitled:Untitled-1');
+
+    workspace.createOrUpdate(otherUri, 'Func BackupData()\nEndFunc\n');
+    workspace.createOrUpdate(untitledUri, 'Func Foo()\n    Back\nEndFunc\n');
+
+    const bridge = new CompletionItemBridge(workspace);
+    const items = getItems(bridge.resolveCompletionItems(
+        untitledUri.toString(),
+        { line: 1, character: 8 },
+    ));
+
+    /*
+     * No include can be written for an unsaved document, so the symbol would
+     * never resolve after being accepted
+     */
+    expect(items.find((item) => item.label === 'BackupData')).toBeUndefined();
+});
+
 test('inserts the include after the last top-level include statement', () => {
     const workspace = new Workspace();
     const otherUri = URI.file('/ws/other.au3');

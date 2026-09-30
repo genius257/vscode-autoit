@@ -291,15 +291,24 @@ export class CompletionItemBridge {
 
             const includeEdit = this.workpspace.getIncludeInsertionEdit(textDocumentUri, targetUri.toString());
 
+            /*
+             * A workspace symbol is only useful when it can be included. Without
+             * the include edit the accepted identifier would not resolve, so the
+             * suggestion is skipped rather than offered as a dead end. This
+             * happens for documents an include can not be written for, such as
+             * untitled or virtual documents.
+             */
+            if (includeEdit === null) {
+                continue;
+            }
+
             items.push({
                 label: displayName,
                 kind: this.resolveCompletionItemKind(entry.symbol),
                 documentation: this.resolveCompletionItemDocumentation(entry.symbol),
                 labelDetails: { description: this.resolveProvenance(textDocumentUri, targetUri) },
                 sortText: `zzzz${displayName.toLowerCase()}`,
-                additionalTextEdits: includeEdit === null
-                    ? undefined
-                    : [includeEdit],
+                additionalTextEdits: [includeEdit],
             });
         }
 
