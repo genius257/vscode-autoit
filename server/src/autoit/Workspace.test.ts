@@ -492,6 +492,56 @@ test('resolveIncludePathForEdit treats library roots case-sensitively', () => {
         .toBe('"libs\\Helper.au3"');
 });
 
+test('resolveIncludePathForEdit emits an absolute path when a library include would be ambiguous', () => {
+    const workspace = new Workspace();
+
+    type ResolveInternals = { configuration: AutoIt3Configuration | null };
+
+    const internals = workspace as unknown as ResolveInternals;
+
+    type ResolveMethod = { resolveIncludePathForEdit(scriptUri: URI, targetUri: URI): string | null };
+
+    const resolve = (workspace as unknown as ResolveMethod).resolveIncludePathForEdit.bind(workspace as unknown as ResolveMethod);
+
+    const scriptUri = URI.file('/ws/main.au3');
+    const standardTwinUri = URI.file('/opt/autoit3/Include/Helper.au3');
+
+    /*
+     * Same relative path in the standard library and in a user defined library:
+     * <Helper.au3> would be ambiguous, so the absolute path is emitted
+     */
+    workspace.createOrUpdate(standardTwinUri, 'Func Helper()\nEndFunc\n');
+
+    internals.configuration = createConfiguration({
+        installDir: '/opt/autoit3',
+        userDefinedLibraries: ['/ws/libs'],
+    });
+
+    expect(resolve(scriptUri, URI.file('/ws/libs/Helper.au3')))
+        .toBe('"\\ws\\libs\\Helper.au3"');
+
+    // A different relative path in the user defined library is not a collision
+    internals.configuration = createConfiguration({
+        installDir: '/opt/autoit3',
+        userDefinedLibraries: ['/ws/libs'],
+    });
+
+    expect(resolve(scriptUri, URI.file('/opt/autoit3/Include/Other.au3')))
+        .toBe('<Other.au3>');
+
+    expect(resolve(scriptUri, URI.file('/ws/libs/Sub/Helper.au3')))
+        .toBe('<Sub\\Helper.au3>');
+
+    // Without a same named file in the standard library there is no collision
+    internals.configuration = createConfiguration({
+        installDir: '/opt/autoit3',
+        userDefinedLibraries: ['/ws/libs'],
+    });
+
+    expect(resolve(scriptUri, standardTwinUri))
+        .toBe('<Helper.au3>');
+});
+
 test('stale read completion cannot recreate a deleted script', async () => {
     let resolveRead: (value: string | null) => void = () => undefined;
 

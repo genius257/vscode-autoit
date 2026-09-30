@@ -686,18 +686,42 @@ export class Workspace {
             return null;
         };
 
-        // Standard library include: <relative\path.au3>
-        if (typeof configuration?.installDir === 'string') {
-            const relative = containedIn(`${normalizeGlob(configuration.installDir)}/Include`);
-
-            if (relative !== null) {
-                return `<${relative.replace(/\//g, '\\')}>`;
-            }
-        }
+        /*
+         * Standard library include: <relative\path.au3>
+         *
+         * Only the root is resolved here. A target can be contained in at most
+         * one root, so the user defined libraries below compare the relative path
+         * against the standard library root to detect a collision.
+         */
+        const standardLibraryRoot = typeof configuration?.installDir === 'string'
+            ? `${normalizeGlob(configuration.installDir)}/Include`
+            : null;
 
         // User defined library include: <relative\path.au3>
         for (const library of configuration?.userDefinedLibraries ?? []) {
             const relative = containedIn(normalizeGlob(library));
+
+            if (relative === null) {
+                continue;
+            }
+
+            /*
+             * The same relative path may also exist in the standard library, in
+             * which case `<...>` cannot address the intended file unambiguously
+             * and would resolve to whichever file the search order prefers. Emit
+             * the absolute path instead, which both this extension and the AutoIt
+             * compiler resolve to exactly one file. The resolution precedence
+             * itself is deliberately left untouched.
+             */
+            if (standardLibraryRoot !== null && this.exists(Utils.resolvePath(URI.file(standardLibraryRoot), relative).toString())) {
+                return `"${targetUri.fsPath.replace(/\//g, '\\')}"`;
+            }
+
+            return `<${relative.replace(/\//g, '\\')}>`;
+        }
+
+        if (standardLibraryRoot !== null) {
+            const relative = containedIn(standardLibraryRoot);
 
             if (relative !== null) {
                 return `<${relative.replace(/\//g, '\\')}>`;
