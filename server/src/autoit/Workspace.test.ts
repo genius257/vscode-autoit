@@ -442,6 +442,56 @@ test('isManagedUri matches roots with path-boundary semantics', async () => {
     await expect(internals.isManagedUri('file:///ws2/x.au3')).resolves.toBe(false);
 });
 
+test('resolveIncludePathForEdit treats library roots case-sensitively', () => {
+    const workspace = new Workspace();
+
+    type ResolveInternals = { configuration: AutoIt3Configuration | null };
+
+    const internals = workspace as unknown as ResolveInternals;
+
+    type ResolveMethod = { resolveIncludePathForEdit(scriptUri: URI, targetUri: URI): string | null };
+
+    const resolve = (workspace as unknown as ResolveMethod).resolveIncludePathForEdit.bind(workspace as unknown as ResolveMethod);
+
+    const scriptUri = URI.file('/ws/main.au3');
+
+    // Standard library root with exact casing uses the library form
+    internals.configuration = createConfiguration({
+        installDir: '/opt/mylib',
+        userDefinedLibraries: [],
+    });
+
+    expect(resolve(scriptUri, URI.file('/opt/mylib/Include/Helper.au3')))
+        .toBe('<Helper.au3>');
+
+    // Differing only in case: not contained, so the relative form is used
+    internals.configuration = createConfiguration({
+        installDir: '/opt/mylib',
+        userDefinedLibraries: [],
+    });
+
+    expect(resolve(scriptUri, URI.file('/opt/MyLib/Include/Helper.au3')))
+        .toBe('"..\\opt\\MyLib\\Include\\Helper.au3"');
+
+    // User defined library with exact casing uses the library form
+    internals.configuration = createConfiguration({
+        installDir: '/opt/autoit3',
+        userDefinedLibraries: ['/ws/libs'],
+    });
+
+    expect(resolve(scriptUri, URI.file('/ws/libs/Helper.au3')))
+        .toBe('<Helper.au3>');
+
+    // ... and with differing casing falls back to the relative form
+    internals.configuration = createConfiguration({
+        installDir: '/opt/autoit3',
+        userDefinedLibraries: ['/ws/Libs'],
+    });
+
+    expect(resolve(scriptUri, URI.file('/ws/libs/Helper.au3')))
+        .toBe('"libs\\Helper.au3"');
+});
+
 test('stale read completion cannot recreate a deleted script', async () => {
     let resolveRead: (value: string | null) => void = () => undefined;
 

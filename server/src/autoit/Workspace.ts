@@ -669,10 +669,17 @@ export class Workspace {
 
         const containedIn = (rootPath: string): string | null => {
             const rootFilePath = URI.file(rootPath.replace(/\\/g, '/').replace(/\/+$/, '')).path.replace(/\/+$/, '');
-            const lowerTarget = targetPath.toLowerCase();
-            const lowerRoot = rootFilePath.toLowerCase();
 
-            if (lowerTarget === lowerRoot || lowerTarget.startsWith(`${lowerRoot}/`)) {
+            /*
+             * Containment is compared case-sensitively on every platform: the
+             * extension runs on the user's file system, which may be
+             * case-sensitive even on Windows, while AutoIt itself only ever runs
+             * on Windows. This also keeps the comparison consistent with the
+             * case-sensitive include resolution used elsewhere in the extension.
+             * A false negative only falls back to the relative include form,
+             * which is still correct.
+             */
+            if (targetPath === rootFilePath || targetPath.startsWith(`${rootFilePath}/`)) {
                 return targetPath.slice(rootFilePath.length).replace(/^\//, '');
             }
 
