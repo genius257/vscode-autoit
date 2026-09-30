@@ -223,6 +223,42 @@ test('does not suggest workspace symbols without a typed prefix', () => {
     expect(labels).not.toContain('BackupData');
 });
 
+test('resolves duplicate workspace symbol names independent of the script order', () => {
+    const mainUri = URI.file('/ws/main.au3');
+    const firstUri = URI.file('/ws/a/backup.au3');
+    const secondUri = URI.file('/ws/z/backup.au3');
+
+    // Added in reverse lexical order on purpose
+    for (const order of [
+        [secondUri, firstUri],
+        [firstUri, secondUri],
+    ]) {
+        const workspace = new Workspace();
+
+        for (const uri of order) {
+            workspace.createOrUpdate(uri, 'Func BackupData()\nEndFunc\n');
+        }
+
+        workspace.createOrUpdate(mainUri, 'Func Foo()\n    Back\nEndFunc\n');
+
+        const bridge = new CompletionItemBridge(workspace);
+        const items = getItems(bridge.resolveCompletionItems(
+            mainUri.toString(),
+            { line: 1, character: 8 },
+        ));
+        const backup = items.find((item) => item.label === 'BackupData');
+
+        expect(backup).toBeDefined();
+        expect(backup?.labelDetails?.description).toBe('a\\backup.au3');
+        expect(backup?.additionalTextEdits).toEqual([
+            {
+                range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+                newText: '#include "a\\backup.au3"\n',
+            },
+        ]);
+    }
+});
+
 test('does not suggest workspace symbols when disabled in configuration', () => {
     const workspace = new Workspace();
     const otherUri = URI.file('/ws/other.au3');

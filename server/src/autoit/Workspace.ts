@@ -429,16 +429,24 @@ export class Workspace {
     /**
      * Returns symbols declared (or assigned) in the global scope of every
      * file-backed script in the workspace: functions and global variables.
-     * The native library and non-file URIs are excluded. Only the first
-     * script declaring a given symbol name is kept. The index is cached and
-     * rebuilt lazily after any script change.
+     * The native library and non-file URIs are excluded. When a symbol name is
+     * declared in multiple files, the script with the lexically smallest URI is
+     * kept, so the result does not depend on the order the scripts were added.
+     * The index is cached and rebuilt lazily after any script change.
      */
     public getWorkspaceSymbols(): WorkspaceSymbolEntry[] {
         if (this.workspaceSymbolIndex === null) {
             const entries: WorkspaceSymbolEntry[] = [];
             const seenKeys = new Set<string>();
 
-            for (const [uriString] of this.scripts) {
+            /*
+             * Iterate in a stable URI order so that a symbol name declared in
+             * multiple files always resolves to the same source file, no matter
+             * in which order the scripts happened to be added to the workspace
+             */
+            const uriStrings = Array.from(this.scripts.keys()).sort();
+
+            for (const uriString of uriStrings) {
                 const uri = URI.parse(uriString);
 
                 if (uri.scheme !== 'file') {
@@ -468,7 +476,15 @@ export class Workspace {
                 }
             }
 
-            entries.sort((a, b) => a.uri.toString().localeCompare(b.uri.toString()) || a.key.localeCompare(b.key));
+            entries.sort((a, b) => {
+                const uriComparison = a.uri.toString() < b.uri.toString() ? -1 : a.uri.toString() > b.uri.toString() ? 1 : 0;
+
+                if (uriComparison !== 0) {
+                    return uriComparison;
+                }
+
+                return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
+            });
 
             this.workspaceSymbolIndex = entries;
         }
