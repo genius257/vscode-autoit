@@ -199,13 +199,10 @@ export default class Script {
     public triggerDiagnostics(): void {
         this.debouncedTriggerDiagnostics ??= debounce(() => {
             if (this.uri !== undefined) {
-                this.workspace?.eventEmitter.emit(
-                    'diagnostics',
-                    {
-                        uri: this.uri.toString(),
-                        diagnostics: this.getDiagnostics(),
-                    },
-                );
+                this.workspace?.emitDiagnostics({
+                    uri: this.uri.toString(),
+                    diagnostics: this.getDiagnostics(),
+                });
             }
         }, 100);
 

@@ -11,10 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Native function Au3Doc descriptions now include links to the online documentation
 - Completion suggestions now include functions and global variables from all indexed workspace files, even when not included. Such suggestions are ranked after included, local and native suggestions, appear only once an identifier has been typed, show the source file in the suggestion description, and accepting one inserts the required `#include` after the last top-level include statement. Controlled by the new `autoit3.workspaceCompletions` setting (enabled by default)
+- Files associated with the `au3` language via the `files.associations` setting are now indexed and watched like `.au3` files
 
 ### Changed
 
 - Function signatures with many parameters (e.g. the native `BitAND`, `Call` and `DllCall` emulations) are now truncated in hover text, completion suggestion details and signature help, showing the first and last parameters with an ellipsis placeholder for the middle ones
+- Read failure error messages now show the file system path instead of the percent-encoded URI
+- Repeated read failures for the same file are now reported only once within a 30 second window
+
+### Fixed
+
+- File watching no longer attempts to read directories (e.g. the `node_modules` and `.git` folders), which were reported as files that failed to load, with the error text duplicated within the message
+- File changes no longer load and parse non-AutoIt files; only `.au3` files, files associated with the `au3` language, and files already tracked by the dependency manager are picked up by the file watcher
 
 ## [1.9.0] - 2027-09-04
 
