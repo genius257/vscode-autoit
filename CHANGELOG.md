@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File watching no longer attempts to read directories (e.g. the `node_modules` and `.git` folders), which were reported as files that failed to load, with the error text duplicated within the message
 - File changes no longer load and parse non-AutoIt files; only `.au3` files, files associated with the `au3` language, and files already tracked by the dependency manager are picked up by the file watcher
 
-## [1.9.0] - 2027-09-04
+## [1.9.0] - 2026-09-04
 
 ### Added
 
