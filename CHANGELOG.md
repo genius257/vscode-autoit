@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-15
+
 ### Added
 
 - Native function Au3Doc descriptions now include links to the online documentation
@@ -340,7 +342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AutoIt3 syntax highlighting
 - AutoIt2 syntax highlighting
 
-[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.9.0...HEAD
+[Unreleased]: https://github.com/genius257/vscode-autoit/compare/1.10.0...HEAD
+[1.10.0]: https://github.com/genius257/vscode-autoit/compare/1.9.11...1.10.0
 [1.9.0]: https://github.com/genius257/vscode-autoit/compare/1.8.11...1.9.0
 [1.8.11]: https://github.com/genius257/vscode-autoit/compare/1.8.10...1.8.11
 [1.8.10]: https://github.com/genius257/vscode-autoit/compare/1.8.9...1.8.10
