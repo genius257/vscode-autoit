@@ -335,3 +335,37 @@ test('deduplicates workspace symbols declared in multiple files', () => {
     expect(matches).toHaveLength(1);
     expect(matches[0]?.labelDetails?.description).toBe('a_first.au3');
 });
+
+test('suggests a standard library include when the drive letter case differs', () => {
+    const workspace = new Workspace();
+
+    /*
+     * The script lives on D:, the AutoIt3 installation on C:. The file URIs the
+     * client reports arrive serialized (`file:///c%3A/...`), and `URI.toString()`
+     * lowercases the drive letter, while the `installDir` setting keeps the casing
+     * the user typed.
+     */
+    const libraryUri = URI.file('c:/Program Files (x86)/AutoIt3/Include/WinAPIGdi.au3');
+    const scriptUri = URI.file('D:/Documents/AutoIt/vscode test/vscode-autoit#55.au3');
+
+    setConfiguration(workspace, { installDir: 'C:\\Program Files (x86)\\AutoIt3' });
+
+    workspace.createOrUpdate(libraryUri, 'Func _WinAPI_AbortPath($hDC)\nEndFunc\n');
+    workspace.createOrUpdate(scriptUri, 'Func Foo()\n    _WinAPI_Abort\nEndFunc\n');
+
+    const bridge = new CompletionItemBridge(workspace);
+    const items = getItems(bridge.resolveCompletionItems(
+        scriptUri.toString(),
+        { line: 1, character: 17 },
+    ));
+
+    const abortPath = items.find((item) => item.label === '_WinAPI_AbortPath');
+
+    expect(abortPath).toBeDefined();
+    expect(abortPath?.additionalTextEdits).toEqual([
+        {
+            range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+            newText: '#include <WinAPIGdi.au3>\n',
+        },
+    ]);
+});

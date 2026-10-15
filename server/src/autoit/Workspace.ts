@@ -36,6 +36,19 @@ function normalizeGlob(path: string): string {
     return path.replace(/\\/g, '/').replace(/\/+$/, '');
 }
 
+/**
+ * Returns the path a URI has after being serialized and parsed again, which is
+ * what happens to every file URI the client reports to the server.
+ * `URI.toString()` lowercases Windows drive letters, while a raw configuration
+ * path keeps the casing the user typed, so both sides of a containment
+ * comparison are passed through the same round trip. Only the drive letter is
+ * rewritten, so the case-sensitive comparison of the remaining path segments
+ * is preserved.
+ */
+function serializedUriPath(uri: URI): string {
+    return URI.parse(uri.toString()).path;
+}
+
 export type IncludeResolve = { uri: URI, text: string | null };
 
 export type IncludePromise = Promise<IncludeResolve | null>;
@@ -705,10 +718,10 @@ export class Workspace {
         }
 
         const configuration = this.configuration;
-        const targetPath = targetUri.path.replace(/\/+$/, '');
+        const targetPath = serializedUriPath(targetUri).replace(/\/+$/, '');
 
         const containedIn = (rootPath: string): string | null => {
-            const rootFilePath = URI.file(rootPath.replace(/\\/g, '/').replace(/\/+$/, '')).path.replace(/\/+$/, '');
+            const rootFilePath = serializedUriPath(URI.file(rootPath.replace(/\\/g, '/').replace(/\/+$/, ''))).replace(/\/+$/, '');
 
             /*
              * Containment is compared case-sensitively on every platform: the
@@ -718,6 +731,11 @@ export class Workspace {
              * case-sensitive include resolution used elsewhere in the extension.
              * A false negative only falls back to the relative include form,
              * which is still correct.
+             *
+             * Both paths are passed through the same serialization round trip
+             * first, so a Windows drive letter is compared in the casing
+             * `URI.toString()` produces, rather than in the casing the
+             * `autoit3.installDir` setting happened to be typed with.
              */
             if (targetPath === rootFilePath || targetPath.startsWith(`${rootFilePath}/`)) {
                 return targetPath.slice(rootFilePath.length).replace(/^\//, '');
