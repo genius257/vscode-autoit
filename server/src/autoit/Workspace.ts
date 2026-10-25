@@ -658,14 +658,16 @@ export class Workspace {
             ? script.getScope()
             : script.getScopeAtPosition(locationToPosition(node.location.start));
 
-        const symbol = scope.getSymbol(symbolKey);
+        const result = scope.getSymbolInScopeChain(symbolKey);
 
-        if (symbol === undefined) {
+        if (result === undefined) {
             return undefined;
         }
 
+        const { symbol, scope: symbolScope } = result;
+
         // For local scopes, simply return the symbol as-is
-        if (!scope.isGlobal()) {
+        if (!symbolScope.isGlobal()) {
             return symbol;
         }
 

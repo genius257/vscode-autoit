@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Hover, go-to-definition and find references now find `Global`-declared variables used inside functions
+
 ## [1.10.0] - 2026-10-15
 
 ### Added

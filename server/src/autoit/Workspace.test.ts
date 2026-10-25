@@ -4,6 +4,7 @@ import { AutoIt3Configuration, IndexingProgressNotification, Workspace } from '.
 import { URI /* , Utils*/ } from 'vscode-uri';
 import { Connection, Diagnostic, FileChangeType, type FileSystemWatcher /* , RemoteConsole*/ } from 'vscode-languageserver';
 import DependencyGraph from './DependencyGraph';
+import Symbol, { type Node as SymbolNode } from './Symbol';
 import type { SymbolKey } from './Scope';
 
 const createConfiguration = (overrides: Partial<AutoIt3Configuration> = {}): AutoIt3Configuration => ({
@@ -1325,4 +1326,84 @@ test('openTextDocument returns null when the pending read produces no text', asy
 
     // An unreadable pending read is reported as unresolved, like a failed include read
     expect(value).toBeNull();
+});
+
+test('resolveSymbolForNode finds Global variables from within a local function scope', () => {
+    /*
+     * Mirrors the reported hover bug:
+     *   Global $__g_hGLDll = "Opengl32.dll"
+     *   Global $GLfloat
+     *   Func glClearIndex($c)
+     *       Local $aRet = DllCall($__g_hGLDll, "NONE", "glClearIndex", $GLfloat, $c)
+     *   EndFunc
+     *
+     * $c is a function parameter (local scope) -> resolves from local scope
+     * $__g_hGLDll and $GLfloat are Global declarations -> should resolve via the parent scope chain
+     */
+    const src = [
+        'Global $__g_hGLDll = "Opengl32.dll"',
+        'Global $GLfloat',
+        '',
+        'Func glClearIndex($c)',
+        '    Local $aRet = DllCall($__g_hGLDll, "NONE", "glClearIndex", $GLfloat, $c)',
+        'EndFunc',
+    ].join('\n');
+
+    const uri = URI.file('/repro.au3');
+    const workspace = new Workspace();
+    const script = new Script(src, uri, workspace);
+    workspace.add(script);
+
+    const lines = src.split('\n');
+
+    // Collect resolution results for every VariableIdentifier position.
+    const results: { key: string, line: number, scopeGlobal: boolean, resolved: boolean }[] = [];
+
+    for (let line = 0; line < lines.length; line++) {
+        for (let ch = 0; ch < lines[line].length; ch++) {
+            const nodes = script.getNodesAt({ line, character: ch });
+            const idents = nodes.filter((n): n is SymbolNode => n.type === 'VariableIdentifier');
+
+            if (idents.length === 0) {
+                continue;
+            }
+
+            const ident = idents[idents.length - 1];
+            const key = Symbol.getNodeName(ident);
+            const scope = script.getScopeAtPosition({ line, character: ch });
+            const symbol = workspace.resolveSymbolForNode(ident, key);
+            results.push({ key, line, scopeGlobal: scope.isGlobal(), resolved: symbol !== undefined });
+        }
+    }
+
+    // Deduplicate: one entry per (key, line, scopeGlobal)
+    const seen = new Set<string>();
+    const unique = results.filter((r) => {
+        const id = `${r.key}@L${r.line}@${r.scopeGlobal}`;
+
+        if (seen.has(id)) {
+            return false;
+        }
+
+        seen.add(id);
+
+        return true;
+    });
+
+    // Both globals are declared at the top of the file (global scope)
+    const globalDecls = unique.filter((r) => (r.key === '$__g_hgldll' || r.key === '$glfloat') && r.scopeGlobal);
+    expect(globalDecls.length).toBeGreaterThan(0);
+    expect(globalDecls.every((r) => r.resolved)).toBe(true);
+
+    // Both globals resolve when used from within the function (local scope)
+    const globalUsagesInsideFunc = unique.filter(
+        (r) => (r.key === '$__g_hgldll' || r.key === '$glfloat') && r.line >= 3 && !r.scopeGlobal,
+    );
+    expect(globalUsagesInsideFunc.length).toBeGreaterThan(0);
+    expect(globalUsagesInsideFunc.every((r) => r.resolved)).toBe(true);
+
+    // The locally declared parameter $c resolves from the local scope
+    const cResults = unique.filter((r) => r.key === '$c');
+    expect(cResults.length).toBeGreaterThan(0);
+    expect(cResults.every((r) => r.resolved)).toBe(true);
 });
