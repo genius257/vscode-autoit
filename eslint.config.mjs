@@ -1,6 +1,7 @@
 // @ts-check
 
 import eslint from '@eslint/js';
+import importPlugin from "eslint-plugin-import";
 import stylistic from '@stylistic/eslint-plugin';
 import tseslint from 'typescript-eslint';
 
@@ -8,6 +9,7 @@ export default tseslint.config({
   files: ['**/*.ts', '**/*.tsx'],
   plugins: {
     '@stylistic': stylistic,
+    import: importPlugin,
   },
   extends: [
     eslint.configs.recommended,
@@ -19,6 +21,12 @@ export default tseslint.config({
     parserOptions: {
       projectService: true,
     }
+  },
+  settings: {
+    "import/resolver": {
+        node: true,
+        typescript: true,
+      },
   },
   rules: {
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],

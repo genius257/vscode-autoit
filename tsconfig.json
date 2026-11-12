@@ -34,5 +34,10 @@
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
         "useUnknownInCatchVariables": true,
-    }
+        "paths": {
+            "@utils/*": [
+                "./server/src/utils/*",
+            ],
+        },
+    },
 }

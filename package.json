@@ -162,6 +162,8 @@
         "@vscode/test-web": "^0.0.66",
         "@vscode/vsce": "^3.2.2",
         "eslint": "^9.20.1",
+        "eslint-import-resolver-typescript": "^4.4.5",
+        "eslint-plugin-import": "^2.32.0",
         "path-browserify": "^1.0.1",
         "svg-png-converter": "0.0.9",
         "ts-loader": "^9.4.2",

@@ -296,7 +296,6 @@ test('handleFileDeleted removes the script, clears diagnostics and refreshes dep
     const refreshSpy = vi.spyOn(mainScript, 'refreshIncludes');
     const diagnosticsSpy = vi.fn();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
 
     workspace.handleFileDeleted(includeUri.toString());
@@ -373,7 +372,6 @@ test('handleFileDeleted preserves active scripts', () => {
 
     const diagnosticsSpy = vi.fn();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
 
     workspace.handleFileDeleted(scriptUri.toString());
@@ -401,7 +399,6 @@ test('handleFileDeleted removes deferred diagnostics for the deleted file', () =
 
     workspace.add(new Script('Global $x = 1', scriptUri));
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
 
     type DeferredDiagnosticsInternals = {
@@ -1014,7 +1011,6 @@ test('processFileEvents ignores deletion of untracked files', async () => {
 
     const diagnosticsSpy = vi.fn();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     workspace.eventEmitter.on('diagnostics', diagnosticsSpy);
 
     internals.pendingFileEvents.set('file:///ws/gone.au3', FileChangeType.Deleted);
@@ -1360,7 +1356,8 @@ test('resolveSymbolForNode finds Global variables from within a local function s
     const results: { key: string, line: number, scopeGlobal: boolean, resolved: boolean }[] = [];
 
     for (let line = 0; line < lines.length; line++) {
-        for (let ch = 0; ch < lines[line].length; ch++) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        for (let ch = 0; ch < lines[line]!.length; ch++) {
             const nodes = script.getNodesAt({ line, character: ch });
             const idents = nodes.filter((n): n is SymbolNode => n.type === 'VariableIdentifier');
 
@@ -1368,7 +1365,8 @@ test('resolveSymbolForNode finds Global variables from within a local function s
                 continue;
             }
 
-            const ident = idents[idents.length - 1];
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const ident = idents[idents.length - 1]!;
             const key = Symbol.getNodeName(ident);
             const scope = script.getScopeAtPosition({ line, character: ch });
             const symbol = workspace.resolveSymbolForNode(ident, key);
