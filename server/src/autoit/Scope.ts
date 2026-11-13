@@ -68,7 +68,7 @@ export default class Scope {
         while (searchScope !== null) {
             const symbol = searchScope.getSymbol(symbolKey);
 
-            if (symbol !== undefined && symbol.getDeclarations().size > 0) {
+            if (symbol !== undefined) {
                 return { symbol, scope: searchScope };
             }
 

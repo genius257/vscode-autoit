@@ -1405,3 +1405,41 @@ test('resolveSymbolForNode finds Global variables from within a local function s
     expect(cResults.length).toBeGreaterThan(0);
     expect(cResults.every((r) => r.resolved)).toBe(true);
 });
+
+test('resolveSymbolForNode merges declarations from included files for reference-only globals', () => {
+    /*
+     * The global is declared in the included file, but the including script
+     * only references it, so its own global symbol has no declarations.
+     * getSymbolInScopeChain must still return that reference-only symbol so
+     * resolveSymbolForNode can merge the declarations from the dependency,
+     * keeping hover, go-to-definition and find references working across files.
+     */
+    const includeUri = URI.file('/lib.au3');
+    const mainUri = URI.file('/main.au3');
+
+    const workspace = new Workspace();
+    workspace.add(new Script('Global $g_value = 42', includeUri));
+
+    const mainScript = new Script('ConsoleWrite($g_value)', mainUri, workspace);
+    workspace.add(mainScript);
+
+    workspace.dependencyGraph.setDependencies(mainUri.toString(), [includeUri.toString()]);
+
+    const nodes = mainScript.getNodesAt({ line: 0, character: 14 });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const ident = nodes.find((n): n is SymbolNode => n.type === 'VariableIdentifier')!;
+
+    expect(ident).toBeDefined();
+
+    const key = Symbol.getNodeName(ident);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const symbol = workspace.resolveSymbolForNode(ident, key)!;
+
+    expect(symbol).toBeDefined();
+
+    const declarations = [...symbol.getDeclarations()];
+
+    expect(declarations).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    expect(declarations[0]!.location.source.toString()).toBe(includeUri.toString());
+});

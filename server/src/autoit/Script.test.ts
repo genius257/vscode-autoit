@@ -114,6 +114,50 @@ EndFunc`);
     });
 });
 
+describe('Scope chain resolution with reference-only globals', function () {
+    test('Dim $x in function with a global $x that is only referenced declares in global scope', function () {
+        /*
+         * A bare reference at global scope implicitly creates a global symbol
+         * without declarations. getSymbolInScopeChain must stop at such a
+         * symbol, so a subsequent Dim inside a function attaches to that
+         * global (matching AutoIt runtime semantics) instead of declaring a
+         * separate local.
+         */
+        const script = new Script(`ConsoleWrite($x)
+Func test()
+    Dim $x
+EndFunc`);
+        const globalScope = script.getScope();
+        const functionScopes = [...globalScope.getSubscopes()];
+        expect(functionScopes).toHaveLength(1);
+
+        const functionScope = functionScopes[0];
+
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getDeclarations().size).toBe(1);
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getDeclarations().size ?? 0).toBe(0);
+    });
+
+    test('reference in function to a global $x that is only referenced attaches to the global symbol', function () {
+        /*
+         * The in-function reference cannot resolve to a declaration anywhere
+         * in the scope chain, so it is attached to the first matching symbol
+         * in the chain (the implicitly global one), not to a new local symbol.
+         */
+        const script = new Script(`ConsoleWrite($x)
+Func test()
+    ConsoleWrite($x)
+EndFunc`);
+        const globalScope = script.getScope();
+        const functionScopes = [...globalScope.getSubscopes()];
+        expect(functionScopes).toHaveLength(1);
+
+        const functionScope = functionScopes[0];
+
+        expect(globalScope.getSymbol('$x' as SymbolKey)?.getReferences().size).toBe(2);
+        expect(functionScope?.getSymbol('$x' as SymbolKey)?.getReferences().size ?? 0).toBe(0);
+    });
+});
+
 describe('Synthetic nodes for special symbol references', function () {
     test('getNodesAt on IsDeclared with string literal produces SyntheticVariableIdentifier', function () {
         const script = new Script(`IsDeclared('varName')`);
