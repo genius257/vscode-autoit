@@ -29,6 +29,10 @@ export default tseslint.config({
       },
   },
   rules: {
+    "import/no-unresolved": "error",
+    'import/no-dynamic-require': 'warn',
+    'import/no-cycle': 'warn',
+
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     "@typescript-eslint/no-inferrable-types": ["error", { ignoreParameters: true , ignoreProperties: true }],
     "@typescript-eslint/member-ordering": ["error"],
