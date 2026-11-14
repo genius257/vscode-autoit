@@ -56,8 +56,8 @@ export function AstToString(
         | AutoIt3.VariableDeclarationInWith
         | AutoIt3.EnumDeclaration
         | AutoIt3.EnumDeclarationInWith
-        | AutoIt3.Initialiser
-        | AutoIt3.InitialiserInWith
+        | AutoIt3.Initializer
+        | AutoIt3.InitializerInWith
         | AutoIt3.SwitchCaseValue
         | AutoIt3.SwitchCaseValueInWith
         | AutoIt3.Macro,

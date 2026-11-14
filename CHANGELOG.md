@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgrade dependency: autoit3-pegjs to 5.0.0
+
 ### Fixed
 
 - Hover, go-to-definition and find references now find `Global`-declared variables used inside functions
