@@ -939,25 +939,7 @@ export default class Script {
             throw new Error('location is undefined on node type: ' + node.type);
         }
 
-        /*
-         * Both "MemberExpression" and "CallExpression" are exempted from the position
-         * check below due to parser bugs in how wrapping expression `location` ranges
-         * are computed:
-         *
-         * - CallExpression: nested call expressions (e.g. `foo()()`) produce a wrapping
-         *   CallExpression whose `location` only covers the trailing parentheses,
-         *   excluding the callee subtree.
-         *
-         * - MemberExpression: when a MemberExpression's `object` is a CallExpression
-         *   (e.g. `$obj.Method().Property`), the `location` only spans from the `.`
-         *   separator to the end of the property name, excluding the entire `object`
-         *   subtree.
-         *
-         * In both cases, `isPositionWithinLocation` would return `false` for cursor
-         * positions within the excluded subtree, causing the node to be erroneously
-         * skipped from the matches. The root fix should be implemented in the parser.
-         */
-        if (node.type !== 'MemberExpression' && node.type !== 'CallExpression' && !Parser.isPositionWithinLocation(line, column, node.location)) {
+        if (!Parser.isPositionWithinLocation(line, column, node.location)) {
             return matches;
         }
 
