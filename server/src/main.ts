@@ -1,5 +1,5 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent, CodeLens } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
 import { getScopeLabel } from './autoit/DeclarationScope';
@@ -62,6 +62,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
                 ',',
             ],
             retriggerCharacters: [','],
+            workDoneProgress: false,
+        },
+        codeLensProvider: {
+            resolveProvider: true,
             workDoneProgress: false,
         },
         textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -313,6 +317,68 @@ connection.onHover((hoverParams/* ,token, workDoneProgress*/): Hover | null => {
             identifierAtPos.location,
         ),
     };
+});
+
+connection.onCodeLens((params) => {
+    const script = workspace.get(params.textDocument.uri);
+
+    if (script === undefined) {
+        return null;
+    }
+
+    const codeLens: CodeLens[] = [];
+
+    script.getScope().getSymbols()
+        .forEach(
+            (symbol) => {
+                const declarations = symbol.getDeclarations();
+                declarations.forEach((declaration) => codeLens.push({
+                    range: PositionHelper.locationRangeToRange(declaration.location),
+                    data: declaration,
+                }));
+            },
+        );
+
+    return codeLens;
+});
+
+connection.onCodeLensResolve((codeLens) => {
+    const symbolNode = codeLens.data as SymbolNode | undefined;
+
+    switch (symbolNode?.type) {
+        case 'Identifier':
+        case 'SyntheticIdentifier':
+        case 'VariableIdentifier':
+        case 'SyntheticVariableIdentifier':
+        {
+            const symbolKey = Symbol.getNodeName(symbolNode);
+
+            const references = workspace.resolveSymbolForNode(symbolNode, symbolKey)?.getReferences();
+
+            const count = references?.size ?? 0;
+
+            const locations: Location[] = Array.from(references?.values() ?? []).map((referance) => ({
+                uri: referance.location.source.toString(),
+                range: PositionHelper.locationRangeToRange(referance.location),
+            }));
+
+            codeLens.command = {
+                title: `${count} ${count === 1 ? 'reference' : 'references'}`,
+                command: 'editor.action.showReferences',
+                arguments: [
+                    symbolNode.location.source,
+                    codeLens.range.start,
+                    locations,
+                ],
+            };
+
+            break;
+        }
+        default:
+            break;
+    }
+
+    return codeLens;
 });
 
 // Listen on the connection
