@@ -326,20 +326,20 @@ connection.onCodeLens((params) => {
         return null;
     }
 
-    const codeLens: CodeLens[] = [];
+    const codeLenses: CodeLens[] = [];
 
     script.getScope().getSymbols()
         .forEach(
             (symbol) => {
                 const declarations = symbol.getDeclarations();
-                declarations.forEach((declaration) => codeLens.push({
+                declarations.forEach((declaration) => codeLenses.push({
                     range: PositionHelper.locationRangeToRange(declaration.location),
                     data: declaration,
                 }));
             },
         );
 
-    return codeLens;
+    return codeLenses;
 });
 
 connection.onCodeLensResolve((codeLens) => {
