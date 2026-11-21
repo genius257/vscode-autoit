@@ -5,8 +5,8 @@
  *--------------------------------------------------------------------------------------------
  */
 
-import { /* CancellationToken,*/ ExtensionContext, FileSystemError, FileType, ProviderResult, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
-import { DocumentSelector, LanguageClientOptions, NotificationType } from 'vscode-languageclient';
+import { /* CancellationToken,*/ ExtensionContext, FileSystemError, FileType, Location, Position, ProviderResult, Range, StatusBarAlignment, StatusBarItem, TextDocumentContentProvider, TextEditor, Uri, window, workspace } from 'vscode';
+import { DocumentSelector, LanguageClientOptions, NotificationType, Location as LocationType, Position as PositionType } from 'vscode-languageclient';
 import jschardet from 'jschardet';
 import native from '../../server/src/autoit/native.au3?raw';
 import { LanguageClient } from 'vscode-languageclient/browser';
@@ -34,6 +34,33 @@ export function activate(context: ExtensionContext) {
         documentSelector,
         synchronize: {},
         initializationOptions: {},
+        middleware: {
+            resolveCodeLens: async (codeLens, token, next) => {
+                const resolvedCodeLens = await next(codeLens, token);
+
+                const command = resolvedCodeLens?.command;
+
+                if (command === undefined) {
+                    return resolvedCodeLens;
+                }
+
+                if (command.command === 'editor.action.showReferences' && command.arguments) {
+                    const _arguments = command.arguments as [string, PositionType, LocationType[]];
+
+                    // Hydrate the JSON into VS Code objects right here
+                    command.arguments = [
+                        Uri.parse(_arguments[0]),
+                        new Position(_arguments[1].line, _arguments[1].character),
+                        _arguments[2].map((l: LocationType) => new Location(
+                            Uri.parse(l.uri),
+                            new Range(l.range.start.line, l.range.start.character, l.range.end.line, l.range.end.character),
+                        )),
+                    ];
+                }
+
+                return resolvedCodeLens;
+            },
+        },
     };
 
     const client = createWorkerLanguageClient(context, clientOptions);
