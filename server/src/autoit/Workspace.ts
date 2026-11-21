@@ -1,10 +1,11 @@
 import { type AutoIt3, type GrammarSource } from 'autoit3-pegjs';
-import { Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, ProtocolNotificationType, type RelativePattern, Range, type TextEdit, type WorkDoneProgressServerReporter } from 'vscode-languageserver';
+import { CodeLensRefreshRequest, Connection, Diagnostic, DidChangeConfigurationNotification, DidChangeWatchedFilesNotification, Disposable, FileChangeType, type FileSystemWatcher, ProtocolNotificationType, type RelativePattern, Range, type TextEdit, type WorkDoneProgressServerReporter } from 'vscode-languageserver';
 import { URI, Utils } from 'vscode-uri';
 import Script from './Script';
 import native from './native.au3?raw';
 import { isAbsolutePath, relativePath } from './Path';
 import EventEmitter from '@utils/EventEmitter';
+import debounce from '@utils/debounce';
 import Symbol, { type Node as SymbolNode } from './Symbol';
 import Scope, { SymbolKey } from './Scope';
 import DependencyGraph from './DependencyGraph';
@@ -105,6 +106,7 @@ export class Workspace {
     protected configuration: AutoIt3Configuration | null = null;
     protected watchedFilesDisposable: Disposable | null = null;
     protected pendingFileEvents = new Map<string, FileChangeType>();
+    protected codeLensRefresh: (() => void) | null = null;
     protected fileEventTimer: ReturnType<typeof setTimeout> | null = null;
     protected readingFiles = new Set<string>();
     protected readingPromises = new Map<string, Promise<string | null>>();
@@ -244,6 +246,8 @@ export class Workspace {
 
         this.workspaceSymbolIndex = null;
 
+        this.scheduleCodeLensRefresh();
+
         return script;
     }
 
@@ -292,7 +296,37 @@ export class Workspace {
             }
 
             this.dependencyGraph.setDependencies(uri, dependencies);
+
+            this.scheduleCodeLensRefresh();
         });
+    }
+
+    /**
+     * Schedules a debounced `workspace/codeLens/refresh` request.
+     *
+     * Code lens reference counts are resolved lazily by the client and cached
+     * until the owning document changes, so any workspace change that can alter
+     * reference counts outside the edited document (startup indexing, file
+     * watcher events, dependency edge updates) must ask the client to
+     * re-resolve its code lenses.
+     */
+    public scheduleCodeLensRefresh(): void {
+        this.codeLensRefresh ??= debounce(() => {
+            /*
+             * Promise.resolve also tolerates test doubles (and exotic clients)
+             * where sendRequest does not return a promise, instead of throwing
+             * asynchronously after the triggering operation has completed.
+             */
+            void Promise.resolve(this.connection?.sendRequest(CodeLensRefreshRequest.type)).catch(() => {
+                /*
+                 * Clients that do not support workspace/codeLens/refresh reject
+                 * the request; counts then stay stale until the document itself
+                 * changes.
+                 */
+            });
+        }, 500);
+
+        this.codeLensRefresh();
     }
 
     /**
@@ -336,6 +370,8 @@ export class Workspace {
                 this.updateDependencies(dependent);
             }
         }
+
+        this.scheduleCodeLensRefresh();
     }
 
     /**
@@ -1333,6 +1369,13 @@ export class Workspace {
             await Promise.all(Array.from({ length: Math.min(preloadConcurrency, total) }, () => worker()));
         } finally {
             this.setDiagnosticsDeferred(false);
+
+            /*
+             * Code lenses resolved during the preload hold counts computed before
+             * all workspace files were indexed and their dependency edges set, so
+             * the client must re-resolve them now that indexing is complete.
+             */
+            this.scheduleCodeLensRefresh();
         }
     }
 

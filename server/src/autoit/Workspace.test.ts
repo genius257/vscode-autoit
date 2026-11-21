@@ -1443,3 +1443,38 @@ test('resolveSymbolForNode merges declarations from included files for reference
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(declarations[0]!.location.source.toString()).toBe(includeUri.toString());
 });
+
+test('scheduleCodeLensRefresh sends workspace/codeLens/refresh after updates', async function () {
+    vi.useFakeTimers();
+
+    try {
+        const sendRequest = vi.fn().mockResolvedValue(undefined);
+
+        const connection: Partial<Connection> = {
+            sendRequest: sendRequest as unknown as Connection['sendRequest'],
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onInitialized: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeConfiguration: () => ({ dispose: () => {} }),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function, @stylistic/curly-newline
+            onDidChangeWatchedFiles: () => ({ dispose: () => {} }),
+        };
+
+        const workspace = new Workspace(connection as Connection);
+
+        // Multiple updates must coalesce into a single refresh request
+        workspace.createOrUpdate(URI.file('/codelens-refresh.au3'), 'Global $a = 1');
+        workspace.createOrUpdate(URI.file('/codelens-refresh.au3'), 'Global $a = 2');
+
+        await vi.advanceTimersByTimeAsync(499);
+
+        expect(sendRequest).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+
+        expect(sendRequest).toHaveBeenCalledTimes(1);
+        expect(sendRequest.mock.calls[0]).toEqual([expect.objectContaining({ method: 'workspace/codeLens/refresh' })]);
+    } finally {
+        vi.useRealTimers();
+    }
+});
