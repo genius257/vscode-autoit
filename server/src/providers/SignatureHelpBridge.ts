@@ -16,12 +16,12 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 type CallExpressionNode = WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'>;
 
 export class SignatureHelpBridge {
-    protected workpspace: Workspace;
+    protected workspace: Workspace;
     protected declarator: AutoIt3.FunctionDeclaration | null = null;
     protected callExpression: CallExpressionNode | null = null;
 
     public constructor(workpspace: Workspace) {
-        this.workpspace = workpspace;
+        this.workspace = workpspace;
     }
 
     public resolveSignatureHelp(
@@ -30,10 +30,10 @@ export class SignatureHelpBridge {
         const textDocumentUri = params.textDocument.uri;
         const position = params.position;
 
-        const script = this.workpspace.get(textDocumentUri);
+        const script = this.workspace.get(textDocumentUri);
 
         if (script === undefined) {
-            this.workpspace.getConnection()?.console.error(
+            this.workspace.getConnection()?.console.error(
                 `Could not find script for document: ${textDocumentUri}`,
             );
 
@@ -70,7 +70,7 @@ export class SignatureHelpBridge {
             // Use the new Symbol system to find the function declaration
             const callee = callExpression.callee;
             const symbolKey = Symbol.getNodeName(callee);
-            const symbol = this.workpspace.resolveSymbolForNode(callee, symbolKey);
+            const symbol = this.workspace.resolveSymbolForNode(callee, symbolKey);
 
             if (symbol === undefined) {
                 return null;
@@ -82,7 +82,7 @@ export class SignatureHelpBridge {
                     declaration.name.toLowerCase() === callee.name.toLowerCase()
                 ) {
                     // Find the actual function declaration node from the script
-                    const functionScript = this.workpspace.get(declaration.location.source);
+                    const functionScript = this.workspace.get(declaration.location.source);
 
                     if (functionScript !== undefined) {
                         const functionNode = functionScript.getNodesAt(
