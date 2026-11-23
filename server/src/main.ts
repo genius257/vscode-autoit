@@ -137,8 +137,6 @@ providers.forEach((provider) => {
     instance.register(connection);
 });
 
-connection.onDocumentHighlight(getDocumentHighlight);
-
 connection.onDocumentLinks((params: DocumentLinkParams) => {
     // const documentText = documents.get(params.textDocument.uri)?.getText();
 
@@ -382,38 +380,3 @@ connection.onCodeLensResolve((codeLens) => {
 
 // Listen on the connection
 connection.listen();
-
-function getDocumentHighlight(params: DocumentHighlightParams): DocumentHighlight[] | null | undefined {
-    const script = workspace.get(params.textDocument.uri);
-
-    if (script === undefined) {
-        return null;
-    }
-
-    const nodesAt = script.getNodesAt(params.position);
-    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
-
-    if (identifierAtPos === undefined) {
-        return null;
-    }
-
-    const scope = identifierAtPos.type === 'Identifier' || identifierAtPos.type === 'SyntheticIdentifier'
-        ? script.getScope()
-        : script.getScopeAtPosition(params.position);
-
-    const symbolKey = Symbol.getNodeName(identifierAtPos);
-
-    const symbol = scope.getSymbol(symbolKey);
-
-    if (symbol === undefined) {
-        return null;
-    }
-
-    return [
-        ...symbol.getDeclarations(),
-        ...symbol.getReferences(),
-        ...symbol.getAssignments(),
-    ].map<DocumentHighlight>((node) => ({
-        range: PositionHelper.locationRangeToRange(node.location),
-    }));
-}
