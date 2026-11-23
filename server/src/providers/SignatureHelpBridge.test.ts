@@ -169,7 +169,6 @@ test('retrigger after an incremental edit serves the updated document', () => {
 
 describe('canReuseSignatureHelpCache', () => {
     const cached = (overrides: Partial<{ uri: string, revision: number | undefined, hasSyntaxErrors: boolean }> = {}) => ({
-        bridge: new SignatureHelpBridge(new Workspace()),
         uri: '/cached.au3',
         revision: 1,
         hasSyntaxErrors: false,

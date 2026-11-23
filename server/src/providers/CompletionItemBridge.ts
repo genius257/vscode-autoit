@@ -1,8 +1,7 @@
-import { CompletionItem, CompletionItemKind, CompletionList, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, CompletionList, CompletionParams, Connection, Disposable, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
 import { type AutoIt3, type Location } from 'autoit3-pegjs';
 import { URI, Utils } from 'vscode-uri';
 import { relativePath } from '../autoit/Path';
-import { Workspace } from '../autoit/Workspace';
 import Symbol from '../autoit/Symbol';
 import * as PositionHelper from '../autoit/PositionHelper';
 import * as Parser from '../autoit/Parser';
@@ -10,6 +9,7 @@ import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
 import { getScopeLabel } from '../autoit/DeclarationScope';
 import buildSignatureLabel from '../utils/signatureParams';
+import BaseProvider from './BaseProvider';
 
 const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
     .map(([, nativeSuggestion]) => ({
@@ -59,18 +59,19 @@ function isFuzzyMatch(prefix: string, label: string): boolean {
 /**
  * Bridge between the CompletionItemProvider and the Script
  */
-export class CompletionItemBridge {
-    protected workspace: Workspace;
+export class CompletionItemBridge extends BaseProvider {
     protected nativeSuggestions;
 
-    public constructor(workpspace: Workspace) {
-        this.workspace = workpspace;
+    public override register(connection: Connection): Disposable {
+        return connection.onCompletion(this.resolveCompletionItems.bind(this));
     }
 
     public resolveCompletionItems(
-        textDocumentUri: string,
-        position: Position,
+        params: CompletionParams,
     ): CompletionItem[] | CompletionList | undefined | null {
+        const textDocumentUri = params.textDocument.uri;
+        const position = params.position;
+
         const scopes = this.workspace.getScopes(textDocumentUri);
         const symbols = new Map<string, Symbol>();
         const cursorLocation = PositionHelper.positionToLocation(position);

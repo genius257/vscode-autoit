@@ -1,5 +1,5 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, CompletionItem, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, CompletionParams, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, SignatureHelp, SignatureHelpParams, Hover, Range, MarkupKind, MarkupContent, CompletionList, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent, CodeLens } from 'vscode-languageserver';
+import { InitializeParams, InitializeResult, ServerCapabilities, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, Hover, Range, MarkupKind, MarkupContent, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent, CodeLens } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
 import { getScopeLabel } from './autoit/DeclarationScope';
@@ -8,9 +8,8 @@ import { type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from './autoit/PositionHelper';
 import * as Parser from './autoit/Parser';
 import { Workspace } from './autoit/Workspace';
-import { CompletionItemBridge } from './providers/CompletionItemBridge';
-import { canReuseSignatureHelpCache, type CachedSignatureHelpBridge, SignatureHelpBridge } from './providers/SignatureHelpBridge';
 import buildSignatureLabel from './utils/signatureParams';
+import providers from './providers';
 
 // eslint-disable-next-line no-console
 console.log('running server autoit3-lsp-web-extension');
@@ -133,11 +132,14 @@ connection.onDidCloseTextDocument((params) => {
     workspace.get(params.textDocument.uri)?.release();
 });
 
+providers.forEach((provider) => {
+    const instance = new provider(workspace);
+    instance.register(connection);
+});
+
 connection.onDocumentSymbol(getDocumentSymbol);
 connection.onDefinition(getDefinition);
 connection.onReferences(getReferences);
-connection.onCompletion(getCompletionItems);
-connection.onSignatureHelp(getSignatureHelp);
 connection.onDocumentHighlight(getDocumentHighlight);
 
 connection.onDocumentLinks((params: DocumentLinkParams) => {
@@ -516,45 +518,6 @@ function getDefinition(params: DefinitionParams): LocationLink[] {
             declaration.location,
         ),
     }));
-}
-
-// eslint-disable-next-line @typescript-eslint/require-await
-async function getCompletionItems(
-    params: CompletionParams,
-): Promise<CompletionItem[] | CompletionList | undefined | null> {
-    const completionItemBridge = new CompletionItemBridge(workspace);
-
-    return completionItemBridge.resolveCompletionItems(
-        params.textDocument.uri,
-        params.position,
-    );
-}
-
-let lastSignatureHelp: CachedSignatureHelpBridge | undefined;
-
-function getSignatureHelp(params: SignatureHelpParams): SignatureHelp | null {
-    const uri = params.textDocument.uri;
-    const script = workspace.get(uri);
-    const revision = script?.getRevision();
-    const hasSyntaxErrors = script?.hasSyntaxErrors() ?? false;
-
-    let signatureHelpBridge = new SignatureHelpBridge(workspace);
-    const canReuse = canReuseSignatureHelpCache(lastSignatureHelp, uri, revision, hasSyntaxErrors, params.context?.isRetrigger === true);
-
-    if (canReuse && lastSignatureHelp !== undefined) {
-        signatureHelpBridge = lastSignatureHelp.bridge;
-    }
-
-    lastSignatureHelp = {
-        bridge: signatureHelpBridge,
-        uri,
-        revision,
-        hasSyntaxErrors,
-    };
-
-    return signatureHelpBridge.resolveSignatureHelp(
-        params,
-    );
 }
 
 function getReferences(params: ReferenceParams): Location[] | null | undefined {

@@ -1,5 +1,4 @@
-import { Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
-import { Workspace } from '../autoit/Workspace';
+import { Connection, Disposable, Position, SignatureHelp, SignatureHelpParams } from 'vscode-languageserver';
 import buildSignatureLabel from '../utils/signatureParams';
 import { LocationRange, SyntaxError, type AutoIt3 } from 'autoit3-pegjs';
 import * as PositionHelper from '../autoit/PositionHelper';
@@ -7,6 +6,7 @@ import * as Parser from '../autoit/Parser';
 import Script, { Node, NodeFilterAction } from '../autoit/Script';
 import AstWalker from '../autoit/AstWalker';
 import Symbol from '../autoit/Symbol';
+import BaseProvider from './BaseProvider';
 
 type WhereAstTypeEquals<T extends { type: string }, S extends string> =
     T extends { type: S } ? T : never;
@@ -15,22 +15,44 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 type CallExpressionNode = WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'>;
 
-export class SignatureHelpBridge {
-    protected workspace: Workspace;
+export class SignatureHelpBridge extends BaseProvider {
     protected declarator: AutoIt3.FunctionDeclaration | null = null;
     protected callExpression: CallExpressionNode | null = null;
 
-    public constructor(workpspace: Workspace) {
-        this.workspace = workpspace;
+    protected cache: CachedSignatureHelpBridge | undefined;
+
+    public override register(connection: Connection): Disposable {
+        return connection.onSignatureHelp(this.resolveSignatureHelp.bind(this));
     }
 
     public resolveSignatureHelp(
         params: SignatureHelpParams,
     ): SignatureHelp | null {
+        const uri = params.textDocument.uri;
+        const script = this.workspace.get(uri);
+        const revision = script?.getRevision();
+        const hasSyntaxErrors = script?.hasSyntaxErrors() ?? false;
+        const isRetrigger = params.context?.isRetrigger === true;
+
+        /*
+         * Cached AST nodes are only ever served for a retrigger on the same
+         * document while the cache is fresh (or while stale only in a syntax
+         * error state). Otherwise they are dropped, so a retrigger cannot
+         * serve nodes from another document or a superseded revision.
+         */
+        if (!canReuseSignatureHelpCache(this.cache, uri, revision, hasSyntaxErrors, isRetrigger)) {
+            this.callExpression = null;
+            this.declarator = null;
+        }
+
+        this.cache = {
+            uri,
+            revision,
+            hasSyntaxErrors,
+        };
+
         const textDocumentUri = params.textDocument.uri;
         const position = params.position;
-
-        const script = this.workspace.get(textDocumentUri);
 
         if (script === undefined) {
             this.workspace.getConnection()?.console.error(
@@ -40,12 +62,10 @@ export class SignatureHelpBridge {
             return null;
         }
 
-        const hasSyntaxErrors = script.hasSyntaxErrors();
-
         let callExpression: CallExpressionNode | undefined;
         let declarator: AutoIt3.FunctionDeclaration | null = null;
 
-        if (params.context?.isRetrigger && this.callExpression !== null && this.declarator !== null && hasSyntaxErrors) {
+        if (isRetrigger && this.callExpression !== null && this.declarator !== null && hasSyntaxErrors) {
             callExpression = this.callExpression;
             declarator = this.declarator;
         } else {
@@ -412,11 +432,14 @@ export class UnfixableCallExpressionError extends Error {
     }
 }
 
+/**
+ * Freshness metadata for the signature help state cached on the
+ * `SignatureHelpBridge` instance.
+ */
 export type CachedSignatureHelpBridge = {
-    bridge: SignatureHelpBridge,
     uri: string,
 
-    /** Script revision the cached bridge was created against */
+    /** Script revision the cached state was created against */
     revision: number | undefined,
 
     /** Whether the document had syntax errors when the cache was filled */
@@ -424,12 +447,13 @@ export type CachedSignatureHelpBridge = {
 };
 
 /**
- * Determines whether a cached bridge may be reused for this request.
+ * Determines whether the cached signature help state may be reused for this
+ * request.
  *
- * The cached bridge holds AST nodes that may have been replaced by an
- * incremental update. It may only be reused while it is known to be fresh
- * (same document, no edits since), or while the document is in a syntax
- * error state, where serving the last valid parse is intentional.
+ * The instance holds AST nodes that may have been replaced by an incremental
+ * update. They may only be reused while the cache is known to be fresh (same
+ * document, no edits since), or while the document is in a syntax error
+ * state, where serving the last valid parse is intentional.
  */
 export function canReuseSignatureHelpCache(
     cached: CachedSignatureHelpBridge | undefined,

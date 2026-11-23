@@ -42,8 +42,12 @@ Global $late = 2
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        uri.toString(),
-        { line: 1, character: 0 },
+        {
+            textDocument: {
+                uri: uri.toString(),
+            },
+            position: { line: 1, character: 0 },
+        },
     ));
 
     expect(labels).toContain('$early');
@@ -62,8 +66,12 @@ EndFunc
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        uri.toString(),
-        { line: 1, character: 0 },
+        {
+            textDocument: {
+                uri: uri.toString(),
+            },
+            position: { line: 1, character: 0 },
+        },
     ));
 
     expect(labels).toContain('$early');
@@ -83,8 +91,12 @@ Global $lateGlobal = 1
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        uri.toString(),
-        { line: 1, character: 4 },
+        {
+            textDocument: {
+                uri: uri.toString(),
+            },
+            position: { line: 1, character: 4 },
+        },
     ));
 
     expect(labels).toContain('$lateGlobal');
@@ -103,8 +115,12 @@ EndFunc
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        uri.toString(),
-        { line: 2, character: 0 },
+        {
+            textDocument: {
+                uri: uri.toString(),
+            },
+            position: { line: 2, character: 0 },
+        },
     ));
 
     expect(labels).toContain('$param');
@@ -120,8 +136,12 @@ test('always includes native suggestions', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        uri.toString(),
-        { line: 0, character: 0 },
+        {
+            textDocument: {
+                uri: uri.toString(),
+            },
+            position: { line: 0, character: 0 },
+        },
     ));
 
     expect(labels).toContain('Exit');
@@ -137,8 +157,12 @@ test('suggests workspace symbols demoted with an include insertion edit', () => 
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 1, character: 8 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 1, character: 8 },
+        },
     ));
 
     const backup = items.find((item) => item.label === 'BackupData');
@@ -169,8 +193,12 @@ test('suggests workspace global variables demoted', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 1, character: 8 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 1, character: 8 },
+        },
     ));
 
     const cache = items.find((item) => item.label === '$g_cache');
@@ -190,8 +218,12 @@ test('does not suggest workspace symbols for untitled documents', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        untitledUri.toString(),
-        { line: 1, character: 8 },
+        {
+            textDocument: {
+                uri: untitledUri.toString(),
+            },
+            position: { line: 1, character: 8 },
+        },
     ));
 
     /*
@@ -213,8 +245,12 @@ test('inserts the include after the last top-level include statement', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 3, character: 8 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 3, character: 8 },
+        },
     ));
 
     const backup = items.find((item) => item.label === 'BackupData');
@@ -237,8 +273,12 @@ test('does not suggest workspace symbols without a typed prefix', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 1, character: 4 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 1, character: 4 },
+        },
     ));
 
     expect(labels).not.toContain('BackupData');
@@ -264,8 +304,12 @@ test('resolves duplicate workspace symbol names independent of the script order'
 
         const bridge = new CompletionItemBridge(workspace);
         const items = getItems(bridge.resolveCompletionItems(
-            mainUri.toString(),
-            { line: 1, character: 8 },
+            {
+                textDocument: {
+                    uri: mainUri.toString(),
+                },
+                position: { line: 1, character: 8 },
+            },
         ));
         const backup = items.find((item) => item.label === 'BackupData');
 
@@ -292,8 +336,12 @@ test('does not suggest workspace symbols when disabled in configuration', () => 
 
     const bridge = new CompletionItemBridge(workspace);
     const labels = getLabels(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 1, character: 8 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 1, character: 8 },
+        },
     ));
 
     expect(labels).not.toContain('BackupData');
@@ -307,8 +355,12 @@ test('does not suggest symbols from the current document twice', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 4, character: 8 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 4, character: 8 },
+        },
     ));
 
     expect(items.filter((item) => item.label === 'BackupData')).toHaveLength(1);
@@ -326,8 +378,12 @@ test('deduplicates workspace symbols declared in multiple files', () => {
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        mainUri.toString(),
-        { line: 1, character: 8 },
+        {
+            textDocument: {
+                uri: mainUri.toString(),
+            },
+            position: { line: 1, character: 8 },
+        },
     ));
 
     const matches = items.filter((item) => item.label === 'BackupData');
@@ -355,8 +411,12 @@ test('suggests a standard library include when the drive letter case differs', (
 
     const bridge = new CompletionItemBridge(workspace);
     const items = getItems(bridge.resolveCompletionItems(
-        scriptUri.toString(),
-        { line: 1, character: 17 },
+        {
+            textDocument: {
+                uri: scriptUri.toString(),
+            },
+            position: { line: 1, character: 17 },
+        },
     ));
 
     const abortPath = items.find((item) => item.label === '_WinAPI_AbortPath');
