@@ -59,7 +59,7 @@ function isFuzzyMatch(prefix: string, label: string): boolean {
 /**
  * Bridge between the CompletionItemProvider and the Script
  */
-export class CompletionItemBridge extends BaseProvider {
+export class CompletionItemProvider extends BaseProvider {
     protected nativeSuggestions;
 
     public override register(connection: Connection): Disposable {
