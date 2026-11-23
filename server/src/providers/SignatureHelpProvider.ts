@@ -19,7 +19,7 @@ export class SignatureHelpProvider extends BaseProvider {
     protected declarator: AutoIt3.FunctionDeclaration | null = null;
     protected callExpression: CallExpressionNode | null = null;
 
-    protected cache: CachedSignatureHelpBridge | undefined;
+    protected cache: CachedSignatureHelpState | undefined;
 
     public override register(connection: Connection): Disposable {
         return connection.onSignatureHelp(this.resolveSignatureHelp.bind(this));
@@ -436,7 +436,7 @@ export class UnfixableCallExpressionError extends Error {
  * Freshness metadata for the signature help state cached on the
  * `SignatureHelpProvider` instance.
  */
-export type CachedSignatureHelpBridge = {
+export type CachedSignatureHelpState = {
     uri: string,
 
     /** Script revision the cached state was created against */
@@ -456,7 +456,7 @@ export type CachedSignatureHelpBridge = {
  * state, where serving the last valid parse is intentional.
  */
 export function canReuseSignatureHelpCache(
-    cached: CachedSignatureHelpBridge | undefined,
+    cached: CachedSignatureHelpState | undefined,
     uri: string,
     revision: number | undefined,
     hasSyntaxErrors: boolean,
