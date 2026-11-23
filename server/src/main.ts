@@ -137,41 +137,5 @@ providers.forEach((provider) => {
     instance.register(connection);
 });
 
-connection.onDocumentLinks((params: DocumentLinkParams) => {
-    // const documentText = documents.get(params.textDocument.uri)?.getText();
-
-    const includes = workspace.get(params.textDocument.uri)?.getIncludes();
-
-    if (includes !== undefined) {
-        const statementToRange = (
-            statement: AutoIt3.IncludeStatement,
-        ): Range => ({
-            start: {
-                line: statement.location.start.line - 1,
-                character: Math.max(
-                    0,
-                    statement.location.end.column - statement.file.length - 3,
-                ),
-            },
-            end: {
-                line: statement.location.end.line - 1,
-                character: statement.location.end.column - 1,
-            },
-        });
-
-        return Promise
-            .all(includes.map((include) => include.promise))
-            .then<DocumentLink[]>(() => includes.filter((include) => !(include.uri ?? '').startsWith('autoit3doc:') && include.uri !== null).map<DocumentLink>((include) => ({
-                range: statementToRange(include.statement),
-                target: include.uri ?? undefined,
-                tooltip: include.uri === null
-                    ? undefined
-                    : URI.parse(include.uri).fsPath,
-            })));
-    } else {
-        return [];
-    }
-});
-
 // Listen on the connection
 connection.listen();

@@ -3,6 +3,7 @@ import { CodeLensProvider } from './CodeLensProvider';
 import { CompletionItemProvider } from './CompletionItemProvider';
 import { DefinitionProvider } from './DefinitionProvider';
 import { DocumentHighlightProvider } from './DocumentHighlightProvider';
+import { DocumentLinkProvider } from './DocumentLinkProvider';
 import { DocumentSymbolProvider } from './DocumentSymbolProvider';
 import { HoverProvider } from './HoverProvider';
 import { ReferencesProvider } from './ReferencesProvider';
@@ -16,6 +17,7 @@ export default [
     CompletionItemProvider,
     DefinitionProvider,
     DocumentHighlightProvider,
+    DocumentLinkProvider,
     DocumentSymbolProvider,
     HoverProvider,
     ReferencesProvider,
