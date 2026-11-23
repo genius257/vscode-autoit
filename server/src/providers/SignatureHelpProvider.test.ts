@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { canReuseSignatureHelpCache, SignatureHelpBridge } from './SignatureHelpBridge';
+import { canReuseSignatureHelpCache, SignatureHelpBridge } from './SignatureHelpProvider';
 import { Workspace } from '../autoit/Workspace';
 import { URI } from 'vscode-uri';
 import { SignatureHelpTriggerKind } from 'vscode-languageserver';

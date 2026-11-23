@@ -15,7 +15,7 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 type CallExpressionNode = WhereAstTypeEquals<AutoIt3.CallExpression, 'CallExpression'>;
 
-export class SignatureHelpBridge extends BaseProvider {
+export class SignatureHelpProvider extends BaseProvider {
     protected declarator: AutoIt3.FunctionDeclaration | null = null;
     protected callExpression: CallExpressionNode | null = null;
 
