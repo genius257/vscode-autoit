@@ -4,6 +4,7 @@ import { CompletionItemProvider } from './CompletionItemProvider';
 import { DefinitionProvider } from './DefinitionProvider';
 import { DocumentHighlightProvider } from './DocumentHighlightProvider';
 import { DocumentSymbolProvider } from './DocumentSymbolProvider';
+import { HoverProvider } from './HoverProvider';
 import { ReferencesProvider } from './ReferencesProvider';
 import { SignatureHelpProvider } from './SignatureHelpProvider';
 
@@ -16,6 +17,7 @@ export default [
     DefinitionProvider,
     DocumentHighlightProvider,
     DocumentSymbolProvider,
+    HoverProvider,
     ReferencesProvider,
     SignatureHelpProvider,
 ] as const satisfies Constructor<BaseProvider>[];
