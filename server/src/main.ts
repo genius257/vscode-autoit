@@ -137,7 +137,6 @@ providers.forEach((provider) => {
     instance.register(connection);
 });
 
-connection.onDefinition(getDefinition);
 connection.onReferences(getReferences);
 connection.onDocumentHighlight(getDocumentHighlight);
 
@@ -384,71 +383,6 @@ connection.onCodeLensResolve((codeLens) => {
 
 // Listen on the connection
 connection.listen();
-
-function getDefinition(params: DefinitionParams): LocationLink[] {
-    const script = workspace.get(params.textDocument.uri);
-
-    if (script === undefined) {
-        return [];
-    }
-
-    const nodesAt = script.getNodesAt(params.position);
-    const identifierAtPos = nodesAt.reverse().find((node): node is SymbolNode => node.type === 'Identifier' || node.type === 'VariableIdentifier' || node.type === 'Macro' || node.type === 'SyntheticIdentifier' || node.type === 'SyntheticVariableIdentifier');
-
-    if (identifierAtPos === undefined) {
-        return [];
-    }
-
-    const symbolKey = Symbol.getNodeName(identifierAtPos);
-
-    const symbol = workspace.resolveSymbolForNode(identifierAtPos, symbolKey);
-
-    if (symbol === undefined) {
-        return [];
-    }
-
-    const configuration = workspace.getConfiguration();
-
-    if (configuration?.showAllDeclarations === false) {
-        // Closest match mode: walk the scope chain for the nearest declaration
-        const closestDeclaration = workspace.getDeclarationsAtPosition(
-            params.textDocument.uri,
-            symbolKey,
-            params.position,
-        )[0];
-
-        /*
-         * Fall back to the first merged declaration if the closest match is empty
-         * (e.g. symbol only declared in an include)
-         */
-        const declaration = closestDeclaration ?? [...symbol.getDeclarations()][0];
-
-        if (declaration === undefined) {
-            return [];
-        }
-
-        return [declaration].map((declaration) => ({
-            targetUri: declaration.location.source.toString(),
-            targetRange: PositionHelper.locationRangeToRange(
-                declaration.location,
-            ),
-            targetSelectionRange: PositionHelper.locationRangeToRange(
-                declaration.location,
-            ),
-        }));
-    }
-
-    // All declarations mode (default)
-    return [...symbol.getDeclarations()].map((declaration) => ({
-        targetUri: declaration.location.source.toString(),
-        targetRange: PositionHelper.locationRangeToRange(
-            declaration.location,
-        ),
-        targetSelectionRange: PositionHelper.locationRangeToRange(
-            declaration.location,
-        ),
-    }));
-}
 
 function getReferences(params: ReferenceParams): Location[] | null | undefined {
     const script = workspace.get(params.textDocument.uri);

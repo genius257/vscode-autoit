@@ -1,5 +1,6 @@
 import BaseProvider from './BaseProvider';
 import { CompletionItemProvider } from './CompletionItemProvider';
+import { DefinitionProvider } from './DefinitionProvider';
 import { DocumentSymbolProvider } from './DocumentSymbolProvider';
 import { SignatureHelpProvider } from './SignatureHelpProvider';
 
@@ -8,6 +9,7 @@ type Constructor<T> = new (...args: any[]) => T;
 
 export default [
     CompletionItemProvider,
+    DefinitionProvider,
     DocumentSymbolProvider,
     SignatureHelpProvider,
 ] as const satisfies Constructor<BaseProvider>[];
