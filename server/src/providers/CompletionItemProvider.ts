@@ -56,9 +56,6 @@ function isFuzzyMatch(prefix: string, label: string): boolean {
     return true;
 }
 
-/**
- * Bridge between the CompletionItemProvider and the Script
- */
 export class CompletionItemProvider extends BaseProvider {
     protected nativeSuggestions;
 
