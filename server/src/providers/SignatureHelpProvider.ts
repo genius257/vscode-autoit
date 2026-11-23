@@ -434,7 +434,7 @@ export class UnfixableCallExpressionError extends Error {
 
 /**
  * Freshness metadata for the signature help state cached on the
- * `SignatureHelpBridge` instance.
+ * `SignatureHelpProvider` instance.
  */
 export type CachedSignatureHelpBridge = {
     uri: string,

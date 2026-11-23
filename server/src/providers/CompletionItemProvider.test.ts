@@ -40,8 +40,8 @@ test('filters out variables declared after the cursor', () => {
 Global $late = 2
 `);
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -64,8 +64,8 @@ Func CalledLater()
 EndFunc
 `);
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -89,8 +89,8 @@ EndFunc
 Global $lateGlobal = 1
 `);
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -113,8 +113,8 @@ test('hides function-local variables declared after the cursor', () => {
 EndFunc
 `);
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -134,8 +134,8 @@ test('always includes native suggestions', () => {
 
     workspace.createOrUpdate(uri, '; empty');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -155,8 +155,8 @@ test('suggests workspace symbols demoted with an include insertion edit', () => 
     workspace.createOrUpdate(otherUri, `Func BackupData()\nEndFunc\n\nGlobal $g_cache = 1\n`);
     workspace.createOrUpdate(mainUri, 'Func Foo()\n    Back\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -191,8 +191,8 @@ test('suggests workspace global variables demoted', () => {
     workspace.createOrUpdate(otherUri, 'Global $g_cache = 1\n');
     workspace.createOrUpdate(mainUri, 'Func Foo()\n    cach\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -216,8 +216,8 @@ test('does not suggest workspace symbols for untitled documents', () => {
     workspace.createOrUpdate(otherUri, 'Func BackupData()\nEndFunc\n');
     workspace.createOrUpdate(untitledUri, 'Func Foo()\n    Back\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: untitledUri.toString(),
@@ -243,8 +243,8 @@ test('inserts the include after the last top-level include statement', () => {
     workspace.createOrUpdate(libUri, 'Func HelperA()\nEndFunc\n');
     workspace.createOrUpdate(mainUri, `#include "helper.au3"\n\nFunc Foo()\n    Back\nEndFunc\n`);
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -271,8 +271,8 @@ test('does not suggest workspace symbols without a typed prefix', () => {
     workspace.createOrUpdate(otherUri, 'Func BackupData()\nEndFunc\n');
     workspace.createOrUpdate(mainUri, 'Func Foo()\n    \nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -302,8 +302,8 @@ test('resolves duplicate workspace symbol names independent of the script order'
 
         workspace.createOrUpdate(mainUri, 'Func Foo()\n    Back\nEndFunc\n');
 
-        const bridge = new CompletionItemProvider(workspace);
-        const items = getItems(bridge.resolveCompletionItems(
+        const provider = new CompletionItemProvider(workspace);
+        const items = getItems(provider.resolveCompletionItems(
             {
                 textDocument: {
                     uri: mainUri.toString(),
@@ -334,8 +334,8 @@ test('does not suggest workspace symbols when disabled in configuration', () => 
     workspace.createOrUpdate(otherUri, 'Func BackupData()\nEndFunc\n');
     workspace.createOrUpdate(mainUri, 'Func Foo()\n    Back\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const labels = getLabels(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const labels = getLabels(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -353,8 +353,8 @@ test('does not suggest symbols from the current document twice', () => {
 
     workspace.createOrUpdate(mainUri, 'Func BackupData()\nEndFunc\n\nFunc Foo()\n    Back\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -376,8 +376,8 @@ test('deduplicates workspace symbols declared in multiple files', () => {
     workspace.createOrUpdate(secondUri, 'Func BackupData()\nEndFunc\n');
     workspace.createOrUpdate(mainUri, 'Func Foo()\n    Back\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: mainUri.toString(),
@@ -409,8 +409,8 @@ test('suggests a standard library include when the drive letter case differs', (
     workspace.createOrUpdate(libraryUri, 'Func _WinAPI_AbortPath($hDC)\nEndFunc\n');
     workspace.createOrUpdate(scriptUri, 'Func Foo()\n    _WinAPI_Abort\nEndFunc\n');
 
-    const bridge = new CompletionItemProvider(workspace);
-    const items = getItems(bridge.resolveCompletionItems(
+    const provider = new CompletionItemProvider(workspace);
+    const items = getItems(provider.resolveCompletionItems(
         {
             textDocument: {
                 uri: scriptUri.toString(),
