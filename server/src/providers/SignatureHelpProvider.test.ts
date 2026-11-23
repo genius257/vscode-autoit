@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { canReuseSignatureHelpCache, SignatureHelpBridge } from './SignatureHelpProvider';
+import { canReuseSignatureHelpCache, SignatureHelpProvider } from './SignatureHelpProvider';
 import { Workspace } from '../autoit/Workspace';
 import { URI } from 'vscode-uri';
 import { SignatureHelpTriggerKind } from 'vscode-languageserver';
@@ -17,7 +17,7 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    const signatureHelpBridge = new SignatureHelpBridge(workspace);
+    const signatureHelpBridge = new SignatureHelpProvider(workspace);
 
     let signatureHelp = signatureHelpBridge.resolveSignatureHelp(
         {
@@ -129,7 +129,7 @@ test('retrigger after an incremental edit serves the updated document', () => {
     const script = workspace.get(uri);
     const revisionBefore = script?.getRevision();
 
-    const firstBridge = new SignatureHelpBridge(workspace);
+    const firstBridge = new SignatureHelpProvider(workspace);
     const firstHelp = firstBridge.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
         position: { line: 0, character: 4 },
