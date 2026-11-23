@@ -1,4 +1,5 @@
 import BaseProvider from './BaseProvider';
+import { CodeLensProvider } from './CodeLensProvider';
 import { CompletionItemProvider } from './CompletionItemProvider';
 import { DefinitionProvider } from './DefinitionProvider';
 import { DocumentHighlightProvider } from './DocumentHighlightProvider';
@@ -10,6 +11,7 @@ import { SignatureHelpProvider } from './SignatureHelpProvider';
 type Constructor<T> = new (...args: any[]) => T;
 
 export default [
+    CodeLensProvider,
     CompletionItemProvider,
     DefinitionProvider,
     DocumentHighlightProvider,
