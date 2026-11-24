@@ -1,14 +1,6 @@
 import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { InitializeParams, InitializeResult, ServerCapabilities, TextDocumentSyncKind, DocumentLinkParams, DocumentLink, DefinitionParams, LocationLink, DocumentSymbolParams, DocumentSymbol, SymbolKind, Hover, Range, MarkupKind, MarkupContent, ReferenceParams, Location, DocumentHighlightParams, DocumentHighlight, TextDocumentContentChangeEvent, CodeLens } from 'vscode-languageserver';
-import { URI } from 'vscode-uri';
-import Symbol, { type Node as SymbolNode } from './autoit/Symbol';
-import { getScopeLabel } from './autoit/DeclarationScope';
-import nativeSuggestions from './autoit/internal';
-import { type AutoIt3 } from 'autoit3-pegjs';
-import * as PositionHelper from './autoit/PositionHelper';
-import * as Parser from './autoit/Parser';
+import { InitializeParams, InitializeResult, ServerCapabilities, TextDocumentSyncKind, TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { Workspace } from './autoit/Workspace';
-import buildSignatureLabel from './utils/signatureParams';
 import providers from './providers';
 
 // eslint-disable-next-line no-console
