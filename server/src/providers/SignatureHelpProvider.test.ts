@@ -149,9 +149,10 @@ test('retrigger after an incremental edit serves the updated document', () => {
     /*
      * A retriggering request after an edit must not reuse AST nodes captured
      * from the pre-edit document (they were replaced by the branch splice).
-     * The same bridge instance is deliberately reused, matching how main.ts
-     * serves retrigger requests from its cache: since the document is valid,
-     * the bridge must re-resolve instead of serving stale nodes.
+     * The same provider instance is deliberately reused, as in production
+     * where a single instance serves the connection: the cache is stale for
+     * the new revision, so the cached nodes are dropped and the request is
+     * re-resolved from the updated document.
      */
     const secondHelp = firstProvider.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
