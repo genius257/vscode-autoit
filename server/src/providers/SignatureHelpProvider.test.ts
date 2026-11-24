@@ -17,9 +17,9 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    const signatureHelpBridge = new SignatureHelpProvider(workspace);
+    const signatureHelpProvider = new SignatureHelpProvider(workspace);
 
-    let signatureHelp = signatureHelpBridge.resolveSignatureHelp(
+    let signatureHelp = signatureHelpProvider.resolveSignatureHelp(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -52,7 +52,7 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    signatureHelp = signatureHelpBridge.resolveSignatureHelp(
+    signatureHelp = signatureHelpProvider.resolveSignatureHelp(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -94,7 +94,7 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    signatureHelp = signatureHelpBridge.resolveSignatureHelp(
+    signatureHelp = signatureHelpProvider.resolveSignatureHelp(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -129,8 +129,8 @@ test('retrigger after an incremental edit serves the updated document', () => {
     const script = workspace.get(uri);
     const revisionBefore = script?.getRevision();
 
-    const firstBridge = new SignatureHelpProvider(workspace);
-    const firstHelp = firstBridge.resolveSignatureHelp({
+    const firstProvider = new SignatureHelpProvider(workspace);
+    const firstHelp = firstProvider.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
         position: { line: 0, character: 4 },
     });
@@ -153,7 +153,7 @@ test('retrigger after an incremental edit serves the updated document', () => {
      * serves retrigger requests from its cache: since the document is valid,
      * the bridge must re-resolve instead of serving stale nodes.
      */
-    const secondHelp = firstBridge.resolveSignatureHelp({
+    const secondHelp = firstProvider.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
         position: { line: 0, character: 6 },
         context: {
