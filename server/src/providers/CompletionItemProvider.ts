@@ -1,8 +1,7 @@
-import { CompletionItem, CompletionItemKind, CompletionList, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, CompletionList, CompletionParams, Connection, Disposable, MarkupContent, MarkupKind, Position } from 'vscode-languageserver';
 import { type AutoIt3, type Location } from 'autoit3-pegjs';
 import { URI, Utils } from 'vscode-uri';
 import { relativePath } from '../autoit/Path';
-import { Workspace } from '../autoit/Workspace';
 import Symbol from '../autoit/Symbol';
 import * as PositionHelper from '../autoit/PositionHelper';
 import * as Parser from '../autoit/Parser';
@@ -10,6 +9,7 @@ import { isPositionWithinLocationRange } from '../autoit/PositionHelper';
 import nativeSuggestions from '../autoit/internal';
 import { getScopeLabel } from '../autoit/DeclarationScope';
 import buildSignatureLabel from '../utils/signatureParams';
+import BaseProvider from './BaseProvider';
 
 const nativeCompletionItems: CompletionItem[] = Object.entries(nativeSuggestions)
     .map(([, nativeSuggestion]) => ({
@@ -56,25 +56,23 @@ function isFuzzyMatch(prefix: string, label: string): boolean {
     return true;
 }
 
-/**
- * Bridge between the CompletionItemProvider and the Script
- */
-export class CompletionItemBridge {
-    protected workpspace: Workspace;
+export class CompletionItemProvider extends BaseProvider {
     protected nativeSuggestions;
 
-    public constructor(workpspace: Workspace) {
-        this.workpspace = workpspace;
+    public override register(connection: Connection): Disposable {
+        return connection.onCompletion(this.resolveCompletionItems.bind(this));
     }
 
     public resolveCompletionItems(
-        textDocumentUri: string,
-        position: Position,
+        params: CompletionParams,
     ): CompletionItem[] | CompletionList | undefined | null {
-        const scopes = this.workpspace.getScopes(textDocumentUri);
+        const textDocumentUri = params.textDocument.uri;
+        const position = params.position;
+
+        const scopes = this.workspace.getScopes(textDocumentUri);
         const symbols = new Map<string, Symbol>();
         const cursorLocation = PositionHelper.positionToLocation(position);
-        const cursorScope = this.workpspace.get(textDocumentUri)?.getScopeAtPosition(position);
+        const cursorScope = this.workspace.get(textDocumentUri)?.getScopeAtPosition(position);
         const isCursorInFunction = cursorScope !== undefined && !cursorScope.isGlobal();
 
         for (const scope of scopes) {
@@ -138,7 +136,7 @@ export class CompletionItemBridge {
             return undefined;
         }
 
-        const declarationScript = this.workpspace.get(declaration.location.source.toString());
+        const declarationScript = this.workspace.get(declaration.location.source.toString());
 
         if (declarationScript === undefined) {
             return undefined;
@@ -248,7 +246,7 @@ export class CompletionItemBridge {
         position: Position,
         existingSymbols: Map<string, Symbol>,
     ): CompletionItem[] {
-        const configuration = this.workpspace.getConfiguration();
+        const configuration = this.workspace.getConfiguration();
 
         if (configuration?.workspaceCompletions === false) {
             return [];
@@ -263,7 +261,7 @@ export class CompletionItemBridge {
         const ignoreInternal = configuration?.ignoreInternalInIncludes === true;
         const items: CompletionItem[] = [];
 
-        for (const entry of this.workpspace.getWorkspaceSymbols()) {
+        for (const entry of this.workspace.getWorkspaceSymbols()) {
             // Already offered via the document scopes or includes
             if (existingSymbols.has(entry.key) || entry.uri.toString() === textDocumentUri) {
                 continue;
@@ -289,7 +287,7 @@ export class CompletionItemBridge {
                 continue;
             }
 
-            const includeEdit = this.workpspace.getIncludeInsertionEdit(textDocumentUri, targetUri.toString());
+            const includeEdit = this.workspace.getIncludeInsertionEdit(textDocumentUri, targetUri.toString());
 
             /*
              * A workspace symbol is only useful when it can be included. Without
@@ -320,7 +318,7 @@ export class CompletionItemBridge {
      * null when the document is unknown or the position is out of range.
      */
     protected getTypedPrefix(textDocumentUri: string, position: Position): string | null {
-        const script = this.workpspace.get(textDocumentUri);
+        const script = this.workspace.get(textDocumentUri);
 
         if (script === undefined) {
             return null;

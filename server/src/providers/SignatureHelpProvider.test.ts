@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { canReuseSignatureHelpCache, SignatureHelpBridge } from './SignatureHelpBridge';
+import { canReuseSignatureHelpCache, SignatureHelpProvider } from './SignatureHelpProvider';
 import { Workspace } from '../autoit/Workspace';
 import { URI } from 'vscode-uri';
 import { SignatureHelpTriggerKind } from 'vscode-languageserver';
@@ -17,9 +17,9 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    const signatureHelpBridge = new SignatureHelpBridge(workspace);
+    const signatureHelpProvider = new SignatureHelpProvider(workspace);
 
-    let signatureHelp = signatureHelpBridge.resolveSignatureHelp(
+    let signatureHelp = signatureHelpProvider.resolveSignatureHelp(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -52,7 +52,7 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    signatureHelp = signatureHelpBridge.resolveSignatureHelp(
+    signatureHelp = signatureHelpProvider.resolveSignatureHelp(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -94,7 +94,7 @@ test('resolveSignatureHelp', () => {
 
     workspace.createOrUpdate(uri, text);
 
-    signatureHelp = signatureHelpBridge.resolveSignatureHelp(
+    signatureHelp = signatureHelpProvider.resolveSignatureHelp(
         {
             textDocument: {
                 uri: uri.toString(),
@@ -129,8 +129,8 @@ test('retrigger after an incremental edit serves the updated document', () => {
     const script = workspace.get(uri);
     const revisionBefore = script?.getRevision();
 
-    const firstBridge = new SignatureHelpBridge(workspace);
-    const firstHelp = firstBridge.resolveSignatureHelp({
+    const firstProvider = new SignatureHelpProvider(workspace);
+    const firstHelp = firstProvider.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
         position: { line: 0, character: 4 },
     });
@@ -149,11 +149,12 @@ test('retrigger after an incremental edit serves the updated document', () => {
     /*
      * A retriggering request after an edit must not reuse AST nodes captured
      * from the pre-edit document (they were replaced by the branch splice).
-     * The same bridge instance is deliberately reused, matching how main.ts
-     * serves retrigger requests from its cache: since the document is valid,
-     * the bridge must re-resolve instead of serving stale nodes.
+     * The same provider instance is deliberately reused, as in production
+     * where a single instance serves the connection: the cache is stale for
+     * the new revision, so the cached nodes are dropped and the request is
+     * re-resolved from the updated document.
      */
-    const secondHelp = firstBridge.resolveSignatureHelp({
+    const secondHelp = firstProvider.resolveSignatureHelp({
         textDocument: { uri: uri.toString() },
         position: { line: 0, character: 6 },
         context: {
@@ -169,7 +170,6 @@ test('retrigger after an incremental edit serves the updated document', () => {
 
 describe('canReuseSignatureHelpCache', () => {
     const cached = (overrides: Partial<{ uri: string, revision: number | undefined, hasSyntaxErrors: boolean }> = {}) => ({
-        bridge: new SignatureHelpBridge(new Workspace()),
         uri: '/cached.au3',
         revision: 1,
         hasSyntaxErrors: false,
